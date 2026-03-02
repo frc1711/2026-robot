@@ -8,11 +8,12 @@ import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ShooterConstants;
@@ -34,6 +35,9 @@ public class Shooter extends SubsystemBase {
   private double maxSpeed = 0.15;
   private double topTargetRPS = 0;
   private double bottomTargetRPS = 0;
+
+  private final SlewRateLimiter topLimiter = new SlewRateLimiter(15);
+  private final SlewRateLimiter bottomLimiter = new SlewRateLimiter(15);
 
   /**
    * The constructor method of the shooter subsytem
@@ -58,11 +62,10 @@ public class Shooter extends SubsystemBase {
     TalonFXConfiguration config = new TalonFXConfiguration();
 
     config.Slot0.kV = ShooterConstants.TOPMOTORKV;
-    config.Slot0.kS = ShooterConstants.TOPMOTORKS;
     config.Slot0.kP = ShooterConstants.TOPMOTORKP;
 
-    config.MotionMagic.MotionMagicAcceleration = 200;
-    config.MotionMagic.MotionMagicJerk = 2000;
+    config.MotionMagic.MotionMagicAcceleration = ShooterConstants.SHOOTERMOTORACCELERATION;
+    config.MotionMagic.MotionMagicJerk = ShooterConstants.SHOOTERMOTORJERK;
 
     config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
 
@@ -77,7 +80,6 @@ public class Shooter extends SubsystemBase {
     TalonFXConfiguration config = new TalonFXConfiguration();
 
     config.Slot0.kV = ShooterConstants.BOTTOMMOTORKV;
-    config.Slot0.kS = ShooterConstants.BOTTOMMOTORKS;
     config.Slot0.kP = ShooterConstants.BOTTOMMOTORKP;
 
     config.MotionMagic.MotionMagicAcceleration = ShooterConstants.SHOOTERMOTORACCELERATION;
@@ -112,8 +114,11 @@ public class Shooter extends SubsystemBase {
 
   @Override
   public void periodic() {
-    this.topShooterMotor.setControl(topRequest.withVelocity(this.topTargetRPS));
-    this.bottomShooterMotor.setControl(bottomRequest.withVelocity(this.bottomTargetRPS));
+    double topSpeed = topLimiter.calculate(topTargetRPS);
+    double bottomSpeed = bottomLimiter.calculate(bottomTargetRPS);
+
+    this.topShooterMotor.setControl(topRequest.withVelocity(topSpeed));
+    this.bottomShooterMotor.setControl(bottomRequest.withVelocity(bottomSpeed));
   }
 
   @Override
@@ -121,16 +126,34 @@ public class Shooter extends SubsystemBase {
     builder.addDoubleProperty(
       "Shooter Speed", 
       () -> this.maxSpeed, 
-      (double d) -> this.maxSpeed = d
+      (double d) -> {
+        this.maxSpeed = d;
+        System.out.println(maxSpeed + " RPS");
+      }
     );
-    builder.addDoubleArrayProperty(
-      "Motor RPS", 
-      () -> new double[]{this.topShooterMotor.getRotorVelocity().getValueAsDouble(), this.bottomShooterMotor.getRotorVelocity().getValueAsDouble()}, 
+    builder.addDoubleProperty(
+      "Top Motor RPS", 
+      () -> this.topShooterMotor.getVelocity().getValueAsDouble(),
+      null
+    );
+    builder.addDoubleProperty(
+      "Bottom Motor RPS", 
+      () -> this.bottomShooterMotor.getVelocity().getValueAsDouble(),
       null
     );
     builder.addDoubleArrayProperty(
       "Motor Current Draw", 
       () -> new double[]{this.topShooterMotor.getSupplyCurrent().getValueAsDouble(), this.bottomShooterMotor.getSupplyCurrent().getValueAsDouble()}, 
+      null
+    );
+    builder.addDoubleArrayProperty(
+      "Shooter Target RPS", 
+      () -> new double[]{this.topTargetRPS, this.bottomTargetRPS}, 
+      null
+    );
+    builder.addBooleanProperty(
+      "At Speed", 
+      this::atSpeed,
       null
     );
   }
@@ -146,15 +169,18 @@ public class Shooter extends SubsystemBase {
     }
 
     // Gets the current shooter motor velocities
-    double topVelocity = topShooterMotor.getRotorVelocity().getValueAsDouble();
-    double bottomVelocity = bottomShooterMotor.getRotorVelocity().getValueAsDouble();
+    double topVelocity = topShooterMotor.getVelocity().getValueAsDouble();
+    double bottomVelocity = bottomShooterMotor.getVelocity().getValueAsDouble();
 
     // Uses 5% of target RPS as the tolerance for velocity of shooter motors
-    double topTolerance = Math.max(Math.abs(topTargetRPS) * 0.05, 2);
-    double bottomTolerance = Math.max(Math.abs(bottomTargetRPS) * 0.05, 2);
+    double topTolerance = Math.abs(topTargetRPS) * 0.05;
+    double bottomTolerance = Math.abs(bottomTargetRPS) * 0.05;
 
-    return (Math.abs(topVelocity - topTargetRPS) < topTolerance
-      && Math.abs(bottomVelocity - bottomTargetRPS) < bottomTolerance);
+    SmartDashboard.putNumber("Top Tolerance", topTolerance);
+    SmartDashboard.putNumber("Top Difference", topTargetRPS - topVelocity);
+
+    return (topTargetRPS - topVelocity < topTolerance
+      && bottomTargetRPS - bottomVelocity < bottomTolerance);
   }
 
   public class Commands {
@@ -166,9 +192,12 @@ public class Shooter extends SubsystemBase {
      */
     public Command shootVelocity(DoubleSupplier topSupplier, DoubleSupplier bottomSupplier) {
       return Shooter.this.run(
-        () -> Shooter.this.setVelocity(topSupplier.getAsDouble() * ShooterConstants.SHOOTERMAXRPS, bottomSupplier.getAsDouble() * ShooterConstants.SHOOTERMAXRPS)
+        () -> Shooter.this.setVelocity(
+          topSupplier.getAsDouble() * ShooterConstants.SHOOTERMAXRPS, 
+          bottomSupplier.getAsDouble() * ShooterConstants.SHOOTERMAXRPS
+        )
       ).finallyDo(
-        () -> this.stopShooting()
+        () -> Shooter.this.setVelocity(0, 0)
       );
     }
 
@@ -179,7 +208,7 @@ public class Shooter extends SubsystemBase {
       return this.shootVelocity(
         () -> FunctionUtilities.applyClamp(Shooter.this.maxSpeed * ShooterConstants.TOPSHOOTERSPEEDMULTIPLIER, 0, 1), 
         () -> Shooter.this.maxSpeed
-      );
+      ).finallyDo(() -> this.stopShooting());
     }
 
     /**

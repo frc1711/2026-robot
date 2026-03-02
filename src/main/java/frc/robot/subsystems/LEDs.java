@@ -18,26 +18,28 @@ public class LEDs extends SubsystemBase {
     private final AddressableLED leds;
     private final AddressableLEDBuffer ledBuffer;
 
-    private final Distance ledsPerMeter = Meters.of(1 / 60.0);
+    private final Distance metersPerLed = Meters.of(1 / 60.0);
 
     public LEDs(int pwmPort, int ledCount) {
         this.leds = new AddressableLED(pwmPort);
         this.ledBuffer = new AddressableLEDBuffer(ledCount);
         
         this.leds.setLength(this.ledBuffer.getLength());
-
-        this.setDefaultCommand(runPattern(this.decreaseYellow()));
     }
 
     // Simple patterns
 
+    public LEDPattern green() {
+        LEDPattern green = LEDPattern.solid(Color.kForestGreen);
 
+        return green;
+    }
 
     // Complex Patterns
 
     public LEDPattern decreaseYellow() {
         LEDPattern yellow = LEDPattern.steps(Map.of(0, Color.kYellow, 0.25, Color.kBlack));
-        LEDPattern scrollingYellow = yellow.scrollAtAbsoluteSpeed(Centimeters.per(Second).of(12.5), ledsPerMeter);
+        LEDPattern scrollingYellow = yellow.scrollAtAbsoluteSpeed(Centimeters.per(Second).of(12.5), metersPerLed);
 
         return scrollingYellow;
     }

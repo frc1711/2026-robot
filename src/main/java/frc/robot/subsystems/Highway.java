@@ -17,14 +17,14 @@ public class Highway extends SubsystemBase {
     public class Commands {
         public Command forward() {
             return Highway.this.startEnd(
-                () -> Highway.this.highwayMotor.set(-0.5),
+                () -> Highway.this.highwayMotor.set(-0.6),
                 () -> Highway.this.highwayMotor.set(0)
             );
         }
 
         public Command backward() {
             return Highway.this.run(
-                () -> Highway.this.highwayMotor.set(0.5)
+                () -> Highway.this.highwayMotor.set(0.6)
             ).finallyDo(
                 () -> Highway.this.highwayMotor.set(0)
             );

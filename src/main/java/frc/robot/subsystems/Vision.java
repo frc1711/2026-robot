@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -13,14 +14,14 @@ import frc.robot.LimelightHelpers;
 public class Vision extends SubsystemBase {
     private final InterpolatingDoubleTreeMap treeMap = new InterpolatingDoubleTreeMap();
 
-    private int[] aprilTagFilter = {2,3,4,5,8,9,10,11,18,19,20,21,24,25,26,27};
+    private int[] aprilTagFilter = null;
 
-    public Vision() {
-        applyAprilTagFilter(aprilTagFilter);
-    }
+    private int[] hubAprilTagFilter = {2,3,4,5,8,9,10,11,18,19,20,21,24,25,26,27};
+
+    public Vision() {}
 
     private final String[] limelights = {
-        "limelight-shooter" //10.17.11.11
+        "limelight-shooter" // IP: 10.17.11.11
     };
 
     public Pose2d estimatePose() {
@@ -36,23 +37,47 @@ public class Vision extends SubsystemBase {
     public void applyAprilTagFilter(int[] filter) {
         this.aprilTagFilter = filter;
 
-        LimelightHelpers.SetFiducialIDFiltersOverride(limelights[0], filter);
+        for (String ll : limelights) {
+            LimelightHelpers.SetFiducialIDFiltersOverride(ll, this.aprilTagFilter);
+        }
+    }
+
+    public void resetAprilTagFilter() {
+        this.aprilTagFilter = null;
+
+        for (String ll : limelights) {
+            LimelightHelpers.SetFiducialIDFiltersOverride(ll, this.aprilTagFilter);
+        }
     }
 
     public double getDistance() {
-        double targetOffsetAngle = LimelightHelpers.getTY(limelights[0]);
+        double distance = 0;
+        
+        applyAprilTagFilter(hubAprilTagFilter);
 
-        double llAngleOffsetDegrees = 20;
-        double llLensHeightInches = 7.46114106;
+        for (String ll : limelights) {
+            if (LimelightHelpers.getTV(ll)) {
+                double targetOffsetAngle = LimelightHelpers.getTY(ll);
 
-        double targetHeightInches = 44.25;
+                Pose3d llPose = LimelightHelpers.getCameraPose3d_RobotSpace(ll);
 
-        double angleToTargetDegrees = llAngleOffsetDegrees + targetOffsetAngle;
-        double angleToTargetRadians = Units.degreesToRadians(angleToTargetDegrees);
+                double llAngleOffsetRadians = llPose.getRotation().getY();
+                double llLensHeightMeters = llPose.getZ();
 
-        double llToTargetInches = (targetHeightInches - llLensHeightInches) / Math.tan(angleToTargetRadians);
+                double targetHeightMeters = Units.inchesToMeters(44.25);
 
-        return llToTargetInches;
+                double angleToTargetRadians = llAngleOffsetRadians + Units.degreesToRadians(targetOffsetAngle);
+                double llToTargetMeters = (targetHeightMeters - llLensHeightMeters) / Math.tan(angleToTargetRadians);
+
+                double robotCenterToTargetMeters = llToTargetMeters - Math.hypot(llPose.getX(), llPose.getY());
+
+                distance += robotCenterToTargetMeters;
+            }   
+        }
+
+        resetAprilTagFilter();
+
+        return distance / limelights.length;
     }
 
     public List<VisionMeasurement> getVisionMeasurements() {
@@ -69,6 +94,7 @@ public class Vision extends SubsystemBase {
                     )
                 );
             }
+            //System.out.println(ll + " getting Measurements");
         }
 
         return measurements;
@@ -78,7 +104,7 @@ public class Vision extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         builder.addDoubleProperty(
             "Distance to Hub", 
-            this::getDistance, 
+            this::getDistance,
             null
         );
     }

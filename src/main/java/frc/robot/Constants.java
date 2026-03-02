@@ -21,7 +21,7 @@ public final class Constants {
     public static final int DRIVERCONTROLLERPORT = 0;
     public static final int OPERATORCONTROLLERPORT = 1;
 
-    public static final double DEADBAND = 0.1;
+    public static final double DEADBAND = 0.05;
   }
 
   public static class ShooterConstants {
@@ -32,14 +32,14 @@ public final class Constants {
     public static final int RIGHTLINEARSERVOPORT = 9;
 
     public static final double TOPMOTORKV = 0.37;
-    public static final double TOPMOTORKP = 0.88;
+    public static final double TOPMOTORKP = 0.15;
     public static final double TOPMOTORKS = 0.1;
 
-    public static final double BOTTOMMOTORKV = 0.56;
-    public static final double BOTTOMMOTORKP = 1.19;
+    public static final double BOTTOMMOTORKV = 0.37;
+    public static final double BOTTOMMOTORKP = 0.15;
     public static final double BOTTOMMOTORKS = 0.1;
 
-    public static final double TOPSHOOTERSPEEDMULTIPLIER = 1.15;
+    public static final double TOPSHOOTERSPEEDMULTIPLIER = 1.25;
     public static final double SHOOTERMAXRPS = 100;
 
     public static final double SHOOTERMOTORACCELERATION = 200;
@@ -85,7 +85,7 @@ public final class Constants {
     public static final double PHYSICALMAXSPEEDMPERSECR2 = Units.feetToMeters(16.8);
     public static final double PHYSICALMAXSPEEDMPERSECR3 = Units.feetToMeters(19.2);
 
-    public static final double TELEOPSPEEDMULTIPLIER = 0.75;
+    public static final double TELEOPSPEEDMULTIPLIER = 0.5;
 
     public static final double DRIVEMOTORGEARRATIOR1 = 7.03;
     public static final double DRIVEMOTORGEARRATIOR2 = 6.03;
@@ -117,7 +117,7 @@ public final class Constants {
     public static final int BACKRIGHTTURNMOTORPORT = 8;
 
     public static final boolean FRONTLEFTDRIVEENCODERREVERSED = false;
-    public static final boolean FRONTRIGHTDRIVEENCODERREVERSED = true;
+    public static final boolean FRONTRIGHTDRIVEENCODERREVERSED = false;
     public static final boolean BACKLEFTDRIVEENCODERREVERSED = false;
     public static final boolean BACKRIGHTDRIVEENCODERREVERSED = false;
 

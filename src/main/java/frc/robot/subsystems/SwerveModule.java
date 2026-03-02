@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -89,6 +90,7 @@ public class SwerveModule {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
         config.MotorOutput.Inverted = reversed ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         
         return config;
     }
@@ -150,7 +152,7 @@ public class SwerveModule {
     public void resetEncoders() {
         this.driveMotor.setPosition(0);
 
-        double offset = Rotation2d.fromRadians(Preferences.getDouble("Module" + this.swerveID + "Zero", 0)).plus(Rotation2d.fromRadians(getAbsoluteEncoderRad())).getRotations();
+        double offset = Rotation2d.fromRadians(Preferences.getDouble("Module" + this.swerveID + "Zero", 0)).minus(Rotation2d.fromRadians(getAbsoluteEncoderRad())).getRotations();
         Preferences.setDouble("Module" + this.swerveID + "Zero", Rotation2d.fromRotations(offset).getRadians());
         CANcoderConfiguration config = new CANcoderConfiguration();
         config.MagnetSensor.MagnetOffset = offset;
