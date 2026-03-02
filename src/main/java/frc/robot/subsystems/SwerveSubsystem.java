@@ -183,7 +183,7 @@ public class SwerveSubsystem extends SubsystemBase {
             rot
         );
 
-        setChassisSpeeds(desiredSpeeds.times(this.speedMultiplier), true);
+        setChassisSpeeds(desiredSpeeds.times(this.speedMultiplier).times(SwerveConstants.TELEOPSPEEDMULTIPLIER), true);
     }
 
     public Pose2d getPose() {
@@ -264,7 +264,7 @@ public class SwerveSubsystem extends SubsystemBase {
         builder.addDoubleProperty("BR Module Angle", 
             () -> br_module.getAbsoluteEncoderDeg(),
             null);
-        builder.addBooleanProperty("New Driver Mode", 
+        builder.addBooleanProperty("New Driver Mode",
             () -> this.maxSpeedMultiplier < 1 ? true : false,
             (boolean mult) -> this.setMaxSpeed(mult ? 0.5 : 1));
         builder.addDoubleProperty("Gyro", 

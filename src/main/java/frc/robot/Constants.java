@@ -33,17 +33,15 @@ public final class Constants {
 
     public static final double TOPMOTORKV = 0.37;
     public static final double TOPMOTORKP = 0.15;
-    public static final double TOPMOTORKS = 0.1;
 
     public static final double BOTTOMMOTORKV = 0.37;
     public static final double BOTTOMMOTORKP = 0.15;
-    public static final double BOTTOMMOTORKS = 0.1;
 
     public static final double TOPSHOOTERSPEEDMULTIPLIER = 1.25;
     public static final double SHOOTERMAXRPS = 100;
 
-    public static final double SHOOTERMOTORACCELERATION = 200;
-    public static final double SHOOTERMOTORJERK = 2000;
+    public static final double SHOOTERMOTORACCELERATION = 150;
+    public static final double SHOOTERMOTORJERK = 1500;
   }
 
   public static class ClimberConstants {
@@ -70,6 +68,18 @@ public final class Constants {
 
   public static class HighwayConstants {
     public static final int HIGHWAYPORT = 17;
+  }
+
+  public static class IntakeConstants {
+    public static final int INTAKEPORT = 19;
+
+    public static final double INTAKEV = 0.37;
+    public static final double INTAKEP = 0.1;
+
+    public static final double INTAKEMAXRPS = 100;
+
+    public static final double INTAKEMOTORACCELERATION = 150;
+    public static final double INTAKEMOTORJERK = 1500;
   }
 
   public static class SwerveConstants {

@@ -36,8 +36,8 @@ public class Shooter extends SubsystemBase {
   private double topTargetRPS = 0;
   private double bottomTargetRPS = 0;
 
-  private final SlewRateLimiter topLimiter = new SlewRateLimiter(15);
-  private final SlewRateLimiter bottomLimiter = new SlewRateLimiter(15);
+  private final SlewRateLimiter topLimiter = new SlewRateLimiter(20);
+  private final SlewRateLimiter bottomLimiter = new SlewRateLimiter(20);
 
   /**
    * The constructor method of the shooter subsytem

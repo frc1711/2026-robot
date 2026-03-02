@@ -54,25 +54,24 @@ public class Vision extends SubsystemBase {
         double distance = 0;
         
         applyAprilTagFilter(hubAprilTagFilter);
+        String ll = limelights[0];
 
-        for (String ll : limelights) {
-            if (LimelightHelpers.getTV(ll)) {
-                double targetOffsetAngle = LimelightHelpers.getTY(ll);
+        if (LimelightHelpers.getTV(ll)) {
+            double targetOffsetAngle = LimelightHelpers.getTY(ll);
 
-                Pose3d llPose = LimelightHelpers.getCameraPose3d_RobotSpace(ll);
+            Pose3d llPose = LimelightHelpers.getCameraPose3d_RobotSpace(ll);
 
-                double llAngleOffsetRadians = llPose.getRotation().getY();
-                double llLensHeightMeters = llPose.getZ();
+            double llAngleOffsetRadians = llPose.getRotation().getY();
+            double llLensHeightMeters = llPose.getZ();
 
-                double targetHeightMeters = Units.inchesToMeters(44.25);
+            double targetHeightMeters = Units.inchesToMeters(44.25);
 
-                double angleToTargetRadians = llAngleOffsetRadians + Units.degreesToRadians(targetOffsetAngle);
-                double llToTargetMeters = (targetHeightMeters - llLensHeightMeters) / Math.tan(angleToTargetRadians);
+            double angleToTargetRadians = llAngleOffsetRadians + Units.degreesToRadians(targetOffsetAngle);
+            double llToTargetMeters = (targetHeightMeters - llLensHeightMeters) / Math.tan(angleToTargetRadians);
 
-                double robotCenterToTargetMeters = llToTargetMeters - Math.hypot(llPose.getX(), llPose.getY());
+            double robotCenterToTargetMeters = llToTargetMeters - Math.hypot(llPose.getX(), llPose.getY());
 
-                distance += robotCenterToTargetMeters;
-            }   
+            distance += robotCenterToTargetMeters;
         }
 
         resetAprilTagFilter();
@@ -86,7 +85,7 @@ public class Vision extends SubsystemBase {
         for (String ll : limelights) {
             var estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(ll);
 
-            if (estimate != null && estimate.tagCount >= 2) {
+            if (estimate != null && estimate.tagCount >= 2 && ll != limelights[0]) {
                 measurements.add(
                     new VisionMeasurement(
                         estimate.pose,
