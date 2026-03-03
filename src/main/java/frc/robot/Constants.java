@@ -37,7 +37,7 @@ public final class Constants {
     public static final double BOTTOMMOTORKV = 0.37;
     public static final double BOTTOMMOTORKP = 0.15;
 
-    public static final double TOPSHOOTERSPEEDMULTIPLIER = 1.25;
+    public static final double TOPSHOOTERSPEEDMULTIPLIER = 1.75;
     public static final double SHOOTERMAXRPS = 100;
 
     public static final double SHOOTERMOTORACCELERATION = 150;
@@ -71,7 +71,8 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-    public static final int INTAKEPORT = 19;
+    public static final int HOPPEREXTENDPORT = 19;
+    public static final int INTAKEPORT = 20;
 
     public static final double INTAKEV = 0.37;
     public static final double INTAKEP = 0.1;

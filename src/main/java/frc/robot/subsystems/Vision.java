@@ -24,16 +24,6 @@ public class Vision extends SubsystemBase {
         "limelight-shooter" // IP: 10.17.11.11
     };
 
-    public Pose2d estimatePose() {
-        var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue(limelights[0]);
-
-        if (llMeasurement != null && llMeasurement.tagCount > 0) {
-            return llMeasurement.pose;
-        }
-
-        return null;
-    }
-
     public void applyAprilTagFilter(int[] filter) {
         this.aprilTagFilter = filter;
 
@@ -52,8 +42,7 @@ public class Vision extends SubsystemBase {
 
     public double getDistance() {
         double distance = 0;
-        
-        applyAprilTagFilter(hubAprilTagFilter);
+
         String ll = limelights[0];
 
         if (LimelightHelpers.getTV(ll)) {
@@ -74,8 +63,6 @@ public class Vision extends SubsystemBase {
             distance += robotCenterToTargetMeters;
         }
 
-        resetAprilTagFilter();
-
         return distance / limelights.length;
     }
 
@@ -85,7 +72,7 @@ public class Vision extends SubsystemBase {
         for (String ll : limelights) {
             var estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(ll);
 
-            if (estimate != null && estimate.tagCount >= 2 && ll != limelights[0]) {
+            if (estimate != null && estimate.tagCount >= 1 && ll != limelights[0]) {
                 measurements.add(
                     new VisionMeasurement(
                         estimate.pose,
@@ -93,7 +80,6 @@ public class Vision extends SubsystemBase {
                     )
                 );
             }
-            //System.out.println(ll + " getting Measurements");
         }
 
         return measurements;

@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.util.function.DoubleSupplier;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
@@ -16,7 +18,9 @@ public class Intake extends SubsystemBase {
     private double intakeTargetRPS = 0;
     private final MotionMagicVelocityVoltage intakeRequest = new MotionMagicVelocityVoltage(0).withSlot(0);
 
-    private final SlewRateLimiter intakeLimiter = new SlewRateLimiter(20);
+    private final SlewRateLimiter intakeLimiter = new SlewRateLimiter(25);
+
+    public final Commands commands = new Commands();
 
     public Intake(int intakeMotorPort) {
         this.intakeMotor = new TalonFX(intakeMotorPort);
@@ -25,29 +29,33 @@ public class Intake extends SubsystemBase {
 
     private TalonFXConfiguration getIntakeConfig() {
         TalonFXConfiguration config = new TalonFXConfiguration();
+        
+        config.Slot0.kV = IntakeConstants.INTAKEV;
+        config.Slot0.kP = IntakeConstants.INTAKEP;
 
-        Slot0Configs slot0 = config.Slot0;
-        slot0.kV = IntakeConstants.INTAKEV;
-        slot0.kP = IntakeConstants.INTAKEP;
+        config.MotionMagic.MotionMagicAcceleration = 150;
+        config.MotionMagic.MotionMagicJerk = 1500;
 
         return config;
     }
 
     public void intake(double speed) {
-        this.intakeTargetRPS = speed;
+        System.out.println("Spinning");
+        this.intakeMotor.set(speed);
     }
 
-    @Override
+    /*@Override
     public void periodic() {
         double limitedSpeed = this.intakeLimiter.calculate(this.intakeTargetRPS);
 
         this.intakeMotor.setControl(this.intakeRequest.withVelocity(limitedSpeed));
-    }
+    }*/
 
     public class Commands {
-        public Command intake(double speed) {
-            return Intake.this.runOnce(
-                () -> Intake.this.intake(speed * IntakeConstants.INTAKEMAXRPS)
+        public Command intake(DoubleSupplier speed) {
+            return Intake.this.startEnd(
+                () -> Intake.this.intake(speed.getAsDouble()),
+                () -> Intake.this.intake(0)
             );
         }
     }

@@ -172,12 +172,9 @@ public class Shooter extends SubsystemBase {
     double topVelocity = topShooterMotor.getVelocity().getValueAsDouble();
     double bottomVelocity = bottomShooterMotor.getVelocity().getValueAsDouble();
 
-    // Uses 5% of target RPS as the tolerance for velocity of shooter motors
-    double topTolerance = Math.abs(topTargetRPS) * 0.05;
-    double bottomTolerance = Math.abs(bottomTargetRPS) * 0.05;
-
-    SmartDashboard.putNumber("Top Tolerance", topTolerance);
-    SmartDashboard.putNumber("Top Difference", topTargetRPS - topVelocity);
+    // Uses 3% of target RPS as the tolerance for velocity of shooter motors
+    double topTolerance = Math.abs(topTargetRPS) * 0.03;
+    double bottomTolerance = Math.abs(bottomTargetRPS) * 0.03;
 
     return (topTargetRPS - topVelocity < topTolerance
       && bottomTargetRPS - bottomVelocity < bottomTolerance);

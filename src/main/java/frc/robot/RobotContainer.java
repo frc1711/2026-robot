@@ -5,6 +5,7 @@
 package frc.robot;
 
 import frc.robot.Constants.HighwayConstants;
+import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TurretConstants;
@@ -30,10 +31,11 @@ public class RobotContainer {
   private final Highway highway = new Highway(HighwayConstants.HIGHWAYPORT);
   private final Vision vision = new Vision();
   public final Autons autons = new Autons(swerve, shooter, highway);
-  private final LEDs leds1 = new LEDs(8,24);
+  //private final LEDs leds1 = new LEDs(8,24);
   //private final LEDs leds2 = new LEDs(9,24);
   //private final Hood hood = new Hood(ShooterConstants.LEFTLINEARSERVOPORT, ShooterConstants.RIGHTLINEARSERVOPORT);
   private final Turret turret = new Turret(TurretConstants.TURRETMOTORPORT, TurretConstants.ENCODERREVERSED);
+  private final Intake intake = new Intake(IntakeConstants.INTAKEPORT);
 
   private final CommandXboxController driverController = new CommandXboxController(OperatorConstants.DRIVERCONTROLLERPORT);
   private final CommandXboxController operatorController = new CommandXboxController(OperatorConstants.OPERATORCONTROLLERPORT);
@@ -54,11 +56,11 @@ public class RobotContainer {
    * Method for adding the controller bindings to the controllers
    */
   private void configureBindings() {
-    this.operatorController.a().whileTrue(this.shooter.commands.shootVelocity());//.alongWith(this.shooter.commands.increaseSpeed(() -> 0.025).onlyWhile(() -> true)));
+    this.operatorController.a().whileTrue(this.shooter.commands.shootVelocity());
     //this.operatorController.povLeft().whileTrue(turret.commands.changeAngle(() -> 5));
     //this.operatorController.povRight().whileTrue(turret.commands.changeAngle(() -> -5));
     this.operatorController.rightTrigger().whileTrue(this.highway.commands.forward());
-    //this.driverController.leftTrigger().whileTrue(this.highway.commands.backward());
+    this.driverController.rightTrigger().whileTrue(this.intake.commands.intake(() -> 0.4));
 
     swerve.setDefaultCommand(new SwerveDriveCommand(
       () -> -this.driverController.getLeftY(),
@@ -67,7 +69,7 @@ public class RobotContainer {
       swerve
     ));
 
-    leds1.setDefaultCommand(leds1.runPattern(leds1.green()));
+    //leds1.setDefaultCommand(leds1.runPattern(leds1.green()));
 
     this.driverController.start().onTrue(this.swerve.resetHeading());
   }

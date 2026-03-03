@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
 
-  @SuppressWarnings("unused")
   private final RobotContainer robotContainer;
 
   private final AutoChooser autoChooser;
@@ -32,7 +31,10 @@ public class Robot extends TimedRobot {
 
     this.autoChooser = new AutoChooser();
 
-    this.autoChooser.addCmd("Last Resort Auto", robotContainer.autons::lastResortAuton);
+    this.autoChooser.addCmd("Left Handed Auto", robotContainer.autons::leftHandedAuton);
+    this.autoChooser.addCmd("Right Handed Auto", robotContainer.autons::rightHandedAuton);
+    this.autoChooser.addCmd("Ambidextrious Auto", robotContainer.autons::ambidextriousAuton);
+
     this.autoChooser.addRoutine("Fire and Ascent Auto", robotContainer.autons::fireAndAscentAuton);
 
     SmartDashboard.putData(this.autoChooser);
