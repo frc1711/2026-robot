@@ -34,6 +34,14 @@ public class Vision extends SubsystemBase {
         }
     }
 
+    public String[] getLimelights() {
+        return limelights;
+    }
+
+    public boolean hasTarget(String ll) {
+        return LimelightHelpers.getTV(ll);
+    }
+
     public void resetAprilTagFilter() {
         this.aprilTagFilter = null;
 
@@ -71,7 +79,7 @@ public class Vision extends SubsystemBase {
     public double getAngleFromHub() {
         String ll = limelights[0];
 
-        if (LimelightHelpers.getTV(ll)) {
+        if (this.hasTarget(ll)) {
             double horizontalAngleOffset = LimelightHelpers.getTX(ll);
             return horizontalAngleOffset;
         }
