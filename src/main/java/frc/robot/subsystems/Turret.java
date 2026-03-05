@@ -53,7 +53,7 @@ public class Turret extends SubsystemBase {
      */
     public double getAngle() {
         double rotations = this.turretMotor.getPosition().getValueAsDouble();
-        double turretRotations = rotations;
+        double turretRotations = rotations / TurretConstants.TURRETGEARRATIO;
         Rotation2d angle = Rotation2d.fromRotations(turretRotations);
 
         if (encoderReversed) {
@@ -115,9 +115,25 @@ public class Turret extends SubsystemBase {
             );
         }
 
-        public Command moveTillZero(DoubleSupplier supplier) {
-            return Turret.this.run(
-                () -> this.changeAngle(() -> Units.degreesToRadians(Math.signum(supplier.getAsDouble()) * 2))
+        public Command trackWithVision(Vision vision) {
+            return Turret.this.startEnd(
+                () -> {
+                    String ll = vision.getLimelights()[0];
+
+                    if (!vision.hasTarget(ll)) return;
+
+                    double txDegrees = vision.getAngleFromHub();
+                    if (Math.abs(txDegrees) < 0.3) return;
+                    double txRadians = Units.degreesToRadians(txDegrees);
+                    
+
+                    double turretAngle = Turret.this.getAngle();
+
+                    double targetAngle = turretAngle - txRadians;
+
+                    Turret.this.anglePidController.setSetpoint(targetAngle);
+                },
+                () -> {}
             );
         }
     }

@@ -61,6 +61,7 @@ public class RobotContainer {
    */
   private void configureBindings() {
     this.operatorController.a().whileTrue(this.shooter.commands.shootVelocity());
+    this.operatorController.b().whileTrue(this.turret.commands.trackWithVision(vision));
     //this.operatorController.povLeft().whileTrue(turret.commands.changeAngle(() -> 5));
     //this.operatorController.povRight().whileTrue(turret.commands.changeAngle(() -> -5));
     this.operatorController.rightTrigger().whileTrue(this.highway.commands.forward());
