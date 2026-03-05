@@ -6,4 +6,12 @@ public class FunctionUtilities {
         else if (input > maximum) return maximum;
         else return input;
     }
+
+    public static double applyDeadband(double input, double deadband) {
+        if (Math.abs(input) < deadband) {
+            return 0;
+        }
+
+        return Math.signum(input) * (Math.abs(input) - deadband) / (1 - deadband);
+    }
 }

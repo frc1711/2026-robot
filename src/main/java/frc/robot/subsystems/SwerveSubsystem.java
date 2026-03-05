@@ -1,12 +1,11 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -34,6 +33,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public final double maxSpeed = SwerveConstants.PHYSICALMAXSPEEDMPERSECR2;
 
+    // The swerve modules
     public final SwerveModule fl_module = new SwerveModule(
         SwerveConstants.FRONTLEFTDRIVEMOTORPORT,
         SwerveConstants.FRONTLEFTTURNMOTORPORT,
@@ -68,19 +68,23 @@ public class SwerveSubsystem extends SubsystemBase {
 
     private final Pigeon2 gyro = new Pigeon2(SwerveConstants.PIGEON2PORT);
 
-    private final SwerveDriveOdometry odometry = new SwerveDriveOdometry(SwerveConstants.kDriveKinematics,
-                                                                            getRotation2d(), 
-                                                                            getPositions());
+    // Acts like the swerve odometry
+    private final SwerveDrivePoseEstimator estimator = new SwerveDrivePoseEstimator(
+        SwerveConstants.kDriveKinematics,
+        getRotation2d(), 
+        getPositions(),
+        new Pose2d()
+    );
 
     private SwerveModuleState[] desiredStates = {};
 
     private double speedMultiplier = 1;
-
     private double maxSpeedMultiplier = 1;
 
-    private PIDController xController = new PIDController(1, 0, 0);
-    private PIDController yController = new PIDController(1, 0, 0);
-    private PIDController headingController = new PIDController(3.5, 0, 0);
+    // PID Controllers for choreo autos
+    private PIDController xController = new PIDController(3, 0, 0);
+    private PIDController yController = new PIDController(3, 0, 0);
+    private PIDController headingController = new PIDController(5, 0, 0);
 
     private SysIdRoutine sysIdRoutine = new SysIdRoutine(
         new SysIdRoutine.Config(),
@@ -91,6 +95,7 @@ public class SwerveSubsystem extends SubsystemBase {
         )
     );
 
+    // Used for displaying swerve modules on advantagescope
     StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault()
         .getStructArrayTopic("Swerve Module States", SwerveModuleState.struct).publish();
 
@@ -98,14 +103,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public SwerveSubsystem() {
         System.out.println("Swerve Subsystem initialized");
-        new Thread(() -> {
-            try {
-                Thread.sleep(1000);
-                resetGyro();
-                resetOdometry(new Pose2d(new Translation2d(), getRotation2d()));
-            } catch (Exception e) {
-            }
-        }).start();
+        this.resetGyro();
 
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.field = new Field2d();
@@ -113,8 +111,19 @@ public class SwerveSubsystem extends SubsystemBase {
         SmartDashboard.putData("Field", field);
     }
 
+    /**
+     * @return Returns the velocity of the robot's rotation
+     */
+    public double getTurnRate() {
+        return this.gyro.getAngularVelocityZWorld().getValueAsDouble();
+    }
+
+    /**
+     * Method used by choreo for following a path
+     * 
+     * @param sample
+     */
     public void followTrajectory(SwerveSample sample) {
-        System.out.println("Following Trajectory...");
         Pose2d pose = getPose();
 
         // Generate the next speeds for the robot
@@ -128,20 +137,28 @@ public class SwerveSubsystem extends SubsystemBase {
         setChassisSpeeds(speeds, false);
     }
 
+    /**
+     * Gives the swerve modules what their desired state should be
+     * 
+     * @param desiredSpeed The desired {@link edu.wpi.first.math.kinematics.ChassisSpeeds ChassisSpeeds} of swerve
+     * @param fieldRelative If the robot should drive field relative or not
+     */
     public void setChassisSpeeds(ChassisSpeeds desiredSpeed, boolean fieldRelative) {
+        // Make the speeds field relative if they should be field relative
         ChassisSpeeds speeds = (fieldRelative) ? ChassisSpeeds.fromFieldRelativeSpeeds(desiredSpeed, getRotation2d()) : desiredSpeed;
         //ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(desiredSpeed, getRotation2d());
 
-
+        // Get the states
         SwerveModuleState[] newStates = SwerveConstants.kDriveKinematics.toSwerveModuleStates(speeds);
-
         SwerveDriveKinematics.desaturateWheelSpeeds(newStates, this.maxSpeed);
 
+        // Set the states of the modules
         fl_module.setDesiredState(newStates[0]);
         fr_module.setDesiredState(newStates[1]);
         bl_module.setDesiredState(newStates[2]);
         br_module.setDesiredState(newStates[3]);
 
+        // Used for the publisher
         this.desiredStates = newStates;
     }
 
@@ -152,6 +169,13 @@ public class SwerveSubsystem extends SubsystemBase {
         br_module.runVolts(volts/2);
     }
 
+    /**
+     * Converts speeds into {@link edu.wpi.first.math.kinematics.ChassisSpeeds ChassisSpeeds}
+     * 
+     * @param xSpeed The speed of forward/backwards of the robot
+     * @param ySpeed The speed of left/right of the robot
+     * @param rot The speed of the robot's rotation
+     */
     public void drive(double xSpeed, double ySpeed, double rot) {
         ChassisSpeeds desiredSpeeds = new ChassisSpeeds(
             xSpeed,
@@ -159,17 +183,24 @@ public class SwerveSubsystem extends SubsystemBase {
             rot
         );
 
-        setChassisSpeeds(desiredSpeeds.times(this.speedMultiplier), true);
+        setChassisSpeeds(desiredSpeeds.times(this.speedMultiplier).times(SwerveConstants.TELEOPSPEEDMULTIPLIER), true);
     }
 
     public Pose2d getPose() {
-        return odometry.getPoseMeters();
+        return estimator.getEstimatedPosition();
+    }
+
+    public void addVisionMeasurement(Pose2d visionPose, double timestamp) {
+        estimator.addVisionMeasurement(visionPose, timestamp);
     }
 
     public void resetOdometry(Pose2d pose) {
-        odometry.resetPosition(getRotation2d(), getPositions(), pose);
+        estimator.resetPosition(getRotation2d(), getPositions(), pose);
     }
 
+    /**
+     * @return Puts the {@link edu.wpi.first.math.kinematics.SwerveModulePosition SwerveModulePositions} into an array
+     */
     private SwerveModulePosition[] getPositions() {
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
 
@@ -181,6 +212,11 @@ public class SwerveSubsystem extends SubsystemBase {
         return positions;
     }
 
+    /**
+     * Used for setting the speed multiplier of swerve (for slowing it down)
+     * 
+     * @param mult What should the multiplier be
+     */
     public void setSpeed(double mult) {
 
         this.speedMultiplier = FunctionUtilities.applyClamp(
@@ -191,15 +227,17 @@ public class SwerveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Run the modules periodics
         fl_module.periodic();
         fr_module.periodic();
         bl_module.periodic();
         br_module.periodic();
 
-        odometry.update(getRotation2d(), getPositions());
-
+        // Update the odometry and add to field
+        estimator.update(getRotation2d(), getPositions());
         this.field.setRobotPose(getPose());
 
+        // Get the states and send them with the publisher
         SwerveModuleState[] loggingStates = null;
 
         if (Robot.isSimulation()) {
@@ -214,19 +252,19 @@ public class SwerveSubsystem extends SubsystemBase {
     
     @Override
     public void initSendable(SendableBuilder builder) {
-        builder.addDoubleProperty("FL Module Setpoint", 
-            () -> fl_module.getTurningController().getSetpoint(),
+        builder.addDoubleProperty("FL Module Angle", 
+            () -> fl_module.getAbsoluteEncoderDeg(),
             null);
-        builder.addDoubleProperty("FR Module Setpoint", 
-            () -> fr_module.getTurningController().getSetpoint(),
+        builder.addDoubleProperty("FR Module Angle", 
+            () -> fr_module.getAbsoluteEncoderDeg(),
             null);
-        builder.addDoubleProperty("BL Module Setpoint", 
-            () -> bl_module.getTurningController().getSetpoint(),
+        builder.addDoubleProperty("BL Module Angle", 
+            () -> bl_module.getAbsoluteEncoderDeg(),
             null);
-        builder.addDoubleProperty("BR Module Setpoint", 
-            () -> br_module.getTurningController().getSetpoint(),
+        builder.addDoubleProperty("BR Module Angle", 
+            () -> br_module.getAbsoluteEncoderDeg(),
             null);
-        builder.addBooleanProperty("New Driver Mode", 
+        builder.addBooleanProperty("New Driver Mode",
             () -> this.maxSpeedMultiplier < 1 ? true : false,
             (boolean mult) -> this.setMaxSpeed(mult ? 0.5 : 1));
         builder.addDoubleProperty("Gyro", 
@@ -241,12 +279,20 @@ public class SwerveSubsystem extends SubsystemBase {
         return gyro.getRotation2d();
     }
 
+    /**
+     * Sets the max speed multiplier of swerve
+     * 
+     * @param mult The max value of the speed multiplier
+     */
     private void setMaxSpeed(double mult) {
         System.out.println(mult);
         this.maxSpeedMultiplier = mult;
         this.setSpeed(mult);
     }
 
+    /**
+     * @return P and D values of the swerve modules
+     */
     public double[] getPid() {
         PIDController turningController = fl_module.getTurningController();
         double[] pidValues = {turningController.getP(),turningController.getD()};
@@ -255,11 +301,21 @@ public class SwerveSubsystem extends SubsystemBase {
 
     }
 
+    /**
+     * Changes the P and D values of the swerve modules
+     * 
+     * @param pid The array used for setting P and D. Array is [pValue, dValue]
+     */
     public void setPid(double[] pid) {
         this.setTurningP(pid[0]);
         this.setTurningD(pid[1]);
     }
 
+    /**
+     * Sets the P value of the turning controller for the swerve modules
+     * 
+     * @param p value
+     */
     private void setTurningP(double p) {
         fl_module.setTurningControllerP(p);
         fr_module.setTurningControllerP(p);
@@ -267,6 +323,11 @@ public class SwerveSubsystem extends SubsystemBase {
         br_module.setTurningControllerP(p);
     }
 
+    /**
+     * Sets the D value of the turning controller for the swerve modules
+     * 
+     * @param d value
+     */
     private void setTurningD(double d) {
         fl_module.setTurningControllerD(d);
         fr_module.setTurningControllerD(d);
@@ -285,6 +346,9 @@ public class SwerveSubsystem extends SubsystemBase {
         gyro.reset();
     }
 
+    /**
+     * Used to reset the zeroes of the swerve modules
+     */
     public Command resetSwerveHeadings() {
         return Commands.runOnce(() -> {
             fl_module.resetEncoders();

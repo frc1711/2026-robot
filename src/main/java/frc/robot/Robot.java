@@ -4,7 +4,9 @@
 
 package frc.robot;
 
+import choreo.auto.AutoChooser;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 /**
@@ -14,8 +16,9 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  */
 public class Robot extends TimedRobot {
 
-  @SuppressWarnings("unused")
   private final RobotContainer robotContainer;
+
+  private final AutoChooser autoChooser;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -25,6 +28,16 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
+
+    this.autoChooser = new AutoChooser();
+
+    this.autoChooser.addCmd("Left Handed Auto", robotContainer.autons::leftHandedAuton);
+    this.autoChooser.addCmd("Right Handed Auto", robotContainer.autons::rightHandedAuton);
+    this.autoChooser.addCmd("Ambidextrious Auto", robotContainer.autons::ambidextriousAuton);
+
+    this.autoChooser.addRoutine("Fire and Ascent Auto", robotContainer.autons::fireAndAscentAuton);
+
+    SmartDashboard.putData(this.autoChooser);
   }
 
   /**
@@ -41,6 +54,8 @@ public class Robot extends TimedRobot {
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+
+    robotContainer.periodic();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
@@ -52,7 +67,9 @@ public class Robot extends TimedRobot {
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
-  public void autonomousInit() {}
+  public void autonomousInit() {
+    autoChooser.selectedCommandScheduler();
+  }
 
   /** This function is called periodically during autonomous. */
   @Override

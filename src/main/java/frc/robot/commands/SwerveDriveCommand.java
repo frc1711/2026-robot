@@ -2,11 +2,13 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
-import edu.wpi.first.math.util.Units;
+import org.opencv.core.Mat;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.util.FunctionUtilities;
 
 public class SwerveDriveCommand extends Command {
     private final DoubleSupplier xSupplier;
@@ -29,15 +31,15 @@ public class SwerveDriveCommand extends Command {
         double y = ySupplier.getAsDouble();
         double rotation = rotSupplier.getAsDouble();
 
-        x = Math.abs(x) > OperatorConstants.DEADBAND ? x : 0.0;
-        y = Math.abs(y) > OperatorConstants.DEADBAND ? y : 0.0;
-        rotation = Math.abs(rotation) > OperatorConstants.DEADBAND ? rotation : 0.0;
+        x = Math.signum(x) * Math.pow(FunctionUtilities.applyDeadband(x, OperatorConstants.DEADBAND), 2);
+        y = Math.signum(y) * Math.pow(FunctionUtilities.applyDeadband(y, OperatorConstants.DEADBAND), 2);
+        rotation = Math.signum(rotation) * Math.pow(FunctionUtilities.applyDeadband(rotation, OperatorConstants.DEADBAND), 2);
 
-        x *= swerve.maxSpeed * SwerveConstants.TELEOPSPEEDMULTIPLIER;
-        y *= swerve.maxSpeed * SwerveConstants.TELEOPSPEEDMULTIPLIER;
-        rotation *= swerve.maxSpeed  * SwerveConstants.TELEOPSPEEDMULTIPLIER;
+        x *= swerve.maxSpeed;
+        y *= swerve.maxSpeed;
+        rotation *= swerve.maxSpeed  * (Math.PI / 2);
 
-        //System.out.println("X: " + x + " Y: " + y + " Rotation: " + rotation);
+        System.out.println("X: " + x + " Y: " + y + " Rotation: " + rotation);
 
         swerve.drive(x, y, rotation);
     }
