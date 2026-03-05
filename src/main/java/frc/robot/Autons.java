@@ -61,8 +61,8 @@ public class Autons {
         return Commands.sequence(
             shooter.commands.shootVelocity(),
             new InstantCommand(() -> swerve.setChassisSpeeds(new ChassisSpeeds(
-                0,
                 -1,
+                0,
                 0
             ), false), swerve)
         );

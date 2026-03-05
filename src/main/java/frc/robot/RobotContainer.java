@@ -6,6 +6,7 @@ package frc.robot;
 
 import frc.robot.Constants.HighwayConstants;
 import frc.robot.Constants.IntakeConstants;
+import frc.robot.Constants.LedConstants;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TurretConstants;
@@ -21,21 +22,22 @@ import frc.robot.subsystems.Vision;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 public class RobotContainer {
 
   // Initializing the subsystems
-  private final Shooter shooter = new Shooter(ShooterConstants.TOPSHOOTERMOTORPORT, ShooterConstants.BOTTOMSHOOTERMOTORPORT);
-  private final SwerveSubsystem swerve = new SwerveSubsystem();
-  private final Highway highway = new Highway(HighwayConstants.HIGHWAYPORT);
-  private final Vision vision = new Vision();
+  public final Shooter shooter = new Shooter(ShooterConstants.TOPSHOOTERMOTORPORT, ShooterConstants.BOTTOMSHOOTERMOTORPORT);
+  public final SwerveSubsystem swerve = new SwerveSubsystem();
+  public final Highway highway = new Highway(HighwayConstants.HIGHWAYPORT, HighwayConstants.AGITATORPORT);
+  public final Vision vision = new Vision();
   public final Autons autons = new Autons(swerve, shooter, highway);
-  //private final LEDs leds1 = new LEDs(8,24);
-  //private final LEDs leds2 = new LEDs(9,24);
+  public final LEDs leds = new LEDs(LedConstants.CANDLEPORT, 8, 10);
   //private final Hood hood = new Hood(ShooterConstants.LEFTLINEARSERVOPORT, ShooterConstants.RIGHTLINEARSERVOPORT);
-  private final Turret turret = new Turret(TurretConstants.TURRETMOTORPORT, TurretConstants.ENCODERREVERSED);
-  private final Intake intake = new Intake(IntakeConstants.INTAKEPORT);
+  public final Turret turret = new Turret(TurretConstants.TURRETMOTORPORT, TurretConstants.ENCODERREVERSED);
+  public final Intake intake = new Intake(IntakeConstants.INTAKEPORT);
+  public final AdvancedCommands advancedCommands = new AdvancedCommands(this);
 
   private final CommandXboxController driverController = new CommandXboxController(OperatorConstants.DRIVERCONTROLLERPORT);
   private final CommandXboxController operatorController = new CommandXboxController(OperatorConstants.OPERATORCONTROLLERPORT);
@@ -50,6 +52,8 @@ public class RobotContainer {
 
     // Configure the controller bindings
     configureBindings();
+
+    this.leds.runSolid(this.leds.green());
   }
 
   /**
@@ -60,7 +64,7 @@ public class RobotContainer {
     //this.operatorController.povLeft().whileTrue(turret.commands.changeAngle(() -> 5));
     //this.operatorController.povRight().whileTrue(turret.commands.changeAngle(() -> -5));
     this.operatorController.rightTrigger().whileTrue(this.highway.commands.forward());
-    this.driverController.rightTrigger().whileTrue(this.intake.commands.intake(() -> 0.4));
+    this.driverController.rightTrigger().whileTrue(this.intake.commands.intake(() -> 0.65));
 
     swerve.setDefaultCommand(new SwerveDriveCommand(
       () -> -this.driverController.getLeftY(),

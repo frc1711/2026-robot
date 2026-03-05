@@ -11,6 +11,7 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TurretConstants;
 
 public class Turret extends SubsystemBase {
@@ -39,6 +40,8 @@ public class Turret extends SubsystemBase {
             Preferences.getDouble("TurretD", TurretConstants.TURRETD)
         );
 
+        this.anglePidController.setTolerance(0.05);
+
         this.anglePidController.setSetpoint(0);
         
         this.encoderReversed = encoderReversed;
@@ -50,14 +53,14 @@ public class Turret extends SubsystemBase {
      */
     public double getAngle() {
         double rotations = this.turretMotor.getPosition().getValueAsDouble();
-        double turretRotations = rotations * TurretConstants.TURRETGEARRATIO;
+        double turretRotations = rotations;
         Rotation2d angle = Rotation2d.fromRotations(turretRotations);
 
         if (encoderReversed) {
             angle = angle.unaryMinus();
         }
 
-        return angle.getRadians();
+        return angle.getRadians() * TurretConstants.TURRETGEARRATIO;
     }
 
     @Override
@@ -94,6 +97,10 @@ public class Turret extends SubsystemBase {
         );
     }
 
+    public boolean atSetpoint() {
+        return this.anglePidController.atSetpoint();
+    }
+
     public class Commands {
         /**
          * Increases the angle of the turret by the given value
@@ -105,6 +112,12 @@ public class Turret extends SubsystemBase {
                 () -> Turret.this.anglePidController.setSetpoint(Turret.this.anglePidController.getSetpoint() + Units.degreesToRadians(additionSupplier.getAsDouble()))
             ).finallyDo(
                 () -> {}
+            );
+        }
+
+        public Command moveTillZero(DoubleSupplier supplier) {
+            return Turret.this.run(
+                () -> this.changeAngle(() -> Units.degreesToRadians(Math.signum(supplier.getAsDouble()) * 2))
             );
         }
     }

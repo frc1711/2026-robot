@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -40,7 +39,6 @@ public class Intake extends SubsystemBase {
     }
 
     public void intake(double speed) {
-        System.out.println("Spinning");
         this.intakeMotor.set(speed);
     }
 

@@ -68,6 +68,8 @@ public final class Constants {
 
   public static class HighwayConstants {
     public static final int HIGHWAYPORT = 17;
+
+    public static final int AGITATORPORT = 21;
   }
 
   public static class IntakeConstants {
@@ -81,6 +83,10 @@ public final class Constants {
 
     public static final double INTAKEMOTORACCELERATION = 150;
     public static final double INTAKEMOTORJERK = 1500;
+  }
+
+  public static class LedConstants {
+    public static final int CANDLEPORT = 22;
   }
 
   public static class SwerveConstants {

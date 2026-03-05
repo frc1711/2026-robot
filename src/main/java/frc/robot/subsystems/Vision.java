@@ -16,12 +16,14 @@ public class Vision extends SubsystemBase {
 
     private int[] aprilTagFilter = null;
 
-    private int[] hubAprilTagFilter = {2,3,4,5,8,9,10,11,18,19,20,21,24,25,26,27};
+    public int[] hubAprilTagFilter = {2, 3, 5, 9, 18, 21, 26};
 
     public Vision() {}
 
     private final String[] limelights = {
-        "limelight-shooter" // IP: 10.17.11.11
+        "limelight-shooter", // IP: 10.17.11.11
+        "limelight-right", // IP: 10.17.11.12
+        "limelight-left" // IP: 10.17.11.13
     };
 
     public void applyAprilTagFilter(int[] filter) {
@@ -63,7 +65,18 @@ public class Vision extends SubsystemBase {
             distance += robotCenterToTargetMeters;
         }
 
-        return distance / limelights.length;
+        return distance;
+    }
+
+    public double getAngleFromHub() {
+        String ll = limelights[0];
+
+        if (LimelightHelpers.getTV(ll)) {
+            double horizontalAngleOffset = LimelightHelpers.getTX(ll);
+            return horizontalAngleOffset;
+        }
+
+        return 0;
     }
 
     public List<VisionMeasurement> getVisionMeasurements() {
