@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -12,214 +14,299 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.SwerveConstants;
+import frc.robot.configuration.RobotDimensions;
+import frc.robot.configuration.SwerveModuleConfiguration;
+import frc.robot.math.DoubleUtilities;
+
+import static edu.wpi.first.units.Units.*;
 
 public class SwerveModule {
+    
+    protected final SwerveModuleConfiguration configuration;
+    
     // Motors for the swerve module
-    private final TalonFX driveMotor;
-    private final TalonFX turningMotor;
+    protected final TalonFX driveMotor;
+    
+    protected final TalonFX turningMotor;
+    
+    protected final CANcoder steeringEncoder;
 
     // PID controller for turning and limiter for drive velocity
-    private final PIDController turningPidController;
-    private final SlewRateLimiter driveVelocityLimiter = new SlewRateLimiter(15, -20, 0);
+    protected final SlewRateLimiter driveVelocityLimiter = new SlewRateLimiter(15, -20, 0);
+    
+    protected LinearVelocity driveVelocitySetpoint;
+    
+    protected Angle steerAngleSetpoint;
 
-    // Encoder values
-    private final CANcoder absoluteEncoder;
-    private final boolean absoluteEncoderReversed;
-
-    private SwerveModuleState state;
-
-    private final int swerveID;
-
-    private final double driveRotationToMeter;
-    private final double driveMaxSpeed;
+    protected SwerveModuleState state;
 
     /**
      * Constructor method for the swerve subsystem
-     * 
-     * @param driveMotorId CAN ID of drive motor
-     * @param turningMotorId CAN ID of turning motor
-     * @param driveMotorReversed If the drive motor is reversed
-     * @param absoluteEncoderId CAN ID of the {@link com.ctre.phoenix6.hardware.CANcoder CANCoder}
-     * @param absoluteEncoderReversed If the {@link com.ctre.phoenix6.hardware.CANcoder CANCoder} is reversed
-     * @param swerveID Number used for identifying swerve module in preferences and the dashboard
-     * @param gearRatio The gear ratio of the drive motor (1, 2, or 3)
      */
-    public SwerveModule(int driveMotorId, int turningMotorId, boolean driveMotorReversed,
-            int absoluteEncoderId, boolean absoluteEncoderReversed, int swerveID, int gearRatio) {
-        this.swerveID = swerveID;
-
-        // Create and configure the absolute encoder
-        this.absoluteEncoderReversed = absoluteEncoderReversed;
-        this.absoluteEncoder = new CANcoder(absoluteEncoderId);
-        CANcoderConfiguration config = new CANcoderConfiguration();
-        config.MagnetSensor.MagnetOffset = Units.radiansToRotations(Preferences.getDouble("Module" + this.swerveID + "Zero", 0));
-        this.absoluteEncoder.getConfigurator().apply(config);
-
+    public SwerveModule(SwerveModuleConfiguration configuration) {
+        
+        this.configuration = configuration;
+        this.driveMotor = new TalonFX(this.configuration.driveMotorControllerCANDevice.id);
+        this.turningMotor = new TalonFX(this.configuration.steerMotorControllerCANDevice.id);
+        this.steeringEncoder = new CANcoder(this.configuration.steerEncoderCANDevice.id);
+        
+        this.driveVelocitySetpoint = InchesPerSecond.of(0);
+        this.steerAngleSetpoint = Degrees.of(0);
+        
         // Create and configure the drive and turn motors
-        this.driveMotor = new TalonFX(driveMotorId);
-        this.turningMotor = new TalonFX(turningMotorId);
-
-        this.driveMotor.getConfigurator().apply(getDriveConfig(driveMotorReversed));
-        this.turningMotor.getConfigurator().apply(getTurningConfig());
-
-        // Create pid controller for turning motor
-        this.turningPidController = new PIDController(
-            Preferences.getDouble("Module" + this.swerveID + "TurningP", SwerveConstants.SWERVETURNINGP),
-            0,
-            Preferences.getDouble("Module" + this.swerveID + "TurningD", SwerveConstants.SWERVETURNINGD)
-        );
-        this.turningPidController.enableContinuousInput(-Math.PI, Math.PI);
-        this.turningPidController.setTolerance(0.1);
-
-        // Based on gear ratio, make conversions the correct conversion
-        this.driveRotationToMeter = (gearRatio == 1) ? SwerveConstants.ROTATIONSTOMETERSR1 : (gearRatio == 2) ? SwerveConstants.ROTATIONSTOMETERSR2 : SwerveConstants.ROTATIONSTOMETERSR3;
-        this.driveMaxSpeed = (gearRatio == 1) ? SwerveConstants.PHYSICALMAXSPEEDMPERSECR1 : (gearRatio == 2) ? SwerveConstants.PHYSICALMAXSPEEDMPERSECR2 : SwerveConstants.PHYSICALMAXSPEEDMPERSECR3;
-
-        this.setDesiredState(new SwerveModuleState(0, Rotation2d.fromRadians(getAbsoluteEncoderRad())));
+        this.driveMotor.getConfigurator()
+            .apply(SwerveModule.getDriveMotorConfig());
+        this.turningMotor.getConfigurator()
+            .apply(SwerveModule.getTurningMotorConfig());
+        this.steeringEncoder.getConfigurator()
+            .apply(SwerveModule.getSteeringEncoderConfig());
+        
+        this.configuration.steerEncoderOffset
+            .useValue((double steerEncoderOffsetInRotations) -> {
+                
+                CANcoderConfiguration encoderConfig =
+                    SwerveModule.getSteeringEncoderConfig();
+                
+                encoderConfig.MagnetSensor.MagnetOffset =
+                    steerEncoderOffsetInRotations;
+                
+                this.steeringEncoder.getConfigurator().apply(encoderConfig);
+                
+            });
+        
     }
 
     /**
-     * @param reversed If the drive motor is reversed
      * @return The configuration to be applied to the drive motor
      */
-    private TalonFXConfiguration getDriveConfig(boolean reversed) {
+    protected static TalonFXConfiguration getDriveMotorConfig() {
+        
         TalonFXConfiguration config = new TalonFXConfiguration();
 
-        config.MotorOutput.Inverted = reversed ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         
         return config;
+        
     }
 
     /**
      * @return The configuration to be applied to the turning motor
      */
-    private TalonFXConfiguration getTurningConfig() {
+    protected static TalonFXConfiguration getTurningMotorConfig() {
+        
         TalonFXConfiguration config = new TalonFXConfiguration();
         
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        
         return config;
+        
     }
-
+    
+    protected static CANcoderConfiguration getSteeringEncoderConfig() {
+        
+        CANcoderConfiguration config = new CANcoderConfiguration();
+        
+        return config;
+        
+    }
+    
+    /**
+     * Returns the unique ID of this swerve module.
+     * 
+     * @return The unique ID of this swerve module.
+     */
+    public int getID() {
+        
+        return this.configuration.moduleID;
+        
+    }
+    
+    /**
+     * Returns the position of this swerve module, which consists of the
+     * distance the drive wheel has spun and the current heading of the steering
+     * motor.
+     * 
+     * @return The position of this swerve module.
+     */
+    public SwerveModulePosition getPosition() {
+        
+        return new SwerveModulePosition(
+            this.getDrivePosition(),
+            new Rotation2d(this.getSteeringHeading())
+        );
+        
+    }
+    
+    /**
+     * Returns the state of this swerve module, which consists of the surface
+     * speed of the drive wheel and the current heading of the steering motor.
+     * 
+     * @return The state of this swerve module.
+     */
+    public SwerveModuleState getState() {
+        
+        return new SwerveModuleState(
+            this.getVelocity(),
+            new Rotation2d(this.getSteeringHeading())
+        );
+        
+    }
+    
     /**
      * @return The amount the drive wheel has spun in meters
      */
-    public double getDrivePosition() {
-        return this.driveMotor.getPosition().getValueAsDouble() * this.driveRotationToMeter;
+    public Distance getDrivePosition() {
+        
+        return RobotDimensions.SWERVE_WHEEL_CIRCUMFERENCE.times(
+            this.configuration.gearRatio.convertMotorShaftThetaToWheelTheta(
+                this.driveMotor.getPosition().getValue()
+            ).in(Rotations)
+        );
+        
     }
-
+    
     /**
-     * @return What the current velocity of the drive motor is in m/s
+     * Returns the current heading of this swerve module, oriented in the
+     * standard FRC 'northwest-up' ('NWU') coordinate system.
+     *
+     * @return The current heading of this swerve module.
      */
-    public double getDriveVelocity() {
-        return this.driveMotor.getVelocity().getValueAsDouble() * this.driveRotationToMeter;
+    public Angle getSteeringHeading() {
+        
+        return Degrees.of(DoubleUtilities.normalizeToRange(
+            this.steeringEncoder.getAbsolutePosition().getValue().in(Degrees),
+            -180,
+            180
+        ));
+        
     }
-
+    
     /**
-     * @return What the absolute encoder is reading as the angle in degrees
+     * Calibrates the steering heading for this swerve module such that it will
+     * return the given angle in its current physical position after this method
+     * is called.
+     *
+     * @param currentHeading The heading to calibrate this swerve module at.
      */
-    public double getAbsoluteEncoderDeg() {
-        double rotations = absoluteEncoder.getAbsolutePosition().getValueAsDouble();
-        Rotation2d angle = Rotation2d.fromRotations(rotations);
-
-        if (absoluteEncoderReversed) {
-            angle = angle.unaryMinus();
-        }
-
-        return angle.getDegrees();
+    public void calibrateSteeringHeading(Angle currentHeading) {
+        
+        Angle existingOffset =
+            Rotations.of(this.configuration.steerEncoderOffset.get());
+        
+        this.configuration.steerEncoderOffset.set(
+            existingOffset
+                .minus(this.getSteeringHeading())
+                .minus(currentHeading)
+                .in(Rotations)
+        );
+        
     }
-
+    
     /**
-     * @return What the absolute encoder is reading as the angle in radians
+     * Calibrates the steering heading for this swerve module such that it will
+     * return 0 degrees in its current physical position after this method is
+     * called.
+     *
+     * @see #calibrateSteeringHeading(Angle)
      */
-    public double getAbsoluteEncoderRad() {
-        double rotations = absoluteEncoder.getAbsolutePosition().getValueAsDouble();
-        Rotation2d angle = Rotation2d.fromRotations(rotations);
-
-        if (absoluteEncoderReversed) {
-            angle = angle.unaryMinus();
-        }
-
-        return angle.getRadians();
+    public void calibrateSteeringHeading() {
+        
+        this.calibrateSteeringHeading(Degrees.of(0));
+        
     }
-
+    
     /**
-     * Resets the drive motor position and makes the current absolute encoder angle 0
-     */
-    public void resetEncoders() {
-        this.driveMotor.setPosition(0);
-
-        double offset = Rotation2d.fromRadians(Preferences.getDouble("Module" + this.swerveID + "Zero", 0)).minus(Rotation2d.fromRadians(getAbsoluteEncoderRad())).getRotations();
-        Preferences.setDouble("Module" + this.swerveID + "Zero", Rotation2d.fromRotations(offset).getRadians());
-        CANcoderConfiguration config = new CANcoderConfiguration();
-        config.MagnetSensor.MagnetOffset = offset;
-        this.absoluteEncoder.getConfigurator().apply(config);
-    }
-
-    /**
-     * @return The {@link edu.wpi.first.math.kinematics.SwerveModuleState SwerveModuleState} using the motor velocity and absolute encoder position
-     */
-    public SwerveModuleState getState() {
-        return new SwerveModuleState(getDriveVelocity(), Rotation2d.fromRadians(getAbsoluteEncoderRad()));
-    }
-
-    public void runVolts(double volts) {
-        this.driveMotor.setVoltage(volts);
-    }
-
-    public void periodic() {
-        // Add some speed limiting to the drive motor getting up to speed
-        double limitedSpeed = driveVelocityLimiter.calculate(this.state.speedMetersPerSecond);
-        this.driveMotor.set(limitedSpeed / this.driveMaxSpeed);
-
-        // Set the turning motor voltage to the pid controller output
-        this.turningMotor.setVoltage(this.turningPidController.calculate(getAbsoluteEncoderRad()));
-        SmartDashboard.putNumber(this.swerveID + " Velocity", this.getDriveVelocity());
-    }
-
-    /**
-     * Sets the current {@link edu.wpi.first.math.kinematics.SwerveModuleState SwerveModuleState} to the new desired state
+     * Returns the setpoint of the steering PID controller, which is the angle
+     * that the steering motor is trying to reach.
      * 
-     * @param desiredState The state to get the module to be at
+     * @return The setpoint of the steering PID controller.
      */
-    public void setDesiredState(SwerveModuleState desiredState) {
-        if (Math.abs(desiredState.speedMetersPerSecond) < 0.05) {
-            desiredState.speedMetersPerSecond = 0;
-        }
-        desiredState.optimize(getState().angle);
-        this.state = desiredState;
-        SmartDashboard.putNumber(this.swerveID+ " Velocity Setpoint", this.state.speedMetersPerSecond);
-        turningPidController.setSetpoint(this.state.angle.getRadians());
+    public Angle getSteeringHeadingSetpoint() {
+        
+        return this.steerAngleSetpoint;
+        
     }
-
-    public SwerveModulePosition getPosition() {
-        SwerveModulePosition position = new SwerveModulePosition(getDrivePosition(), Rotation2d.fromRadians(getAbsoluteEncoderRad()));
-        return position;
+    
+    /**
+     * Returns a measurement of the error between the current steering heading
+     * and the setpoint of the steering PID controller.
+     *
+     * @return A measurement of the error between the current steering heading
+     * and the setpoint of the steering PID controller.
+     */
+    public Angle getSteeringHeadingError() {
+        
+        Angle steerHeadingError = this.getSteeringHeading()
+            .minus(this.getSteeringHeadingSetpoint());
+        
+        return Degrees.of(DoubleUtilities.normalizeToRange(
+            steerHeadingError.in(Degrees),
+            -180,
+            180
+        ));
+        
     }
-
-    public void stop() {
-        this.driveMotor.set(0);
-        this.turningMotor.set(0);
+    
+    /**
+     * Returns the current surface speed of the drive wheel.
+     * 
+     * @return The current surface speed of the drive wheel.
+     */
+    public LinearVelocity getVelocity() {
+        
+        AngularVelocity motorShaftAngularVelocity =
+            this.driveMotor.getVelocity().getValue();
+        
+        return this.configuration.gearRatio
+            .withMotorShaftAngularVelocity(motorShaftAngularVelocity)
+            .getWheelSurfaceSpeed();
+        
     }
-
-    public int getSwerveID() {
-        return this.swerveID;
+    
+    /**
+     * Returns the setpoint of the drive motor's velocity controller, which is
+     * the surface speed that the drive wheel is trying to reach.
+     * 
+     * @return The setpoint of the drive motor's velocity controller.
+     */
+    public LinearVelocity getVelocitySetpoint() {
+        
+        return this.driveVelocitySetpoint;
+        
     }
-
-    public PIDController getTurningController() {
-        return this.turningPidController;
+    
+    public void updateModuleState(SwerveModuleState newState) {
+        
+        Rotation2d currentSteeringHeading =
+            new Rotation2d(this.getSteeringHeading());
+        
+        newState.optimize(currentSteeringHeading);
+        
+        // Perform cosine speed compensation.
+        newState.speedMetersPerSecond *=
+            newState.angle.minus(currentSteeringHeading).getCos();
+        
+        this.steerAngleSetpoint = newState.angle.getMeasure();
+        this.driveVelocitySetpoint =
+            MetersPerSecond.of(newState.speedMetersPerSecond);
+        
+        this.turningMotor.setControl(
+            new MotionMagicVoltage(this.steerAngleSetpoint)
+        );
+        
+        this.driveMotor.setControl(new MotionMagicVelocityVoltage(
+            this.configuration.gearRatio
+                .withWheelSurfaceSpeed(this.driveVelocitySetpoint)
+                .getMotorShaftAngularVelocity()
+        ));
+        
     }
-
-    public void setTurningControllerP(double p) {
-        Preferences.setDouble("Module" + swerveID + "TurningP", p);
-        this.turningPidController.setP(p);
-    }
-
-    public void setTurningControllerD(double d) {
-        Preferences.setDouble("Module" + swerveID + "TurningD", d);
-        this.turningPidController.setD(d);
-    }
+    
 }

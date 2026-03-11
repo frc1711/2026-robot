@@ -1,140 +1,365 @@
 package frc.robot.subsystems;
 
-import java.util.function.DoubleSupplier;
-
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.TurretConstants;
+import frc.robot.configuration.CANDevice;
+import frc.robot.state.TurretHeading;
+import frc.robot.state.TurretPitch;
+import frc.robot.state.TurretWheelSpeeds;
+
+import static edu.wpi.first.units.Units.*;
 
 public class Turret extends SubsystemBase {
     
-    private final TalonFX turretMotor;
+    protected static final AngleUnit DEFAULT_HEADING_UNITS = Degrees;
+    
+    protected static final AngleUnit DEFAULT_PITCH_UNITS = Degrees;
+    
+    protected static final Angle DEFAULT_HEADING_TOLERANCE = Degrees.of(1);
+    
+    protected static final Angle DEFAULT_PITCH_TOLERANCE = Degrees.of(1);
+    
+    protected final TalonFX lowerWheelMotor;
+    
+    protected final TalonFX upperWheelMotor;
+    
+    protected final TalonFX headingMotor;
 
-    private final PIDController anglePidController;
+    public final Commands commands;
+    
+    public final Triggers triggers;
 
-    private final boolean encoderReversed;
-
-    public final Commands commands = new Commands();
-
-    /**
-     * The constructor method for the turret subsystem
-     * 
-     * @param turretID The CAN ID of the turret motor
-     * @param encoderReversed If the encoder should be reversed
-     */
-    public Turret(int turretID, boolean encoderReversed) {
-        // Initializations
-        this.turretMotor = new TalonFX(turretID);
-
-        this.anglePidController = new PIDController(
-            Preferences.getDouble("TurretP", TurretConstants.TURRETP),
-            0,
-            Preferences.getDouble("TurretD", TurretConstants.TURRETD)
-        );
-
-        this.anglePidController.setTolerance(0.05);
-
-        this.anglePidController.setSetpoint(0);
+    public Turret() {
         
-        this.encoderReversed = encoderReversed;
+        this.lowerWheelMotor = new TalonFX(CANDevice.TURRET_LOWER_WHEEL_MOTOR_CONTROLLER.id);
+        this.upperWheelMotor = new TalonFX(CANDevice.TURRET_UPPER_WHEEL_MOTOR_CONTROLLER.id);
+        this.headingMotor = new TalonFX(CANDevice.TURRET_HEADING_MOTOR_CONTROLLER.id);
+        this.commands = new Commands();
+        this.triggers = new Triggers();
+        
+        this.lowerWheelMotor.getConfigurator().apply(Turret.getLowerWheelMotorConfig());
+        this.upperWheelMotor.getConfigurator().apply(Turret.getUpperWheelMotorConfig());
+        this.headingMotor.getConfigurator().apply(Turret.getHeadingMotorConfiguration());
+        
     }
+    
+    protected static TalonFXConfiguration getLowerWheelMotorConfig() {
+        
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        
+        config.Slot0.kS = 0.25;
+        config.Slot0.kV = 0.12;
+        config.Slot0.kA = 0.01;
+        config.Slot0.kP = 0.11;
+        
+        config.MotionMagic.MotionMagicAcceleration = 400;
+        config.MotionMagic.MotionMagicJerk = 4000;
+        
+        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 1;
 
-    /**
-     * 
-     * @return The angle of the turret in radians
-     */
-    public double getAngle() {
-        double rotations = this.turretMotor.getPosition().getValueAsDouble();
-        double turretRotations = rotations / TurretConstants.TURRETGEARRATIO;
-        Rotation2d angle = Rotation2d.fromRotations(turretRotations);
-
-        if (encoderReversed) {
-            angle = angle.unaryMinus();
-        }
-
-        return angle.getRadians() * TurretConstants.TURRETGEARRATIO;
+//    config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+        
+        return config;
     }
+    
+    protected static TalonFXConfiguration getUpperWheelMotorConfig() {
+        
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        
+        config.Slot0.kS = 0.25;
+        config.Slot0.kV = 0.12;
+        config.Slot0.kA = 0.01;
+        config.Slot0.kP = 0.11;
+        
+        config.MotionMagic.MotionMagicAcceleration = 400;
+        config.MotionMagic.MotionMagicJerk = 4000;
 
-    @Override
-    public void periodic() {
-        // Gets the pid controller's output
-        double currentAngle = this.getAngle();
-        double calculatedOutput = this.anglePidController.calculate(currentAngle);
-
-        // Makes sure the turret doesn't over extend
-        boolean overrun = (
-            (calculatedOutput < 0 && currentAngle < TurretConstants.TURRETMINANGLE) ||
-            (calculatedOutput > 0 && currentAngle > TurretConstants.TURRETMAXANGLE)
+//    config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+        
+        return config;
+        
+    }
+    
+    protected static TalonFXConfiguration getHeadingMotorConfiguration() {
+        
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        
+        config.Slot0.kS = 0.1;
+        config.Slot0.kV = 1;
+        config.Slot0.kP = 0.5;
+        config.Slot0.kI = 0;
+        config.Slot0.kD = 0;
+        
+        config.MotionMagic.MotionMagicCruiseVelocity = 25;
+        config.MotionMagic.MotionMagicAcceleration = 25;
+        config.MotionMagic.MotionMagicJerk = 1000;
+        
+        return config;
+        
+    }
+    
+    public TurretWheelSpeeds getWheelSpeeds() {
+        
+        return new TurretWheelSpeeds(
+            this.lowerWheelMotor.getVelocity().asSupplier(),
+            this.upperWheelMotor.getVelocity().asSupplier()
         );
-
-        // Sets the correct voltage for the motor
-        double finalOutput = overrun ? 0 : calculatedOutput;
-        this.turretMotor.setVoltage(finalOutput);
+        
     }
-
+    
+    public void setWheelSpeeds(TurretWheelSpeeds wheelSpeeds) {
+        
+        this.lowerWheelMotor.setControl(new MotionMagicVelocityVoltage(
+            wheelSpeeds.getLowerWheelMotorShaftAngularVelocity()
+        ));
+        
+        this.upperWheelMotor.setControl(new MotionMagicVelocityVoltage(
+            wheelSpeeds.getUpperWheelMotorShaftAngularVelocity()
+        ));
+        
+    }
+    
+    public void stopWheels() {
+        
+        this.lowerWheelMotor.stopMotor();
+        this.upperWheelMotor.stopMotor();
+        
+    }
+    
+    public TurretHeading getHeading() {
+        
+        return TurretHeading.fromMotorShaftAngle(
+            this.headingMotor.getPosition().getValue()
+        );
+        
+    }
+    
+    public void goToHeading(TurretHeading heading) {
+        
+        this.headingMotor.setControl(new MotionMagicVoltage(
+            heading.getMotorShaftAngle()
+        ));
+        
+    }
+    
+    public TurretPitch getPitch() {
+        
+        return TurretPitch.ZERO_POSITION;
+        
+    }
+    
+    public void goToPitch(TurretPitch pitch) {
+        
+        // not yet implemented -- no pitch adjustment available yet
+        
+    }
+    
     @Override
     public void initSendable(SendableBuilder builder) {
+        
         builder.addDoubleProperty(
-            "Turret Angle",
-            () -> Units.radiansToDegrees(getAngle()),
-            (double angle) -> this.anglePidController.setSetpoint(Units.degreesToRadians(angle))
+            "Turret Lower Wheel Speed (RPS)",
+            () -> this.getWheelSpeeds().getLowerWheelAngularVelocity().in(RotationsPerSecond),
+            (double rotationsPerSecond) -> this.setWheelSpeeds(new TurretWheelSpeeds(
+                () -> RotationsPerSecond.of(rotationsPerSecond),
+                this.getWheelSpeeds()::getUpperWheelAngularVelocity
+            ))
         );
-        builder.addDoubleArrayProperty(
-            "Turret PID", 
-            () -> new double[]{this.anglePidController.getP(), this.anglePidController.getD()}, 
-            (double[] pd) -> {
-                this.anglePidController.setP(pd[0]);
-                this.anglePidController.setD(pd[1]);
-            }
+        
+        builder.addDoubleProperty(
+            "Turret Upper Wheel Speed (RPS)",
+            () -> this.getWheelSpeeds().getUpperWheelAngularVelocity().in(RotationsPerSecond),
+            (double rotationsPerSecond) -> this.setWheelSpeeds(new TurretWheelSpeeds(
+                this.getWheelSpeeds()::getLowerWheelAngularVelocity,
+                () -> RotationsPerSecond.of(rotationsPerSecond)
+            ))
         );
-    }
-
-    public boolean atSetpoint() {
-        return this.anglePidController.atSetpoint();
+        
+        builder.addDoubleProperty(
+            "Turret Lower Wheel Surface Speed (ft/s)",
+            () -> this.getWheelSpeeds().getLowerWheelSurfaceSpeed().in(FeetPerSecond),
+            (double feetPerSecond) -> this.setWheelSpeeds(TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+                FeetPerSecond.of(feetPerSecond),
+                this.getWheelSpeeds().getUpperWheelSurfaceSpeed()
+            ))
+        );
+        
+        builder.addDoubleProperty(
+            "Turret Upper Wheel Surface Speed (ft/s)",
+            () -> this.getWheelSpeeds().getUpperWheelSurfaceSpeed().in(FeetPerSecond),
+            (double feetPerSecond) -> this.setWheelSpeeds(TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+                this.getWheelSpeeds().getLowerWheelSurfaceSpeed(),
+                FeetPerSecond.of(feetPerSecond)
+            ))
+        );
+        
+        builder.addDoubleProperty(
+            "Turret Heading (Degrees)",
+            () -> this.getHeading().getHeading().in(Turret.DEFAULT_HEADING_UNITS),
+            (double angle) -> this.goToHeading(
+                TurretHeading.fromHeading(Turret.DEFAULT_HEADING_UNITS.of(angle))
+            )
+        );
+        
+        builder.addDoubleProperty(
+            "Turret Pitch (Degrees)",
+            () -> this.getPitch().getPitch().in(Turret.DEFAULT_PITCH_UNITS),
+            (double angle) -> this.goToPitch(
+                TurretPitch.fromPitch(Turret.DEFAULT_PITCH_UNITS.of(angle))
+            )
+        );
+        
+//        builder.addDoubleArrayProperty(
+//            "Turret PID", 
+//            () -> new double[]{this.anglePidController.getP(), this.anglePidController.getD()}, 
+//            (double[] pd) -> {
+//                this.anglePidController.setP(pd[0]);
+//                this.anglePidController.setD(pd[1]);
+//            }
+//        );
+        
     }
 
     public class Commands {
-        /**
-         * Increases the angle of the turret by the given value
-         * 
-         * @param additionSupplier The {@link java.util.function.DoubleSupplier DoubleSupplier} method for getting the increase in the angle, which should be in degrees
-         */
-        public Command changeAngle(DoubleSupplier additionSupplier) {
-            return Turret.this.run(
-                () -> Turret.this.anglePidController.setSetpoint(Turret.this.anglePidController.getSetpoint() + Units.degreesToRadians(additionSupplier.getAsDouble()))
-            ).finallyDo(
-                () -> {}
-            );
-        }
-
-        public Command trackWithVision(Vision vision) {
+        
+        public Command shoot(TurretWheelSpeeds wheelSpeeds) {
+            
             return Turret.this.startEnd(
-                () -> {
-                    String ll = vision.getLimelights()[0];
-
-                    if (!vision.hasTarget(ll)) return;
-
-                    double txDegrees = vision.getAngleFromHub();
-                    if (Math.abs(txDegrees) < 0.3) return;
-                    double txRadians = Units.degreesToRadians(txDegrees);
-                    
-
-                    double turretAngle = Turret.this.getAngle();
-
-                    double targetAngle = turretAngle - txRadians;
-
-                    Turret.this.anglePidController.setSetpoint(targetAngle);
-                },
-                () -> {}
+                () -> Turret.this.setWheelSpeeds(wheelSpeeds),
+				Turret.this::stopWheels
             );
+            
         }
+        
+        public Command adjustHeading(double speed) {
+            
+            return Turret.this.startEnd(
+                () -> Turret.this.headingMotor.set(speed),
+                Turret.this.headingMotor::stopMotor
+            );
+            
+        }
+        
+        public Command goToHeading(TurretHeading heading, Angle tolerance) {
+            
+            return Turret.this.runOnce(() -> Turret.this.goToHeading(heading))
+                .andThen(this.waitUntilAtHeading(heading, tolerance));
+            
+        }
+        
+        public Command goToHeading(TurretHeading heading) {
+            
+            return this.goToHeading(heading, Turret.DEFAULT_HEADING_TOLERANCE);
+            
+        }
+        
+        public Command waitUntilAtHeading(
+            TurretHeading heading,
+            Angle tolerance
+        ) {
+            
+            return edu.wpi.first.wpilibj2.command.Commands.waitUntil(
+                Turret.this.triggers.isAtHeading(heading, tolerance)
+            );
+            
+        }
+        
+        public Command waitUntilAtHeading(TurretHeading heading) {
+            
+            return edu.wpi.first.wpilibj2.command.Commands.waitUntil(
+                Turret.this.triggers.isAtHeading(heading)
+            ); 
+            
+        }
+        
+//        public Command adjustPitch(double speed) {
+//            
+//            return Turret.this.startEnd(
+//                () -> Turret.this.
+//            )
+//
+//        }
+        
+        public Command goToPitch(TurretPitch pitch, Angle tolerance) {
+            
+            return Turret.this.runOnce(() -> Turret.this.goToPitch(pitch))
+                .andThen(this.waitUntilAtPitch(pitch, tolerance));
+            
+        }
+        
+        public Command goToPitch(TurretPitch pitch) {
+            
+            return this.goToPitch(pitch, Turret.DEFAULT_PITCH_TOLERANCE);
+            
+        }
+        
+        public Command waitUntilAtPitch(TurretPitch pitch, Angle tolerance) {
+            
+            return edu.wpi.first.wpilibj2.command.Commands.waitUntil(
+                Turret.this.triggers.isAtPitch(pitch, tolerance)
+            );
+            
+        }
+        
+        public Command waitUntilAtPitch(TurretPitch pitch) {
+            
+            return edu.wpi.first.wpilibj2.command.Commands.waitUntil(
+                Turret.this.triggers.isAtPitch(pitch)
+            );
+            
+        }
+        
+    }
+    
+    public class Triggers {
+        
+        public Trigger isAtHeading(TurretHeading heading, Angle tolerance) {
+            
+            return new Trigger(() ->
+                Turret.this.getHeading().getHeading().isNear(
+                    heading.getHeading(),
+                    tolerance
+                )
+            );
+            
+        }
+        
+        public Trigger isAtHeading(TurretHeading heading) {
+            
+            return this.isAtHeading(heading, Turret.DEFAULT_HEADING_TOLERANCE);
+            
+        }
+        
+        public Trigger isAtPitch(TurretPitch pitch, Angle tolerance) {
+            
+            return new Trigger(() ->
+                Turret.this.getPitch().getPitch().isNear(
+                    pitch.getPitch(),
+                    tolerance
+                )
+            );
+            
+        }
+        
+        public Trigger isAtPitch(TurretPitch pitch) {
+            
+            return this.isAtPitch(pitch, Turret.DEFAULT_PITCH_TOLERANCE);
+            
+        }
+        
     }
 }

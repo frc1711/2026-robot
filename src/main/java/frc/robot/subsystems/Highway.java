@@ -4,23 +4,26 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.configuration.CANDevice;
 
 public class Highway extends SubsystemBase {
-    private final TalonFX highwayMotor;
-    private final TalonFX agitatorOfDoomMotor;
+    
+    protected final TalonFX highwayMotor;
+    
+    protected final TalonFX agitatorOfDoomMotor;
 
     public final Commands commands = new Commands();
 
-    public Highway(int highwayID, int agitatorID) {
-        this.highwayMotor = new TalonFX(highwayID);
-        this.agitatorOfDoomMotor = new TalonFX(agitatorID);
+    public Highway() {
+        this.highwayMotor = new TalonFX(CANDevice.INDEXER_MOTOR_CONTROLLER.id);
+        this.agitatorOfDoomMotor = new TalonFX(21);
     }
 
     private void setSpeed(double speed) {
         this.highwayMotor.set(-speed);
         this.agitatorOfDoomMotor.set(speed);
     }
-
+    
     public class Commands {
         public Command forward() {
             return Highway.this.startEnd(

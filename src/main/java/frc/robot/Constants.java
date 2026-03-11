@@ -91,8 +91,8 @@ public final class Constants {
 
   public static class SwerveConstants {
     public static final double WHEELDIAMETERMETERS = Units.inchesToMeters(4);
-    public static final double WHEELBASELENGTH = Units.inchesToMeters(27.125);
-    public static final double WHEELBASEWIDTH = Units.inchesToMeters(16);
+    public static final double WHEELBASELENGTH = Units.inchesToMeters(16);
+    public static final double WHEELBASEWIDTH = Units.inchesToMeters(27.125);
 
     public static final double SWERVETURNINGP = 2.5;
     public static final double SWERVETURNINGI = 0;
