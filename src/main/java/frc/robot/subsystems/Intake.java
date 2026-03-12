@@ -8,16 +8,18 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.state.IntakePosition;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.*;
 
 public class Intake extends SubsystemBase {
+    
+    protected static final Current MINIMUM_STALL_DETECTION_CURRENT = Amps.of(20);
     
     protected TalonFX leftExtensionMotor;
     
@@ -101,6 +103,19 @@ public class Intake extends SubsystemBase {
             Intake.this.extensionRequest.withPosition(
                 position.getMotorShaftAngle()
             )
+        );
+        
+    }
+    
+    public boolean isStalling() {
+        
+        return (
+            Intake.this.leftExtensionMotor.getSupplyCurrent()
+                .getValue()
+                .gte(Intake.MINIMUM_STALL_DETECTION_CURRENT) ||
+            Intake.this.rightExtensionMotor.getSupplyCurrent()
+                .getValue()
+                .gte(Intake.MINIMUM_STALL_DETECTION_CURRENT)
         );
         
     }
@@ -189,6 +204,12 @@ public class Intake extends SubsystemBase {
                 position.getOffsetFromFullyStowed(),
                 tolerance
             ));
+            
+        }
+        
+        public Trigger isStalling() {
+            
+            return new Trigger(Intake.this::isStalling);
             
         }
         
