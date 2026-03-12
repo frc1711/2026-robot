@@ -1,15 +1,20 @@
 package frc.robot.configuration;
 
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 
-import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Millimeters;
+import static edu.wpi.first.units.Units.*;
 
 public class RobotDimensions {
-
-    public static final Distance SWERVE_LR_WHEELBASE_DISTANCE = Inches.of(27.125);
     
-    public static final Distance SWERVE_FR_WHEELBASE_DISTANCE = Inches.of(16);
+    public static final AngularVelocity KRAKEN_X60_MAX_FREE_SPEED =
+        Rotations.per(Minute).of(5800);
+
+    public static final Distance SWERVE_LR_WHEELBASE_DISTANCE = Inches.of(27.0825);
+    
+    public static final Distance SWERVE_FR_WHEELBASE_DISTANCE = Inches.of(16.0825);
+    
+    public static final int SWERVE_STEERING_GEAR_RATIO = 26;
     
     public static final int SWERVE_DRIVE_S1_R1_DRIVING_TOOTH_COUNT = 12;
     
