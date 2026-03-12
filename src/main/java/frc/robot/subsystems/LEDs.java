@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.configuration.CANDevice;
 
 public class LEDs extends SubsystemBase {
 	//private final AddressableLED leds;
@@ -25,8 +26,8 @@ public class LEDs extends SubsystemBase {
 	private final int startNumber;
 	private final int endNumber;
 	
-	public LEDs(int candlePort, int startCount, int endCount) {
-		this.candle = new CANdle(candlePort);
+	public LEDs(int startCount, int endCount) {
+		this.candle = new CANdle(CANDevice.CANDLE.id);
 		
 		this.startNumber = startCount;
 		this.endNumber = endCount;

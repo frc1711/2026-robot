@@ -13,6 +13,7 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.configuration.CANDevice;
 import frc.robot.state.IntakePosition;
 
 import static edu.wpi.first.units.Units.*;
@@ -35,9 +36,9 @@ public class Intake extends SubsystemBase {
 
     public Intake() {
         
-        this.leftExtensionMotor = new TalonFX(24);
-        this.rightExtensionMotor = new TalonFX(19);
-        this.rollerMotor = new TalonFX(20);
+        this.leftExtensionMotor = new TalonFX(CANDevice.INTAKE_LEFT_EXTENSION_MOTOR_CONTROLLER.id);
+        this.rightExtensionMotor = new TalonFX(CANDevice.INTAKE_RIGHT_EXTENSION_MOTOR_CONTROLLER.id);
+        this.rollerMotor = new TalonFX(CANDevice.INTAKE_ROLLER_MOTOR_CONTROLLER.id);
         this.extensionRequest = new MotionMagicVoltage(Rotations.zero());
         this.commands = new Commands();
         this.triggers = new Triggers();
