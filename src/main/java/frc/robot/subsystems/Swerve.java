@@ -181,6 +181,7 @@ public class Swerve extends SubsystemBase {
             
             return Swerve.this
                 .runOnce(() -> Swerve.this.getModuleStream().forEach(SwerveModule::calibrateSteeringHeading))
+                .andThen(new LogCommand("Swerve module steering headings calibrated."))
                 .withName("Calibrate Swerve Module Steering Headings")
                 .ignoringDisable(true);
             
@@ -196,6 +197,7 @@ public class Swerve extends SubsystemBase {
             
             return Swerve.this
                 .runOnce(() -> Swerve.this.calibrateFieldRelativeHeading(currentHeading))
+                .andThen(new LogCommand("Swerve field-relative heading calibrated."))
                 .withName("Calibrate Swerve Field-relative Heading")
                 .ignoringDisable(true);
             
