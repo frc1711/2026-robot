@@ -5,7 +5,6 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.SwerveDriveCommand;
 import frc.robot.input.InputScheme;
 import frc.robot.input.inputschemes.StandardTeleoperativeInputsScheme;
 import frc.robot.subsystems.*;
@@ -51,13 +50,6 @@ public class RobotContainer {
         this.driverController,
         this.operatorController
     );
-    
-    swerve.setDefaultCommand(new SwerveDriveCommand(
-      () -> -this.driverController.getLeftY(),
-      () -> -this.driverController.getLeftX(),
-      () -> -this.driverController.getRightX(),
-      swerve
-    ));
     
   }
 
