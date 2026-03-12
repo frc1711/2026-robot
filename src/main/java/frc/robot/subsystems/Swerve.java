@@ -175,6 +175,12 @@ public class Swerve extends SubsystemBase {
         
     }
     
+    public Angle getFieldRelativeHeading() {
+        
+        return this.gyro.yaw.getAngle();
+        
+    }
+    
     public void setFieldRelativeHeadingSetpoint(Angle heading) {
 
 //        Pose2d existingPose = this.odometry.getPose();
@@ -183,6 +189,24 @@ public class Swerve extends SubsystemBase {
 
 //        this.odometry.resetPose(existingPose);
 
+    }
+    
+    public LinearVelocity getLinearVelocity() {
+        
+        ChassisSpeeds actualChassisSpeeds = this.getActualChassisSpeeds();
+        Translation2d speedsTranslation = new Translation2d(
+            actualChassisSpeeds.vxMetersPerSecond,
+            actualChassisSpeeds.vyMetersPerSecond
+        );
+        
+        return MetersPerSecond.of(speedsTranslation.getNorm());
+        
+    }
+    
+    public AngularVelocity getAngularVelocity() {
+        
+        return this.gyro.getYawAngularVelocity();
+        
     }
     
     @Override
