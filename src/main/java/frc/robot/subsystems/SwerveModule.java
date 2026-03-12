@@ -309,4 +309,58 @@ public class SwerveModule {
         
     }
     
+    public void addSendableFields(SendableBuilder builder, String moduleName) {
+        
+        builder.addDoubleProperty(
+            moduleName + " Angle",
+            () -> this.getSteeringHeading().in(Degrees),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            moduleName + " Angle Setpoint",
+            () -> this.getSteeringHeadingSetpoint().in(Degrees),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            moduleName + " Steering Speed (RPS)",
+            () -> this.steeringEncoder.getVelocity().getValue().in(RotationsPerSecond),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            moduleName + " Velocity",
+            () -> this.getVelocity().in(MetersPerSecond),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            moduleName + " Velocity (inches per second)",
+            () -> this.getVelocity().in(InchesPerSecond),
+            null
+        );
+        
+        LinearFilter velocityFilter = LinearFilter.movingAverage(5);
+        
+        builder.addDoubleProperty(
+            moduleName + " Velocity Avg. (inches per second)",
+            () -> velocityFilter.calculate(this.getVelocity().in(InchesPerSecond)),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            moduleName + " Velocity Setpoint (inches per second)",
+            () -> this.getVelocitySetpoint().in(InchesPerSecond),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            moduleName + " Velocity Error (inches per second)",
+            () -> this.getVelocity().minus(this.getVelocitySetpoint()).in(InchesPerSecond),
+            null
+        );
+        
+    }
+    
 }
