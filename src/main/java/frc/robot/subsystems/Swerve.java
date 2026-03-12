@@ -51,9 +51,9 @@ public class Swerve extends SubsystemBase {
     
     protected double speedMultiplier;
     
-    protected Supplier<Angle> headingLockSupplier;
-    
     protected ChassisSpeeds chassisSpeeds;
+    
+    public Supplier<Angle> headingLockSupplier;
     
     public final Commands commands;
 
@@ -70,8 +70,8 @@ public class Swerve extends SubsystemBase {
                 .toArray(Translation2d[]::new)
         );
         this.speedMultiplier = 1;
-        this.headingLockSupplier = null;
         this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
+        this.headingLockSupplier = null;
         this.commands = new Commands();
         
 //        this.resetGyro();
@@ -94,9 +94,39 @@ public class Swerve extends SubsystemBase {
         
     }
     
+    public SwerveDriveKinematics getKinematics() {
+        
+        return this.kinematics;
+        
+    }
+    
+    public ChassisSpeeds getActualChassisSpeeds() {
+        
+        return this.kinematics.toChassisSpeeds(
+            this.getModuleStream()
+                .map(SwerveModule::getState)
+                .toArray(SwerveModuleState[]::new)
+        );
+        
+    }
+    
     public void setDriveSpeedMultiplier(double speedMultiplier) {
         
         this.speedMultiplier = MathUtil.clamp(speedMultiplier, 0, 1);
+        
+    }
+    
+    public void setDriveMotorIdleState(NeutralModeValue neutralMode) {
+        
+        this.getModuleStream().forEach(module -> {
+            
+            TalonFXConfiguration config = module.getDriveMotorConfig();
+            
+            config.MotorOutput.NeutralMode = neutralMode;
+            
+            module.driveMotor.getConfigurator().apply(config);
+            
+        });
         
     }
     
@@ -108,29 +138,9 @@ public class Swerve extends SubsystemBase {
         
     }
     
-    public SwerveDriveKinematics getKinematics() {
-        
-        return this.kinematics;
-        
-    }
-    
     public void stop() {
         
         this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
-        
-    }
-    
-    public void setDriveMotorIdleState(NeutralModeValue neutralMode) {
-        
-        this.getModuleStream().forEach(module -> {
-            
-            TalonFXConfiguration config = SwerveModule.getDriveMotorConfig();
-            
-            config.MotorOutput.NeutralMode = neutralMode;
-            
-            module.driveMotor.getConfigurator().apply(config);
-            
-        });
         
     }
     
@@ -187,12 +197,6 @@ public class Swerve extends SubsystemBase {
             
         }
         
-        public Command calibrateFieldRelativeHeading() {
-            
-            return this.calibrateFieldRelativeHeading(Degrees.of(0));
-            
-        }
-        
         public Command calibrateFieldRelativeHeading(Angle currentHeading) {
             
             return Swerve.this
@@ -200,6 +204,12 @@ public class Swerve extends SubsystemBase {
                 .andThen(new LogCommand("Swerve field-relative heading calibrated."))
                 .withName("Calibrate Swerve Field-relative Heading")
                 .ignoringDisable(true);
+            
+        }
+        
+        public Command calibrateFieldRelativeHeading() {
+            
+            return this.calibrateFieldRelativeHeading(Degrees.of(0));
             
         }
         
