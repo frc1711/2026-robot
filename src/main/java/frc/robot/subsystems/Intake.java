@@ -149,12 +149,17 @@ public class Intake extends SubsystemBase {
         
         public Command pulse() {
             
-            IntakePosition innerPosition = new IntakePosition(Inches.of(5));
+            IntakePosition innerPosition = IntakePosition.FULLY_STOWED;
             IntakePosition outerPosition = IntakePosition.PARTIALLY_STOWED;
             
-            return this.goToPosition(innerPosition)
-                .andThen(this.goToPosition(outerPosition))
-                .repeatedly();
+            Command retract = this.goToPosition(innerPosition)
+                .until(Intake.this::isStalling);
+            Command extend = this.goToPosition(outerPosition);
+            
+            return retract
+                .andThen(extend)
+                .repeatedly()
+                .finallyDo(() -> this.goToPosition(IntakePosition.PARTIALLY_STOWED));
             
         }
         
