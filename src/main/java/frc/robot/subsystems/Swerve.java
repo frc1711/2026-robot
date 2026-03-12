@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.configuration.CANDevice;
 import frc.robot.configuration.SwerveModuleConfiguration;
 import frc.robot.devicewrappers.RaptorsPigeon2;
+import frc.robot.util.LogCommand;
 
 import java.util.function.Supplier;
 import java.util.stream.Stream;
