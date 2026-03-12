@@ -59,6 +59,7 @@ public class ComplexCommands {
         Command feedShooter = this.robot.indexer.commands.forward();
         
         return spinUpShooter
+            .alongWith(agitate)
             .alongWith(waitForSpinup.andThen(feedShooter));
         
     }
