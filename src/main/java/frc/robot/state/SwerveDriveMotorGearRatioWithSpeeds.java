@@ -7,14 +7,14 @@ import frc.robot.configuration.RobotDimensions;
 import static edu.wpi.first.units.Units.Hertz;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-public class SwerveGearRatioWithSpeeds {
+public class SwerveDriveMotorGearRatioWithSpeeds {
 	
-	protected final SwerveGearRatio gearRatio;
+	protected final SwerveDriveMotorGearRatio gearRatio;
 	
 	protected final AngularVelocity motorShaftAngularVelocity;
 	
-	public SwerveGearRatioWithSpeeds(
-		SwerveGearRatio gearRatio,
+	public SwerveDriveMotorGearRatioWithSpeeds(
+		SwerveDriveMotorGearRatio gearRatio,
 		AngularVelocity motorShaftAngularVelocity
 	) {
 		

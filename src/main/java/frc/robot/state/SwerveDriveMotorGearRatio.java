@@ -1,60 +1,58 @@
 package frc.robot.state;
 
 import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.Unit;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.configuration.RobotDimensions;
 
 import static edu.wpi.first.units.Units.*;
 
-public class SwerveGearRatio {
+public class SwerveDriveMotorGearRatio {
 	
-	public static final SwerveGearRatio RATIO_ONE =
-		new SwerveGearRatio(RobotDimensions.SWERVE_DRIVE_S1_R1_DRIVING_TOOTH_COUNT);
+	public static final SwerveDriveMotorGearRatio RATIO_ONE =
+		new SwerveDriveMotorGearRatio(RobotDimensions.SWERVE_DRIVE_S1_R1_DRIVING_TOOTH_COUNT);
 	
-	public static final SwerveGearRatio RATIO_TWO =
-		new SwerveGearRatio(RobotDimensions.SWERVE_DRIVE_S1_R2_DRIVING_TOOTH_COUNT);
+	public static final SwerveDriveMotorGearRatio RATIO_TWO =
+		new SwerveDriveMotorGearRatio(RobotDimensions.SWERVE_DRIVE_S1_R2_DRIVING_TOOTH_COUNT);
 	
-	public static final SwerveGearRatio RATIO_THREE =
-		new SwerveGearRatio(RobotDimensions.SWERVE_DRIVE_S1_R3_DRIVING_TOOTH_COUNT);
+	public static final SwerveDriveMotorGearRatio RATIO_THREE =
+		new SwerveDriveMotorGearRatio(RobotDimensions.SWERVE_DRIVE_S1_R3_DRIVING_TOOTH_COUNT);
 	
 	protected final int stageOneDrivingGearToothCount;
 	
-	protected SwerveGearRatio(int stageOneDriveGearToothCount) {
+	protected SwerveDriveMotorGearRatio(int stageOneDriveGearToothCount) {
 		
 		this.stageOneDrivingGearToothCount = stageOneDriveGearToothCount;
 		
 	}
 	
-	public SwerveGearRatioWithSpeeds withMotorShaftAngularVelocity(
+	public SwerveDriveMotorGearRatioWithSpeeds withMotorShaftAngularVelocity(
 		AngularVelocity motorShaftAngularVelocity
 	) {
 		
-		return new SwerveGearRatioWithSpeeds(
+		return new SwerveDriveMotorGearRatioWithSpeeds(
 			this,
 			motorShaftAngularVelocity
 		);
 		
 	}
 	
-	public SwerveGearRatioWithSpeeds withWheelAngularVelocity(
+	public SwerveDriveMotorGearRatioWithSpeeds withWheelAngularVelocity(
 		AngularVelocity wheelAngularVelocity
 	) {
 		
-		return new SwerveGearRatioWithSpeeds(
+		return new SwerveDriveMotorGearRatioWithSpeeds(
 			this,
 			this.convertWheelThetaToMotorShaftTheta(wheelAngularVelocity)
 		);
 		
 	}
 	
-	public SwerveGearRatioWithSpeeds withWheelSurfaceSpeed(
+	public SwerveDriveMotorGearRatioWithSpeeds withWheelSurfaceSpeed(
 		LinearVelocity wheelSurfaceSpeed
 	) {
 		
-		return new SwerveGearRatioWithSpeeds(
+		return new SwerveDriveMotorGearRatioWithSpeeds(
 			this,
 			this.convertWheelThetaToMotorShaftTheta(RotationsPerSecond.of(
 				wheelSurfaceSpeed.in(InchesPerSecond) /

@@ -1,7 +1,7 @@
 package frc.robot.configuration;
 
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.state.SwerveGearRatio;
+import frc.robot.state.SwerveDriveMotorGearRatio;
 
 import java.util.stream.Stream;
 
@@ -13,7 +13,7 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_FRONT_LEFT_DRIVE_MOTOR_CONTROLLER,
 		CANDevice.SWERVE_FRONT_LEFT_STEER_ENCODER,
 		DoublePreference.FRONT_LEFT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
-		SwerveGearRatio.RATIO_TWO,
+		SwerveDriveMotorGearRatio.RATIO_TWO,
 		true,
 		true
 	),
@@ -24,7 +24,7 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_FRONT_RIGHT_DRIVE_MOTOR_CONTROLLER,
 		CANDevice.SWERVE_FRONT_RIGHT_STEER_ENCODER,
 		DoublePreference.FRONT_RIGHT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
-		SwerveGearRatio.RATIO_TWO,
+		SwerveDriveMotorGearRatio.RATIO_TWO,
 		true,
 		false
 	),
@@ -35,7 +35,7 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_REAR_LEFT_DRIVE_MOTOR_CONTROLLER,
 		CANDevice.SWERVE_REAR_LEFT_STEER_ENCODER,
 		DoublePreference.REAR_LEFT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
-		SwerveGearRatio.RATIO_TWO,
+		SwerveDriveMotorGearRatio.RATIO_TWO,
 		false,
 		true
 	),
@@ -46,7 +46,7 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_REAR_RIGHT_DRIVE_MOTOR_CONTROLLER,
 		CANDevice.SWERVE_REAR_RIGHT_STEER_ENCODER,
 		DoublePreference.REAR_RIGHT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
-		SwerveGearRatio.RATIO_TWO,
+		SwerveDriveMotorGearRatio.RATIO_TWO,
 		false,
 		false
 	);
@@ -65,7 +65,7 @@ public enum SwerveModuleConfiguration {
 	 */
 	public final DoublePreference steerEncoderOffset;
 	
-	public final SwerveGearRatio gearRatio;
+	public final SwerveDriveMotorGearRatio gearRatio;
 	
 	public final boolean isFront;
 	
@@ -82,7 +82,7 @@ public enum SwerveModuleConfiguration {
 		CANDevice driveMotorControllerCANDevice,
 		CANDevice steerEncoderCANDevice,
 		DoublePreference steerEncoderOffset,
-		SwerveGearRatio gearRatio,
+		SwerveDriveMotorGearRatio gearRatio,
 		boolean isFront,
 		boolean isLeft
 	) {
