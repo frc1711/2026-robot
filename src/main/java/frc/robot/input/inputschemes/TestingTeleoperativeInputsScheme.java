@@ -15,14 +15,15 @@ public class TestingTeleoperativeInputsScheme implements InputScheme {
 	) {
 		
 		(new InputSchemeBuilder(robotContainer))
-			.configureDefaultRobotCommands();
-//			.useControllerJoysticksForDriving(controller1)
-//			.useTriggersToLoad(controller1)
-//			.useABXYToScoreCoral(controller1)
-//			.usePOVButtonsToSwitchReefScoringModes(controller1)
-//			.useBumpersToClimb(controller1)
-//			.useBackButtonToUnclimb(controller1)
-//			.useStartToResetFieldHeading(controller1);
+			.configureDefaultRobotCommands()
+			.useControllerJoysticksForDriving(controller1)
+			.useStartButtonToResetFieldHeading(controller1)
+			.useAButtonToShoot(controller1)
+			.useBButtonToPulse(controller1)
+			.useXButtonToIntake(controller1)
+			.useDPadToControlIntakeExtension(controller1)
+			.useBumpersToControlIntakeExtension(controller1)
+			.useBackButtonToCalibrateIntakeExtension(controller1);
 		
 	}
 	
