@@ -83,6 +83,19 @@ public class Swerve extends SubsystemBase {
 
         headingPIDController.enableContinuousInput(0, 360);
         
+        ShuffleboardTab shuffleboardCalibrationTab =
+            Shuffleboard.getTab("Calibration");
+        
+        shuffleboardCalibrationTab.add(
+            this.commands.calibrateModuleSteeringHeadings()
+        );
+        
+        shuffleboardCalibrationTab.add(
+            this.commands.calibrateFieldRelativeHeading()
+        );
+        
+        SmartDashboard.putData("Swerve Drive", this.getSwerveStateSendable());
+        
     }
     
     public Stream<SwerveModule> getModuleStream() {
