@@ -6,20 +6,15 @@ import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.*;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj.Preferences;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.units.AngularAccelerationUnit;
+import edu.wpi.first.units.measure.*;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import frc.robot.configuration.RobotDimensions;
 import frc.robot.configuration.SwerveModuleConfiguration;
 import frc.robot.math.DoubleUtilities;
@@ -28,17 +23,37 @@ import static edu.wpi.first.units.Units.*;
 
 public class SwerveModule {
     
+    public static final Time TIME_TO_MAX_DRIVE_ANGULAR_VELOCITY =
+        Seconds.of(0.25);
+    
+    public static final AngularAcceleration MAX_DRIVE_ANGULAR_ACCELERATION =
+        RobotDimensions.KRAKEN_X60_MAX_FREE_SPEED
+            .div(SwerveModule.TIME_TO_MAX_DRIVE_ANGULAR_VELOCITY);
+    
+//    public static final Time TIME_TO_MAX_DRIVE_ANGULAR_ACCELERATION =
+//        Seconds.of(0.1);
+//    
+//    public static final Velocity<AngularAccelerationUnit>
+//        MAX_DRIVE_ANGULAR_JERK = SwerveModule.MAX_DRIVE_ANGULAR_ACCELERATION
+//            .div(SwerveModule.TIME_TO_MAX_DRIVE_ANGULAR_ACCELERATION);
+    
+    public static final AngularVelocity MAX_STEER_ANGULAR_VELOCITY =
+        RotationsPerSecond.of(30);
+    
+    public static final AngularAcceleration MAX_STEER_ANGULAR_ACCELERATION =
+        RotationsPerSecondPerSecond.of(100);
+    
+//    public static final Velocity<AngularAccelerationUnit>
+//        MAX_STEER_ANGULAR_JERK = RotationsPerSecondPerSecond.per(Second).of(24);
+    
     protected final SwerveModuleConfiguration configuration;
     
     // Motors for the swerve module
     protected final TalonFX driveMotor;
     
-    protected final TalonFX turningMotor;
+    protected final TalonFX steerMotor;
     
     protected final CANcoder steeringEncoder;
-
-    // PID controller for turning and limiter for drive velocity
-    protected final SlewRateLimiter driveVelocityLimiter = new SlewRateLimiter(15, -20, 0);
     
     protected LinearVelocity driveVelocitySetpoint;
     
@@ -53,25 +68,25 @@ public class SwerveModule {
         
         this.configuration = configuration;
         this.driveMotor = new TalonFX(this.configuration.driveMotorControllerCANDevice.id);
-        this.turningMotor = new TalonFX(this.configuration.steerMotorControllerCANDevice.id);
+        this.steerMotor = new TalonFX(this.configuration.steerMotorControllerCANDevice.id);
         this.steeringEncoder = new CANcoder(this.configuration.steerEncoderCANDevice.id);
-        
         this.driveVelocitySetpoint = InchesPerSecond.of(0);
         this.steerAngleSetpoint = Degrees.of(0);
         
-        // Create and configure the drive and turn motors
+        // Create and configure the drive and steer motors
         this.driveMotor.getConfigurator()
-            .apply(SwerveModule.getDriveMotorConfig());
-        this.turningMotor.getConfigurator()
-            .apply(SwerveModule.getTurningMotorConfig());
+            .apply(this.getDriveMotorConfig());
+        this.steerMotor.getConfigurator()
+            .apply(this.getSteeringMotorConfig());
         this.steeringEncoder.getConfigurator()
-            .apply(SwerveModule.getSteeringEncoderConfig());
+            .apply(this.getSteeringEncoderConfig());
         
         this.configuration.steerEncoderOffset
             .useValue((double steerEncoderOffsetInRotations) -> {
                 
                 CANcoderConfiguration encoderConfig =
-                    SwerveModule.getSteeringEncoderConfig();
+                    new CANcoderConfiguration();
+                this.steeringEncoder.getConfigurator().refresh(encoderConfig);
                 
                 encoderConfig.MagnetSensor.MagnetOffset =
                     steerEncoderOffsetInRotations;
@@ -85,33 +100,93 @@ public class SwerveModule {
     /**
      * @return The configuration to be applied to the drive motor
      */
-    protected static TalonFXConfiguration getDriveMotorConfig() {
+    protected TalonFXConfiguration getDriveMotorConfig() {
         
         TalonFXConfiguration config = new TalonFXConfiguration();
-
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        
+//        config.Slot0.kS = 0.25;
+        config.Slot0.kV = 0.12;
+//        config.Slot0.kA = 0.1;
+        config.Slot0.kP = 0.1;
+        config.Slot0.kI = 0;
+        config.Slot0.kD = 0;
+        
+        // Cruise velocity is intentionally unconfigured -- the control mode we
+        // are using (velocity) does not need a separate max velocity to be set.
+        // config.MotionMagic.MotionMagicCruiseVelocity =
+        //    RobotDimensions.KRAKEN_X60_MAX_FREE_SPEED
+        //        .in(RotationsPerSecond);
+        config.MotionMagic.MotionMagicAcceleration =
+            SwerveModule.MAX_DRIVE_ANGULAR_ACCELERATION
+                .in(RotationsPerSecondPerSecond);
+        // Jerk is left intentionally unconfigured -- the Motion Magic profiler
+        // will instead generate an S-curve to match the provided maximum
+        // velocity and acceleration.
+        // config.MotionMagic.MotionMagicJerk =
+        //    SwerveModule.MAX_DRIVE_ANGULAR_JERK
+        //        .in(RotationsPerSecondPerSecond.per(Second));
         
         return config;
         
     }
 
-    /**
-     * @return The configuration to be applied to the turning motor
-     */
-    protected static TalonFXConfiguration getTurningMotorConfig() {
+    protected TalonFXConfiguration getSteeringMotorConfig() {
         
         TalonFXConfiguration config = new TalonFXConfiguration();
         
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        
+        config.Feedback.FeedbackRemoteSensorID =
+            this.configuration.steerEncoderCANDevice.id;
+        // config.Feedback.FeedbackRotorOffset = 0;
+        config.Feedback.FeedbackSensorSource =
+            FeedbackSensorSourceValue.FusedCANcoder;
+        config.Feedback.RotorToSensorRatio =
+            RobotDimensions.SWERVE_STEERING_GEAR_RATIO;
+        config.Feedback.SensorToMechanismRatio = 1;
+        // config.Feedback.VelocityFilterTimeConstant = 0;
+        
+        config.ClosedLoopGeneral.ContinuousWrap = true;
+        
+        config.Slot0.kS = 0.37;
+//        config.Slot0.kV = 0.12;
+//        config.Slot0.kA = 0.01;
+        
+        // kP is in volts per unit of proportional error, which is, in this
+        // case, rotations of the motor shaft.
+        config.Slot0.kP = 24;
+        // kD is in volts per unit of velocity error, which is, in this case,
+        // rotations per unit of time of the motor shaft.
+        config.Slot0.kD = 0;
+        config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+        
+        config.MotionMagic.MotionMagicCruiseVelocity =
+            SwerveModule.MAX_STEER_ANGULAR_VELOCITY.in(RotationsPerSecond);
+        config.MotionMagic.MotionMagicAcceleration =
+            SwerveModule.MAX_STEER_ANGULAR_ACCELERATION
+                .in(RotationsPerSecondPerSecond);
+        // Jerk is left intentionally unconfigured -- the Motion Magic profiler
+        // will instead generate an S-curve to match the provided maximum
+        // velocity and acceleration.
+        // config.MotionMagic.MotionMagicJerk =
+        //    SwerveModule.MAX_STEER_ANGULAR_JERK
+        //        .in(RotationsPerSecondPerSecond.per(Second));
         
         return config;
         
     }
     
-    protected static CANcoderConfiguration getSteeringEncoderConfig() {
+    protected CANcoderConfiguration getSteeringEncoderConfig() {
         
         CANcoderConfiguration config = new CANcoderConfiguration();
+        
+        config.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+        config.MagnetSensor.MagnetOffset = this.configuration.steerEncoderOffset.get();
+        config.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 0.5;
         
         return config;
         
@@ -290,16 +365,17 @@ public class SwerveModule {
         newState.optimize(currentSteeringHeading);
         
         // Perform cosine speed compensation.
-        newState.speedMetersPerSecond *=
-            newState.angle.minus(currentSteeringHeading).getCos();
+        newState.speedMetersPerSecond *= newState.angle
+            .minus(currentSteeringHeading)
+            .getCos();
         
         this.steerAngleSetpoint = newState.angle.getMeasure();
         this.driveVelocitySetpoint =
             MetersPerSecond.of(newState.speedMetersPerSecond);
         
-        this.turningMotor.setControl(
-            new MotionMagicVoltage(this.steerAngleSetpoint)
-        );
+        this.steerMotor.setControl(new MotionMagicVoltage(
+            this.steerAngleSetpoint
+        ));
         
         this.driveMotor.setControl(new MotionMagicVelocityVoltage(
             this.configuration.gearRatio
