@@ -83,7 +83,16 @@ public class SwerveDriveMotorGearRatio {
 			.mut_divide(RobotDimensions.SWERVE_DRIVE_S2_DRIVING_TOOTH_COUNT)
 			.mut_times(RobotDimensions.SWERVE_DRIVE_S1_DRIVEN_TOOTH_COUNT)
 			.mut_divide(this.stageOneDrivingGearToothCount);
-			
+		
+	}
+	
+	public double getEffectiveReduction() {
+		
+		return (
+			((double) this.stageOneDrivingGearToothCount / RobotDimensions.SWERVE_DRIVE_S1_DRIVEN_TOOTH_COUNT) *
+			((double) RobotDimensions.SWERVE_DRIVE_S2_DRIVING_TOOTH_COUNT / RobotDimensions.SWERVE_DRIVE_S2_DRIVEN_TOOTH_COUNT) *
+			((double) RobotDimensions.SWERVE_DRIVE_S3_DRIVING_TOOTH_COUNT / RobotDimensions.SWERVE_DRIVE_S3_DRIVEN_TOOTH_COUNT)
+		);
 		
 	}
 	
