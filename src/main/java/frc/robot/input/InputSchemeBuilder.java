@@ -32,7 +32,7 @@ public class InputSchemeBuilder {
 		CommandXboxController controller
 	) {
 		
-//		this.robot.swerve.setDefaultCommand(this.robot.complexCommands.drive(controller));
+		this.robot.swerve.setDefaultCommand(this.robot.complexCommands.drive(controller));
 		
 		return this;
 		
@@ -85,8 +85,7 @@ public class InputSchemeBuilder {
 	public InputSchemeBuilder useStartButtonToResetFieldHeading(CommandXboxController controller) {
 
 		controller.start().onTrue(
-//			this.robot.swerve.commands.calibrateFieldRelativeHeading()
-			this.robot.swerve.resetHeading()
+			this.robot.swerve.commands.calibrateFieldRelativeHeading()
 		);
 
 		return this;
