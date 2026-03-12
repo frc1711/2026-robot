@@ -10,6 +10,11 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.util.sendable.Sendable;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -174,6 +179,155 @@ public class Swerve extends SubsystemBase {
             this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
         
         this.applyModuleStates(newModuleStates);
+        
+    }
+    
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        
+        builder.addDoubleProperty(
+            "Heading",
+            () -> this.getFieldRelativeHeading().in(Degrees),
+            (double headingDegrees) -> this.setFieldRelativeHeadingSetpoint(Degrees.of(headingDegrees))
+        );
+        
+        builder.addDoubleProperty(
+            "Heading Setpoint",
+            this.headingPIDController::getSetpoint,
+            (double headingDegrees) -> this.setFieldRelativeHeadingSetpoint(Degrees.of(headingDegrees))
+        );
+        
+        builder.addDoubleProperty(
+            "Swerve Linear Velocity (in/sec)",
+            () -> this.getLinearVelocity().in(InchesPerSecond),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            "Swerve Module Velocity kP",
+            () -> {
+                
+                TalonFXConfiguration config = new TalonFXConfiguration();
+                this.modules[0].driveMotor.getConfigurator().refresh(config);
+                
+                return config.Slot0.kP;
+                
+            },
+            (double kP) -> {
+                
+                TalonFXConfiguration config = new TalonFXConfiguration();
+                this.modules[0].driveMotor.getConfigurator().refresh(config);
+                
+                config.Slot0.kP = kP;
+                
+                this.getModuleStream().forEach(module ->
+                    module.driveMotor.getConfigurator().apply(config)
+                );
+                
+            }
+        );
+        
+        builder.addDoubleProperty(
+            "Swerve Module Velocity kD",
+            () -> {
+                
+                TalonFXConfiguration config = new TalonFXConfiguration();
+                this.modules[0].driveMotor.getConfigurator().refresh(config);
+                
+                return config.Slot0.kD;
+                
+            },
+            (double kD) -> {
+                
+                TalonFXConfiguration config = new TalonFXConfiguration();
+                this.modules[0].driveMotor.getConfigurator().refresh(config);
+                
+                config.Slot0.kD = kD;
+                
+                this.getModuleStream().forEach(module ->
+                    module.driveMotor.getConfigurator().apply(config)
+                );
+                
+            }
+        );
+        
+//        builder.addDoubleProperty(
+//            "Distance to Scoring Pose (in)",
+//            () -> {
+//                
+//                Pose2d currentPose = this.odometry.getPose();
+//                IntSupplier tagID = () -> this.odometry.getNearestReefAprilTag().ID;
+//                Pose2d leftScoringPose = PoseBuilder.getReefScoringPose(tagID, ReefAlignment.LEFT).get();
+//                Pose2d rightScoringPose = PoseBuilder.getReefScoringPose(tagID, ReefAlignment.RIGHT).get();
+//                double distanceToLeft = currentPose.minus(leftScoringPose).getTranslation().getNorm();
+//                double distanceToRight = currentPose.minus(rightScoringPose).getTranslation().getNorm();
+//                
+//                return distanceToLeft < distanceToRight
+//                    ? Meters.of(distanceToLeft).in(Inches)
+//                    : Meters.of(distanceToRight).in(Inches);
+//                
+//            },
+//            null
+//        );
+        
+        builder.addDoubleProperty(
+            "Average Module Output Current",
+            () -> this.getModuleStream().mapToDouble((module) ->
+                module.driveMotor.getSupplyCurrent().getValueAsDouble()
+            ).average().orElse(0),
+            null
+        );
+        
+    }
+    
+    public Sendable getSwerveStateSendable() {
+        
+        return builder -> {
+            
+            builder.setSmartDashboardType("SwerveDrive");
+            
+            this.modules[0].addSendableFields(builder, "Front Left");
+            this.modules[1].addSendableFields(builder, "Front Right");
+            this.modules[2].addSendableFields(builder, "Rear Left");
+            this.modules[3].addSendableFields(builder, "Rear Right");
+            
+            builder.addDoubleProperty(
+                "Robot Angle",
+                () -> this.getFieldRelativeHeading().in(Degrees),
+                null
+            );
+            
+            builder.addDoubleProperty(
+                "Chassis Speeds (vX in inches per second)",
+                () -> MetersPerSecond.of(this.getActualChassisSpeeds().vxMetersPerSecond).in(InchesPerSecond),
+                null
+            );
+            
+            builder.addDoubleProperty(
+                "Chassis Speeds (vY in inches per second)",
+                () -> MetersPerSecond.of(this.getActualChassisSpeeds().vyMetersPerSecond).in(InchesPerSecond),
+                null
+            );
+            
+            builder.addDoubleProperty(
+                "Chassis Speeds (vXY in inches per second)",
+                () -> this.getLinearVelocity().in(InchesPerSecond),
+                null
+            );
+            
+            builder.addDoubleProperty(
+                "Chassis Speeds (Rotation in degrees per second)",
+                () -> RadiansPerSecond.of(this.getActualChassisSpeeds().omegaRadiansPerSecond).in(DegreesPerSecond),
+                null
+            );
+            
+//            builder.addStringProperty(
+//                "Field Position",
+//                () -> this.odometry.getFieldThird().name(),
+//                null
+//            );
+            
+        };
         
     }
     
