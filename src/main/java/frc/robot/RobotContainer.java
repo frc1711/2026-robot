@@ -18,7 +18,8 @@ public class RobotContainer {
 
   // Initializing the subsystems
   public final Swerve swerve = new Swerve();
-  public final Highway highway = new Highway();
+  public final Indexer indexer = new Indexer();
+  public final Agitator agitator = new Agitator();
 //  public final Vision vision = new Vision();
 //  public final Autons autons = new Autons(swerve, shooter, highway);
 //  public final LEDs leds = new LEDs(LedConstants.CANDLEPORT, 8, 10);

@@ -54,8 +54,9 @@ public class ComplexCommands {
     ) {
         
         Command spinUpShooter = this.robot.turret.commands.shoot(turretState);
+        Command agitate = this.robot.agitator.commands.agitate();
         Command waitForSpinup = Commands.waitTime(spinupWaitTime);
-        Command feedShooter = this.robot.highway.commands.forward();
+        Command feedShooter = this.robot.indexer.commands.forward();
         
         return spinUpShooter
             .alongWith(waitForSpinup.andThen(feedShooter));

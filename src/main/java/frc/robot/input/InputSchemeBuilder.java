@@ -162,10 +162,10 @@ public class InputSchemeBuilder {
 	) {
 		
 		controller.leftTrigger()
-			.whileTrue(this.robot.highway.commands.backward());
+			.whileTrue(this.robot.indexer.commands.backward());
 		
 		controller.rightTrigger()
-			.whileTrue(this.robot.highway.commands.forward());
+			.whileTrue(this.robot.indexer.commands.forward());
 		
 		return this;
 		
