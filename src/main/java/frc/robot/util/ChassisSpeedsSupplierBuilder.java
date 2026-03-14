@@ -160,39 +160,39 @@ public class ChassisSpeedsSupplierBuilder implements Supplier<ChassisSpeeds> {
 
     }
 
-    public ChassisSpeedsSupplierBuilder withSlowModeCheck(Swerve swerve) {
-
-        return new ChassisSpeedsSupplierBuilder(() -> {
-
-            ChassisSpeeds chassisSpeeds = this.get();
-
-            if (!swerve.isSlowModeEnabled) return chassisSpeeds;
-
-            Translation2d originalLinearSpeeds = new Translation2d(
-                chassisSpeeds.vxMetersPerSecond,
-                chassisSpeeds.vyMetersPerSecond
-            );
-
-            Translation2d newLinearSpeeds = new Translation2d(
-                originalLinearSpeeds.getNorm() * (
-                    Swerve.SLOW_MODE_MAX_LINEAR_VELOCITY.in(InchesPerSecond) /
-                    Swerve.MAX_LINEAR_VELOCITY.in(InchesPerSecond)
-                ),
-                originalLinearSpeeds.getAngle()
-            );
-
-            return new ChassisSpeeds(
-                newLinearSpeeds.getX(),
-                newLinearSpeeds.getY(),
-                chassisSpeeds.omegaRadiansPerSecond * (
-                    Swerve.SLOW_MODE_MAX_ANGULAR_VELOCITY.in(DegreesPerSecond) /
-                    Swerve.MAX_ANGULAR_VELOCITY.in(DegreesPerSecond)
-                )
-            );
-
-        });
-
-    }
+//    public ChassisSpeedsSupplierBuilder withSlowModeCheck(Swerve swerve) {
+//
+//        return new ChassisSpeedsSupplierBuilder(() -> {
+//
+//            ChassisSpeeds chassisSpeeds = this.get();
+//
+//            if (!swerve.isSlowModeEnabled) return chassisSpeeds;
+//
+//            Translation2d originalLinearSpeeds = new Translation2d(
+//                chassisSpeeds.vxMetersPerSecond,
+//                chassisSpeeds.vyMetersPerSecond
+//            );
+//
+//            Translation2d newLinearSpeeds = new Translation2d(
+//                originalLinearSpeeds.getNorm() * (
+//                    Swerve.SLOW_MODE_MAX_LINEAR_VELOCITY.in(InchesPerSecond) /
+//                    Swerve.MAX_LINEAR_VELOCITY.in(InchesPerSecond)
+//                ),
+//                originalLinearSpeeds.getAngle()
+//            );
+//
+//            return new ChassisSpeeds(
+//                newLinearSpeeds.getX(),
+//                newLinearSpeeds.getY(),
+//                chassisSpeeds.omegaRadiansPerSecond * (
+//                    Swerve.SLOW_MODE_MAX_ANGULAR_VELOCITY.in(DegreesPerSecond) /
+//                    Swerve.MAX_ANGULAR_VELOCITY.in(DegreesPerSecond)
+//                )
+//            );
+//
+//        });
+//
+//    }
 
     public ChassisSpeedsSupplierBuilder withMaxVelocityCheck() {
         
