@@ -54,7 +54,8 @@ public class ComplexCommands {
     ) {
         
         Command spinUpShooter = this.robot.turret.commands.shoot(turretState);
-        Command agitate = this.robot.agitator.commands.agitate();
+        Command agitate = this.robot.agitator.commands.agitate()
+            .alongWith(this.robot.intake.commands.pulseV1());
         Command waitForSpinup = Commands.waitTime(spinupWaitTime);
         Command feedShooter = this.robot.indexer.commands.forward();
         
