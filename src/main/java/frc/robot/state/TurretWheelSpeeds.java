@@ -43,6 +43,22 @@ public class TurretWheelSpeeds {
 		
 	}
 	
+	public static TurretWheelSpeeds fromDynamicAngularMotorShaftVelocities(
+		Supplier<AngularVelocity> lowerMotorShaftAngularVelocitySupplier,
+		Supplier<AngularVelocity> upperMotorShaftAngularVelocitySupplier
+	) {
+		
+		return new TurretWheelSpeeds(
+			() -> lowerMotorShaftAngularVelocitySupplier.get()
+				.times(RobotDimensions.TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT)
+				.div(RobotDimensions.TURRET_LOWER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT),
+			() -> upperMotorShaftAngularVelocitySupplier.get()
+				.times(RobotDimensions.TURRET_UPPER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT)
+				.div(RobotDimensions.TURRET_UPPER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
+		);
+		
+	}
+	
 	public static TurretWheelSpeeds fromDynamicAngularWheelVelocities(
 		Supplier<AngularVelocity> lowerWheelAngularVelocitySupplier,
 		Supplier<AngularVelocity> upperWheelAngularVelocitySupplier
