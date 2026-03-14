@@ -150,6 +150,22 @@ public class InputSchemeBuilder {
 		
 	}
 	
+	public InputSchemeBuilder useBumpersToControlIntakeExtension(
+		CommandXboxController controller
+	) {
+		
+		controller.leftBumper().onTrue(this.robot.intake.commands.goToPosition(
+			IntakePosition.FULLY_STOWED
+		));
+		
+		controller.rightBumper().onTrue(this.robot.intake.commands.goToPosition(
+			IntakePosition.PARTIALLY_STOWED
+		));
+		
+		return this;
+		
+	}
+	
 	public InputSchemeBuilder useTriggersToControlRawIntakeExtension(
 		CommandXboxController controller
 	) {
