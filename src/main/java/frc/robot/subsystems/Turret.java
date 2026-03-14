@@ -82,17 +82,7 @@ public class Turret extends SubsystemBase {
     
     protected static TalonFXConfiguration getUpperWheelMotorConfig() {
         
-        TalonFXConfiguration config = new TalonFXConfiguration();
-        
-        config.Slot0.kS = 0.2;
-        config.Slot0.kV = 0.1;
-//        config.Slot0.kA = 0.01;
-        config.Slot0.kP = 0.5;
-        
-        config.MotionMagic.MotionMagicAcceleration = 400;
-//        config.MotionMagic.MotionMagicJerk = 4000;
-
-//    config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
+        TalonFXConfiguration config = Turret.getLowerWheelMotorConfig();
         
         return config;
         
