@@ -426,12 +426,20 @@ public class Swerve extends SubsystemBase {
             );
 
         }
+        
+        public Command enableDynamicHeadingLock(
+            Supplier<Angle> headingSupplier
+        ) {
+            
+            return new InstantCommand(
+                () -> Swerve.this.headingLockSupplier = headingSupplier
+            );
+            
+        }
 
         public Command enableStaticHeadingLock(Angle heading) {
 
-            return new InstantCommand(
-                () -> Swerve.this.headingLockSupplier = () -> heading
-            );
+            return this.enableDynamicHeadingLock(() -> heading);
 
         }
         
