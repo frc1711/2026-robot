@@ -151,8 +151,8 @@ public class TurretWheelSpeeds {
 	public AngularVelocity getLowerWheelMotorShaftAngularVelocity() {
 		
 		return this.lowerWheelAngularVelocitySupplier.get()
-			.div(RobotDimensions.TURRET_LOWER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
-			.times(RobotDimensions.TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT);
+			.times(RobotDimensions.TURRET_LOWER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
+			.div(RobotDimensions.TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT);
 		
 	}
 	
@@ -172,8 +172,8 @@ public class TurretWheelSpeeds {
 	public AngularVelocity getUpperWheelMotorShaftAngularVelocity() {
 		
 		return this.upperWheelAngularVelocitySupplier.get()
-			.div(RobotDimensions.TURRET_UPPER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
-			.times(RobotDimensions.TURRET_UPPER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT);
+			.times(RobotDimensions.TURRET_UPPER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
+			.div(RobotDimensions.TURRET_UPPER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT);
 		
 	}
 	
