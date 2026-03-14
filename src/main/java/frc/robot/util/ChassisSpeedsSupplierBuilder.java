@@ -1,10 +1,12 @@
 package frc.robot.util;
 
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.math.DoubleSupplierBuilder;
@@ -223,7 +225,17 @@ public class ChassisSpeedsSupplierBuilder implements Supplier<ChassisSpeeds> {
     
     public ChassisSpeedsSupplierBuilder withHeadingLock(Swerve swerve) {
 
-        PIDController headingLockController = new PIDController(0.1, 0, 0);
+        ProfiledPIDController headingLockController = new ProfiledPIDController(
+            10,
+            0,
+            0,
+            new TrapezoidProfile.Constraints(
+                RotationsPerSecond.of(1).in(DegreesPerSecond),
+                Swerve.MAX_ANGULAR_ACCELERATION.in(DegreesPerSecondPerSecond)
+            )
+        );
+        
+        headingLockController.enableContinuousInput(-180, 180);
         
         return new ChassisSpeedsSupplierBuilder(() -> {
             
@@ -231,12 +243,23 @@ public class ChassisSpeedsSupplierBuilder implements Supplier<ChassisSpeeds> {
             Angle headingLock = swerve.headingLockSupplier != null
                 ? swerve.headingLockSupplier.get()
                 : Degrees.zero();
-            double headingCorrection = headingLockController.calculate(
-                swerve.getFieldRelativeHeading().in(Degrees),
-                headingLock.in(Degrees)
+            
+            if (swerve.headingLockSupplier == null) {
+                
+                headingLockController.reset(
+                    swerve.getFieldRelativeHeading().in(Degrees)
+                );
+                
+            }
+            
+            AngularVelocity headingCorrection = DegreesPerSecond.of(
+                headingLockController.calculate(
+                    swerve.getFieldRelativeHeading().in(Degrees),
+                    headingLock.in(Degrees)
+                )
             );
             double omegaRadiansPerSecond = swerve.headingLockSupplier != null
-                ? headingCorrection
+                ? headingCorrection.in(RadiansPerSecond)
                 : chassisSpeeds.omegaRadiansPerSecond;
             
             return new ChassisSpeeds(
