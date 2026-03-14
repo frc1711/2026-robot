@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
 import frc.robot.input.InputScheme;
 import frc.robot.input.InputSchemeBuilder;
+import frc.robot.state.IntakePosition;
 
 public class TestingTeleoperativeInputsScheme implements InputScheme {
 	
@@ -24,6 +25,19 @@ public class TestingTeleoperativeInputsScheme implements InputScheme {
 			.useDPadToControlIntakeExtension(controller1)
 			.useBumpersToControlIntakeExtension(controller1)
 			.useBackButtonToCalibrateIntakeExtension(controller1);
+		
+	}
+	
+	@Override
+	public void init(
+		RobotContainer robot,
+		CommandXboxController controller1,
+		CommandXboxController controller2
+	) {
+		
+		InputScheme.super.init(robot, controller1, controller2);
+		
+		robot.intake.goToPosition(IntakePosition.FULLY_STOWED);
 		
 	}
 	
