@@ -59,7 +59,7 @@ public class Swerve extends SubsystemBase {
     
     protected final RaptorsOdometry odometry;
     
-    protected double speedMultiplier;
+    protected double driveSpeedMultiplier;
     
     protected ChassisSpeeds chassisSpeeds;
     
@@ -79,7 +79,7 @@ public class Swerve extends SubsystemBase {
                 .toArray(Translation2d[]::new)
         );
         this.odometry = odometry;
-        this.speedMultiplier = 1;
+        this.driveSpeedMultiplier = 1;
         this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
         this.headingLockSupplier = null;
         this.commands = new Commands();
@@ -133,7 +133,13 @@ public class Swerve extends SubsystemBase {
     
     public void setDriveSpeedMultiplier(double speedMultiplier) {
         
-        this.speedMultiplier = MathUtil.clamp(speedMultiplier, 0, 1);
+        this.driveSpeedMultiplier = MathUtil.clamp(speedMultiplier, 0, 1);
+        
+    }
+    
+    public double getDriveSpeedMultiplier() {
+        
+        return this.driveSpeedMultiplier;
         
     }
     
