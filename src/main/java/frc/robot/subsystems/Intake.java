@@ -88,7 +88,7 @@ public class Intake extends SubsystemBase {
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
-        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 1;
+        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5;
         
         return config;
         
