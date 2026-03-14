@@ -65,8 +65,8 @@ public class Agitator extends SubsystemBase {
         
         public Command agitate(double speed) {
             
-            return this.spin(speed).withTimeout(Seconds.of(0.25))
-                .andThen(edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(0.25)))
+            return this.spin(speed).withTimeout(Seconds.of(0.75))
+                .andThen(this.spin(-speed).withTimeout(Seconds.of(0.25)))
                 .repeatedly();
             
         }
