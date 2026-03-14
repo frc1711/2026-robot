@@ -11,6 +11,12 @@ import static edu.wpi.first.units.Units.*;
 
 public class TurretWheelSpeeds {
 	
+	public static final TurretWheelSpeeds STOPPED =
+		TurretWheelSpeeds.fromStaticAngularWheelVelocities(
+			RotationsPerSecond.zero(),
+			RotationsPerSecond.zero()
+		);
+	
 	public static final TurretWheelSpeeds CLOSE_SHOT =
 		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
 			FeetPerSecond.of(10),
