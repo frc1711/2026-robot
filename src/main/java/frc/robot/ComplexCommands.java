@@ -24,8 +24,8 @@ public class ComplexCommands {
         
         return this.robot.swerve.commands.drive(
             ChassisSpeedsSupplierBuilder.fromControllerJoysticks(controller)
-                .withFieldRelative(this.robot.swerve)
                 .withAdditional(ChassisSpeedsSupplierBuilder.fromControllerDPad(controller))
+                .withFieldRelative(this.robot.swerve)
 //                .withSlowModeCheck(this.robot.swerve)
 //                .withHeadingLock(this.robot.swerve)
                 .withMaxVelocityCheck()
