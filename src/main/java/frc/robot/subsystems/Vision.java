@@ -1,119 +1,109 @@
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.LimelightHelpers;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.*;
+import frc.robot.devicewrappers.RaptorsLimelight;
+import frc.robot.util.VirtualField;
 
-public class Vision extends SubsystemBase {
-    private final InterpolatingDoubleTreeMap treeMap = new InterpolatingDoubleTreeMap();
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Supplier;
 
-    private int[] aprilTagFilter = null;
+import static edu.wpi.first.units.Units.*;
 
-    public int[] hubAprilTagFilter = {2, 3, 5, 9, 18, 21, 26};
-
-    public Vision() {}
-
-    private final String[] limelights = {
-        "limelight-shooter", // IP: 10.17.11.11
-        "limelight-right", // IP: 10.17.11.12
-        "limelight-left" // IP: 10.17.11.13
-    };
-
-    public void applyAprilTagFilter(int[] filter) {
-        this.aprilTagFilter = filter;
-
-        for (String ll : limelights) {
-            LimelightHelpers.SetFiducialIDFiltersOverride(ll, this.aprilTagFilter);
-        }
-    }
-
-    public String[] getLimelights() {
-        return limelights;
-    }
-
-    public boolean hasTarget(String ll) {
-        return LimelightHelpers.getTV(ll);
-    }
-
-    public void resetAprilTagFilter() {
-        this.aprilTagFilter = null;
-
-        for (String ll : limelights) {
-            LimelightHelpers.SetFiducialIDFiltersOverride(ll, this.aprilTagFilter);
-        }
-    }
-
-    public double getDistance() {
-        double distance = 0;
-
-        String ll = limelights[0];
-
-        if (LimelightHelpers.getTV(ll)) {
-            double targetOffsetAngle = LimelightHelpers.getTY(ll);
-
-            Pose3d llPose = LimelightHelpers.getCameraPose3d_RobotSpace(ll);
-
-            double llAngleOffsetRadians = llPose.getRotation().getY();
-            double llLensHeightMeters = llPose.getZ();
-
-            double targetHeightMeters = Units.inchesToMeters(44.25);
-
-            double angleToTargetRadians = llAngleOffsetRadians + Units.degreesToRadians(targetOffsetAngle);
-            double llToTargetMeters = (targetHeightMeters - llLensHeightMeters) / Math.tan(angleToTargetRadians);
-
-            double robotCenterToTargetMeters = llToTargetMeters - Math.hypot(llPose.getX(), llPose.getY());
-
-            distance += robotCenterToTargetMeters;
-        }
-
-        return distance;
-    }
-
-    public double getAngleFromHub() {
-        String ll = limelights[0];
-
-        if (this.hasTarget(ll)) {
-            double horizontalAngleOffset = LimelightHelpers.getTX(ll);
-            return horizontalAngleOffset;
-        }
-
-        return 0;
-    }
-
-    public List<VisionMeasurement> getVisionMeasurements() {
-        List<VisionMeasurement> measurements = new ArrayList<>();
-
-        for (String ll : limelights) {
-            var estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(ll);
-
-            if (estimate != null && estimate.tagCount >= 1 && ll != limelights[0]) {
-                measurements.add(
-                    new VisionMeasurement(
-                        estimate.pose,
-                        estimate.timestampSeconds
-                    )
-                );
-            }
-        }
-
-        return measurements;
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.addDoubleProperty(
-            "Distance to Hub", 
-            this::getDistance,
-            null
-        );
-    }
-
-    public record VisionMeasurement(Pose2d pose, double timestampSeconds) {}
+public class Vision {
+	
+	protected static final RaptorsLimelight[] LIMELIGHTS = new RaptorsLimelight[] {
+		RaptorsLimelight.LEFT_LIMELIGHT,
+		RaptorsLimelight.RIGHT_LIMELIGHT,
+	};
+	
+	protected final Supplier<Angle> headingSupplier;
+	
+	protected final Supplier<LinearVelocity> linearVelocitySupplier;
+	
+	protected final Supplier<AngularVelocity> angularVelocitySupplier;
+	
+	public Vision(
+		Supplier<Angle> headingSupplier,
+		Supplier<LinearVelocity> linearVelocitySupplier,
+		Supplier<AngularVelocity> angularVelocitySupplier
+	) {
+		
+		this.headingSupplier = headingSupplier;
+		this.linearVelocitySupplier = linearVelocitySupplier;
+		this.angularVelocitySupplier = angularVelocitySupplier;
+	
+	}
+	
+	public List<VisionMeasurement> getMeasurements() {
+		
+		boolean shouldUpdateVision = (
+			this.angularVelocitySupplier.get().lt(DegreesPerSecond.of(80)) &&
+			this.linearVelocitySupplier.get().lt(FeetPerSecond.of(1.5))
+		);
+		
+		if (!shouldUpdateVision) return List.of();
+		
+		Angle limelightYaw = this.headingSupplier.get()
+			.plus(Degrees.of(VirtualField.isRedAlliance() ? 180 : 0));
+		
+		for (RaptorsLimelight limelight: Vision.LIMELIGHTS) {
+			
+			limelight.setRobotOrientation(limelightYaw);
+			
+		}
+		
+		double maxTagDistInMeters = Feet.of(10).in(Meters);
+		double maxTagAmbiguity = 0.6;
+		LinearVelocity linearVelocity = this.linearVelocitySupplier.get();
+		AngularVelocity angularVelocity = this.angularVelocitySupplier.get();
+		
+		return Arrays.stream(Vision.LIMELIGHTS)
+			.map(RaptorsLimelight::getBotPoseEstimate)
+			.filter(estimate -> (
+				estimate != null &&
+				estimate.pose != null &&
+				estimate.tagCount > 0 &&
+				estimate.avgTagDist < maxTagDistInMeters &&
+				estimate.rawFiducials[0].ambiguity < maxTagAmbiguity
+			))
+			.map(estimate -> {
+				
+				double ambiguityScaling = estimate.rawFiducials[0].ambiguity + 1;
+				Time kLatency = Milliseconds.of(estimate.latency).times(3);
+				Distance baselineLinearDeviation = Inches.of(4).times(ambiguityScaling);
+				Distance possibleRobotMovement = linearVelocity.times(kLatency);
+				Distance linearDeviation = baselineLinearDeviation.plus(possibleRobotMovement);
+				
+				double linearDeviationMeters = linearDeviation.in(Meters);
+				Angle baselineAngularDeviation = Degrees.of(30);
+				Angle possibleRobotRotation = angularVelocity.times(kLatency);
+				Angle angularDeviation = baselineAngularDeviation.plus(possibleRobotRotation);
+				
+				return new VisionMeasurement(
+					estimate.pose,
+					estimate.timestampSeconds,
+					VecBuilder.fill(
+						linearDeviationMeters,
+						linearDeviationMeters,
+						angularDeviation.in(Degrees)
+					)
+				);
+				
+			})
+			.toList();
+		
+	}
+	
+	public record VisionMeasurement(
+		Pose2d visionRobotPoseMeters,
+		double timestampSeconds,
+		Matrix<N3, N1> visionMeasurementStdDevs
+	) {}
+	
 }
