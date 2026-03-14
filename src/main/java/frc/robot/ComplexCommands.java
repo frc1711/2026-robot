@@ -27,7 +27,7 @@ public class ComplexCommands {
                 .withAdditional(ChassisSpeedsSupplierBuilder.fromControllerDPad(controller))
                 .withFieldRelative(this.robot.swerve)
 //                .withSlowModeCheck(this.robot.swerve)
-//                .withHeadingLock(this.robot.swerve)
+                .withHeadingLock(this.robot.swerve)
                 .withMaxVelocityCheck()
                 .withMaxAccelerationCheck()
         ).finallyDo(this.robot.swerve::stop);
