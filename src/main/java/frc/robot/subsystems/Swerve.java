@@ -3,7 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -16,13 +16,17 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.DeferredCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.configuration.CANDevice;
+import frc.robot.configuration.Direction;
 import frc.robot.configuration.SwerveModuleConfiguration;
 import frc.robot.devicewrappers.RaptorsPigeon2;
+import frc.robot.math.DoubleUtilities;
 import frc.robot.util.LogCommand;
 
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -391,51 +395,85 @@ public class Swerve extends SubsystemBase {
             return this.calibrateFieldRelativeHeading(Degrees.of(0));
             
         }
+
+        public Command disableHeadingLock() {
+
+            return new InstantCommand(
+                () -> Swerve.this.headingLockSupplier = null
+            );
+
+        }
+
+        public Command enableStaticHeadingLock(Angle heading) {
+
+            return new InstantCommand(
+                () -> Swerve.this.headingLockSupplier = () -> heading
+            );
+
+        }
         
-//        public Command setFieldRelativeHeading(Angle heading) {
-//            
-//            return Swerve.this.runOnce(
-//                () -> Swerve.this.setFieldRelativeHeadingSetpoint(heading)
-//            );
-//            
-//        }
-//        
-//        public Command disableHeadingLock() {
-//            
-//            return new InstantCommand(
-//                () -> Swerve.this.headingLockSupplier = null
-//            );
-//            
-//        }
-//        
-//        public Command enableStaticHeadingLock(Angle heading) {
-//            
-//            return new InstantCommand(
-//                () -> Swerve.this.headingLockSupplier = () -> heading
-//            );
-//            
-//        }
-//        
-//        public Command enabledPOIHeadingLock(Translation2d pointOfInterest) {
-//            
-//            return new InstantCommand(() -> {
-//                
-//                Swerve.this.headingLockSupplier = () -> {
-//                    
-//                    Pose2d currentPose = Swerve.this.odometry.getPose();
-//                    
-//                    if (currentPose == null) return Degrees.zero();
-//                    
-//                    Translation2d deltaTranslation = pointOfInterest
-//                        .minus(currentPose.getTranslation());
-//                    
-//                    return deltaTranslation.getAngle().getMeasure();
-//                    
-//                };
-//                
-//            });
-//            
-//        }
+        public Command jumpToNextHeadingLockAngle(
+            Angle increment,
+            boolean toRight
+        ) {
+            
+           return new DeferredCommand(() -> {
+               
+               Angle actualHeading = Swerve.this.getFieldRelativeHeading();
+               Angle tolerance = Degrees.of(5);
+               boolean isRobotAlreadyAtHeadingLock =
+                   Swerve.this.headingLockSupplier != null &&
+                   actualHeading.isNear(Swerve.this.headingLockSupplier.get(), tolerance);
+               
+               Angle originalHeading = isRobotAlreadyAtHeadingLock
+                   ? Swerve.this.headingLockSupplier.get()
+                   : Swerve.this.getFieldRelativeHeading();
+               
+               Angle nextHeading = Degrees.of(DoubleUtilities.getNextIncrement(
+                   originalHeading.in(Degrees),
+                   increment.in(Degrees),
+                   toRight
+               ));
+               
+               return this.enableStaticHeadingLock(nextHeading);
+               
+           }, Set.of());
+            
+        }
+        
+        public Command enabledPOIHeadingLock(
+            Translation2d pointOfInterest,
+            Angle relativeHeading
+        ) {
+            
+            return new InstantCommand(() -> {
+                
+                Swerve.this.headingLockSupplier = () -> {
+                    
+                    Pose2d currentPose = Swerve.this.odometry.getPose();
+                    
+                    if (currentPose == null) return Degrees.zero();
+                    
+                    Translation2d deltaTranslation = pointOfInterest
+                        .minus(currentPose.getTranslation());
+                    
+                    return deltaTranslation.getAngle().getMeasure()
+                        .plus(relativeHeading);
+                    
+                };
+                
+            });
+            
+        }
+        
+        public Command enabledPOIHeadingLock(Translation2d pointOfInterest) {
+            
+            return this.enabledPOIHeadingLock(
+                pointOfInterest,
+                Direction.FORWARDS
+            );
+            
+        }
         
         public Command xMode(LinearVelocity outwardDriveSpeed) {
             
