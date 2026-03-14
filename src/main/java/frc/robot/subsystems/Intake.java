@@ -44,6 +44,13 @@ public class Intake extends SubsystemBase {
         this.rightExtensionMotor.getConfigurator().apply(Intake.getRightExtensionMotorConfig());
         this.rollerMotor.getConfigurator().apply(Intake.getRollerMotorConfig());
         
+        ShuffleboardTab shuffleboardCalibrationTab =
+            Shuffleboard.getTab("Calibration");
+        
+        shuffleboardCalibrationTab.add(
+            this.commands.calibrateExtensionLimits()
+        );
+        
     }
 
     protected static TalonFXConfiguration getLeftExtensionMotorConfig() {
