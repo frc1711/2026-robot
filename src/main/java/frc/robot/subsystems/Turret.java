@@ -116,9 +116,9 @@ public class Turret extends SubsystemBase {
         
     }
     
-    public TurretWheelSpeeds getWheelSpeeds() {
+    public TurretWheelSpeeds getActualWheelSpeeds() {
         
-        return new TurretWheelSpeeds(
+        return TurretWheelSpeeds.fromDynamicAngularMotorShaftVelocities(
             this.lowerWheelMotor.getVelocity().asSupplier(),
             this.upperWheelMotor.getVelocity().asSupplier()
         );
