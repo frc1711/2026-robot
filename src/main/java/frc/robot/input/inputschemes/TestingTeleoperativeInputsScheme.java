@@ -23,7 +23,6 @@ public class TestingTeleoperativeInputsScheme implements InputScheme {
 			.useAButtonToShoot(controller1)
 			.useBButtonToPulse(controller1)
 			.useXButtonToIntake(controller1)
-			.useDPadToControlIntakeExtension(controller1)
 			.useBumpersToControlIntakeExtension(controller1)
 			.useBackButtonToCalibrateIntakeExtension(controller1);
 		
