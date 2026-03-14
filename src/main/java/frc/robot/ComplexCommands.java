@@ -4,11 +4,15 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.math.DoubleSupplierBuilder;
 import frc.robot.state.IntakePosition;
 import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.util.ChassisSpeedsSupplierBuilder;
 
-import static edu.wpi.first.units.Units.Seconds;
+import java.util.function.DoubleSupplier;
+
+import static edu.wpi.first.units.Units.*;
 
 public class ComplexCommands {
     
@@ -21,6 +25,10 @@ public class ComplexCommands {
     }
     
     public Command drive(CommandXboxController controller) {
+        
+        DoubleSupplier rotationInput = DoubleSupplierBuilder.getRotationDoubleSupplier(controller);
+        Trigger driverIsTryingToManuallyTurn = new Trigger(() -> rotationInput.getAsDouble() != 0);
+        driverIsTryingToManuallyTurn.onTrue(this.robot.swerve.commands.disableHeadingLock());
         
         return this.robot.swerve.commands.drive(
             ChassisSpeedsSupplierBuilder.fromControllerJoysticks(controller)
