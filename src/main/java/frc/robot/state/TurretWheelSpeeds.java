@@ -12,21 +12,21 @@ import static edu.wpi.first.units.Units.*;
 public class TurretWheelSpeeds {
 	
 	public static final TurretWheelSpeeds CLOSE_SHOT =
-		TurretWheelSpeeds.fromRelativeStaticAngularWheelVelocities(
-			RotationsPerSecond.of(50),
-			0.75
+		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+			FeetPerSecond.of(10),
+			FeetPerSecond.of(10).plus(FeetPerSecond.of(5))
 		);
 	
 	public static final TurretWheelSpeeds MID_SHOT =
-		TurretWheelSpeeds.fromRelativeStaticAngularWheelVelocities(
-			RotationsPerSecond.of(55),
-			0.75
+		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+			FeetPerSecond.of(17.5),
+			FeetPerSecond.of(17.5).plus(FeetPerSecond.of(20))
 		);
 	
 	public static final TurretWheelSpeeds FAR_SHOT =
-		TurretWheelSpeeds.fromRelativeStaticAngularWheelVelocities(
-			RotationsPerSecond.of(60),
-			0.75
+		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+			FeetPerSecond.of(30),
+			FeetPerSecond.of(30).plus(FeetPerSecond.of(15))
 		);
 	
 	Supplier<AngularVelocity> lowerWheelAngularVelocitySupplier;
