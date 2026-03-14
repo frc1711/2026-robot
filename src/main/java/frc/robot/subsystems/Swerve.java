@@ -235,7 +235,7 @@ public class Swerve extends SubsystemBase {
         
         builder.addDoubleProperty(
             "Heading Setpoint",
-            () -> this.headingLockSupplier.get().in(Degrees),
+            () -> this.headingLockSupplier == null ? -1 : this.headingLockSupplier.get().in(Degrees),
             (double headingDegrees) -> this.headingLockSupplier = () -> Degrees.of(headingDegrees)
         );
         
