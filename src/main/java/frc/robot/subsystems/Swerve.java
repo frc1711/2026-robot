@@ -97,6 +97,7 @@ public class Swerve extends SubsystemBase {
             this.commands.calibrateFieldRelativeHeading()
         );
         
+        SmartDashboard.putData("Swerve", this);
         SmartDashboard.putData("Swerve Drive", this.getSwerveStateSendable());
         
     }
