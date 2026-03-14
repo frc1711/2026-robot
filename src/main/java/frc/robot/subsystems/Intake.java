@@ -153,19 +153,41 @@ public class Intake extends SubsystemBase {
 
         }
         
-        public Command pulse() {
+        public Command pulseV1() {
             
-            IntakePosition innerPosition = IntakePosition.FULLY_STOWED;
+            IntakePosition innerPosition = new IntakePosition(Inches.of(3));
             IntakePosition outerPosition = IntakePosition.PARTIALLY_STOWED;
             
             Command retract = this.goToPosition(innerPosition)
-                .until(Intake.this::isStalling);
+                .withTimeout(Seconds.of(0.25));
             Command extend = this.goToPosition(outerPosition);
+            Runnable resetPosition = () -> this.goToPosition(IntakePosition.PARTIALLY_STOWED);
             
             return retract
                 .andThen(extend)
                 .repeatedly()
-                .finallyDo(() -> this.goToPosition(IntakePosition.PARTIALLY_STOWED));
+                .finallyDo(resetPosition);
+            
+        }
+        
+        public Command pulseV2() {
+            
+            IntakePosition innerPosition = IntakePosition.FULLY_STOWED;
+            IntakePosition outerPosition = new IntakePosition(Inches.of(10));
+            
+            Command retract = this.goToPosition(innerPosition)
+                .until(Intake.this::isStalling);
+//                .withTimeout(Seconds.of(0.25));
+            Command extend = this.goToPosition(outerPosition);
+            Command pulse = retract.andThen(extend);
+            Command spinRoller = edu.wpi.first.wpilibj2.command.Commands.startEnd(
+                () -> Intake.this.rollerMotor.set(0.4),
+                () -> Intake.this.rollerMotor.stopMotor()
+            );
+            
+            return spinRoller.alongWith(
+                pulse.repeatedly()
+            ).finallyDo(() -> this.goToPosition(IntakePosition.PARTIALLY_STOWED));
             
         }
         
