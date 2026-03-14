@@ -24,7 +24,10 @@ import frc.robot.configuration.Direction;
 import frc.robot.configuration.SwerveModuleConfiguration;
 import frc.robot.devicewrappers.RaptorsPigeon2;
 import frc.robot.math.DoubleUtilities;
+import frc.robot.math.Point;
 import frc.robot.util.LogCommand;
+import frc.robot.util.RadiusLock;
+import frc.robot.util.VirtualField;
 
 import java.util.Set;
 import java.util.function.Supplier;
@@ -65,6 +68,8 @@ public class Swerve extends SubsystemBase {
     
     public Supplier<Angle> headingLockSupplier;
     
+    public Supplier<RadiusLock> radiusLockSupplier;
+    
     public final Commands commands;
 
     public Swerve(RaptorsOdometry odometry) {
@@ -82,6 +87,7 @@ public class Swerve extends SubsystemBase {
         this.driveSpeedMultiplier = 1;
         this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
         this.headingLockSupplier = null;
+        this.radiusLockSupplier = null;
         this.commands = new Commands();
         
 //        this.resetGyro();
@@ -503,6 +509,44 @@ public class Swerve extends SubsystemBase {
                 pointOfInterest,
                 Direction.FORWARDS
             );
+            
+        }
+        
+        public Command disablePOIRadiusLock() {
+            
+            return new InstantCommand(
+                () -> Swerve.this.radiusLockSupplier = null
+            );
+            
+        }
+        
+        public Command enablePOIRadiusLock(
+            Point pointOfInterest,
+            Distance radius
+        ) {
+            
+            return new InstantCommand(
+                () -> Swerve.this.radiusLockSupplier =
+                    () -> new RadiusLock(pointOfInterest, radius)
+            );
+            
+        }
+        
+        public Command disablePOIHeadingAndRadiusLock() {
+            
+            return this.disableHeadingLock()
+                .andThen(this.disablePOIRadiusLock());
+            
+        }
+        
+        public Command enablePOIHeadingAndRadiusLock(
+            Point pointOfInterest,
+            Distance radius,
+            Angle relativeHeading
+        ) {
+            
+            return this.enablePOIHeadingLock(pointOfInterest, relativeHeading)
+                .andThen(this.enablePOIRadiusLock(pointOfInterest, radius));
             
         }
         
