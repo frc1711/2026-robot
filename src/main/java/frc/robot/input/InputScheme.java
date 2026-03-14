@@ -14,6 +14,12 @@ public interface InputScheme {
 		CommandXboxController controller2
 	);
 	
+	default void init(
+		RobotContainer robot,
+		CommandXboxController controller1,
+		CommandXboxController controller2
+	) {}
+	
 	default void periodic(
 		RobotContainer robot,
 		CommandXboxController controller1,
