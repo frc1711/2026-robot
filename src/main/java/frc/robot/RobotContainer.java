@@ -4,40 +4,57 @@
 
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
 import frc.robot.input.InputScheme;
-import frc.robot.input.inputschemes.StandardTeleoperativeInputsScheme;
+import frc.robot.input.inputschemes.TestingTeleoperativeInputsScheme;
 import frc.robot.subsystems.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 public class RobotContainer {
   
   protected static final InputScheme CONTROLS_SCHEME =
-      new StandardTeleoperativeInputsScheme();
+      new TestingTeleoperativeInputsScheme();
+  
+  public final Swerve swerve;
+  
+  public final Intake intake;
+  
+  public final Agitator agitator;
+  
+  public final Indexer indexer;
+  
+  public final Turret turret;
+  
+  public final Vision vision;
+  
+  public final RaptorsOdometry odometry;
+  
+  public final ComplexCommands complexCommands;
 
-  // Initializing the subsystems
-  public final Swerve swerve = new Swerve();
-  public final Indexer indexer = new Indexer();
-  public final Agitator agitator = new Agitator();
-//  public final Vision vision = new Vision();
-//  public final Autons autons = new Autons(swerve, shooter, highway);
-//  public final LEDs leds = new LEDs(LedConstants.CANDLEPORT, 8, 10);
-  public final Turret turret = new Turret();
-  public final Intake intake = new Intake();
-  public final ComplexCommands complexCommands = new ComplexCommands(this);
-
-  private final CommandXboxController driverController = new CommandXboxController(OperatorConstants.DRIVERCONTROLLERPORT);
-  private final CommandXboxController operatorController = new CommandXboxController(OperatorConstants.OPERATORCONTROLLERPORT);
+  public final CommandXboxController driverController;
+  
+  public final CommandXboxController operatorController;
   
   public RobotContainer() {
-//    SmartDashboard.putData("Reset Headings", swerve.resetSwerveHeadings());
-//    SmartDashboard.putData("Swerve", swerve);
-//    SmartDashboard.putData("Vision", vision);
-//    SmartDashboard.putData("Hood", hood);
-//    SmartDashboard.putData("Shooter", shooter);
-//    SmartDashboard.putData("Turret", turret);
-
-//    this.leds.runSolid(this.leds.green());
+    
+    
+    this.intake = new Intake();
+    this.agitator = new Agitator();
+    this.indexer = new Indexer();
+    this.turret = new Turret();
+    this.odometry = new RaptorsOdometry();
+    this.swerve = new Swerve(this.odometry);
+    this.vision = new Vision(
+        this.swerve::getFieldRelativeHeading,
+        this.swerve::getLinearVelocity,
+        this.swerve::getAngularVelocity
+    );
+    this.complexCommands = new ComplexCommands(this);
+    this.driverController = new CommandXboxController(0);
+    this.operatorController = new CommandXboxController(1);
+    
+    this.odometry.injectSwerve(this.swerve);
+    this.odometry.injectVision(this.vision);
+    
   }
 
   /**
