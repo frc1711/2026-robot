@@ -10,11 +10,14 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.configuration.CANDevice;
 import frc.robot.state.IntakePosition;
+import frc.robot.util.LogCommand;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -141,7 +144,10 @@ public class Intake extends SubsystemBase {
             return Intake.this.runOnce(() -> {
                 Intake.this.leftExtensionMotor.setPosition(Rotations.zero());
                 Intake.this.rightExtensionMotor.setPosition(Rotations.zero());
-            });
+            })
+                .andThen(new LogCommand("Intake extension limits calibrated."))
+                .withName("Calibrate Intake Extension Limits")
+                .ignoringDisable(true);
             
         }
 
