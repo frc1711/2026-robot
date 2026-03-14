@@ -370,9 +370,12 @@ public class Swerve extends SubsystemBase {
         
         public Command useDriveSpeedMultiplier(double multiplier) {
             
-            return edu.wpi.first.wpilibj2.command.Commands
-                .runOnce(() -> Swerve.this.setDriveSpeedMultiplier(Math.min(multiplier, 1)))
-                .finallyDo(() -> Swerve.this.setDriveSpeedMultiplier(1));
+            Runnable resetMultiplier = () -> Swerve.this.setDriveSpeedMultiplier(1);
+            
+            return edu.wpi.first.wpilibj2.command.Commands.startEnd(
+                () -> Swerve.this.setDriveSpeedMultiplier(Math.min(multiplier, 1)),
+                resetMultiplier
+            ).finallyDo(resetMultiplier);
             
         }
         
