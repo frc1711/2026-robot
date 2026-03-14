@@ -1,8 +1,14 @@
 package frc.robot.input;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
+import frc.robot.configuration.Direction;
 import frc.robot.state.IntakePosition;
+import frc.robot.subsystems.Swerve;
+import frc.robot.util.VirtualField;
+
+import static edu.wpi.first.units.Units.Degrees;
 
 public class InputSchemeBuilder {
 	
@@ -22,7 +28,7 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder configureDefaultRobotCommands() {
 		
-//		this.robot.intake.setDefaultCommand(this.robot.complexCommands.autofeedMailbox());
+//		this.robot.intake.setDefaultCommand(this.robot.intake.commands.goToPosition(IntakePosition.PARTIALLY_STOWED));
 		
 		return this;
 		
@@ -32,7 +38,9 @@ public class InputSchemeBuilder {
 		CommandXboxController controller
 	) {
 		
-		this.robot.swerve.setDefaultCommand(this.robot.complexCommands.drive(controller));
+		this.robot.swerve.setDefaultCommand(
+			this.robot.complexCommands.drive(controller)
+		);
 		
 		return this;
 		
@@ -49,55 +57,56 @@ public class InputSchemeBuilder {
 //		
 //	}
 	
-//	public InputSchemeBuilder useXButtonForEnablingHeadingLock(
-//		CommandXboxController controller
-//	) {
-//		
-//		controller.x().onTrue(this.robot.swerve.commands.enabledPOIHeadingLock(
-//			VirtualField.getReefCenterPoint()
-//		));
-//		
-//		DoubleSupplier rotationInput = DoubleSupplierBuilder.getRotationDoubleSupplier(controller);
-//		(new Trigger(() -> rotationInput.getAsDouble() != 0)).onTrue(
-//			this.robot.swerve.commands.disableHeadingLock()
-//		);
-//		
-//		return this;
-//		
-//	}
-	
-//	public ControlsSchemeBuilder useDPadForRobotRelativeDriving(CommandXboxController controller) {
-//
-//		Swerve.DriveMode mode = Swerve.DriveMode.FIELD_RELATIVE;
-//		LinearVelocity speed = FeetPerSecond.of(1.5);
-//		DoubleSupplier rotation = InputUtilities.getRotationDoubleSupplier(controller);
-//
-//		controller.povUp().whileTrue(this.robot.swerve.commands.drive(() -> new ChassisSpeeds(speed, InchesPerSecond.of(0), rotation.getAsDouble()), mode, false));
-//		controller.povDown().whileTrue(this.robot.swerve.commands.drive(() -> new ChassisSpeeds(speed.times(-1), InchesPerSecond.of(0), InputUtilities.getRotationDoubleSupplier(controller)), mode, false));
-//		controller.povDown().whileTrue(this.robot.swerve.commands.driveForward(speed.times(-1), mode));
-//		controller.povLeft().whileTrue(this.robot.swerve.commands.driveLeft(speed, mode));
-//		controller.povRight().whileTrue(this.robot.swerve.commands.driveLeft(speed.times(-1), mode));
-//
-//		return this;
-//
-//	}
-	
 	public InputSchemeBuilder useStartButtonToResetFieldHeading(CommandXboxController controller) {
-
+		
 		controller.start().onTrue(
 			this.robot.swerve.commands.calibrateFieldRelativeHeading()
 		);
-
+		
 		return this;
-
+		
+	}
+	
+	public InputSchemeBuilder useBumpersToEnableHeadingLock(CommandXboxController controller) {
+		
+		Angle increment = Degrees.of(90);
+		Swerve.Commands swerve = this.robot.swerve.commands;
+		
+		controller.leftBumper()
+			.onTrue(swerve.jumpToNextHeadingLockAngle(increment, false));
+		
+		controller.rightBumper()
+			.onTrue(swerve.jumpToNextHeadingLockAngle(increment, true));
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useABXYButtonsToUseHeadingLock(CommandXboxController controller) {
+		
+		controller.y().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.FORWARDS));
+		controller.x().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.LEFT));
+		controller.b().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.RIGHT));
+		controller.a().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.BACKWARDS));
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useYButtonToLockToHub(CommandXboxController controller) {
+		
+		controller.y().onTrue(this.robot.swerve.commands.enabledPOIHeadingLock(
+			VirtualField.getHubCenterPoint(),
+			Direction.RIGHT
+		));
+		
+		return this;
+		
 	}
 	
 	public InputSchemeBuilder useAButtonToShoot(CommandXboxController controller) {
 		
-		controller.a().whileTrue(
-			this.robot.complexCommands.shoot()
-				.alongWith(this.robot.intake.commands.pulse())
-		);
+		controller.a().whileTrue(this.robot.complexCommands.shoot());
 		
 		return this;
 		
@@ -105,7 +114,7 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder useBButtonToPulse(CommandXboxController controller) {
 		
-		controller.b().whileTrue(this.robot.intake.commands.pulse());
+		controller.b().whileTrue(this.robot.intake.commands.pulseV1());
 		
 		return this;
 		
@@ -119,7 +128,7 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	public InputSchemeBuilder useDPadToControlIntakeExtension(
+	public InputSchemeBuilder useDPadToControlRawIntakeExtension(
 		CommandXboxController controller
 	) {
 		
@@ -130,7 +139,7 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	public InputSchemeBuilder useDPadToControlTurretRotation(
+	public InputSchemeBuilder useDPadToControlRawTurretRotation(
 		CommandXboxController controller
 	) {
 		
@@ -141,17 +150,34 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	public InputSchemeBuilder useBumpersToControlIntakeExtension(
+	public InputSchemeBuilder useTriggersToControlRawIntakeExtension(
 		CommandXboxController controller
 	) {
 		
-		controller.leftBumper().onTrue(this.robot.intake.commands.goToPosition(
-			IntakePosition.FULLY_STOWED
-		));
+		controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+			.onTrue(this.robot.intake.commands.extend(-0.1));
 		
-		controller.rightBumper().onTrue(this.robot.intake.commands.goToPosition(
-			IntakePosition.PARTIALLY_STOWED
-		));
+		controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+			.onTrue(this.robot.intake.commands.extend(0.1));
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useTriggersToControlIntakeExtension(
+		CommandXboxController controller
+	) {
+		
+		controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+			.onTrue(this.robot.intake.commands.goToPosition(
+				IntakePosition.FULLY_STOWED
+			));
+		
+		controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+			.onTrue(this.robot.intake.commands.goToPosition(
+				IntakePosition.PARTIALLY_STOWED
+			));
+		
 		return this;
 		
 	}
