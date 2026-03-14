@@ -239,53 +239,53 @@ public class Swerve extends SubsystemBase {
             null
         );
         
-        builder.addDoubleProperty(
-            "Swerve Module Velocity kP",
-            () -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                return config.Slot0.kP;
-                
-            },
-            (double kP) -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                config.Slot0.kP = kP;
-                
-                this.getModuleStream().forEach(module ->
-                    module.driveMotor.getConfigurator().apply(config)
-                );
-                
-            }
-        );
-        
-        builder.addDoubleProperty(
-            "Swerve Module Velocity kD",
-            () -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                return config.Slot0.kD;
-                
-            },
-            (double kD) -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                config.Slot0.kD = kD;
-                
-                this.getModuleStream().forEach(module ->
-                    module.driveMotor.getConfigurator().apply(config)
-                );
-                
-            }
-        );
+//        builder.addDoubleProperty(
+//            "Swerve Module Velocity kP",
+//            () -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                return config.Slot0.kP;
+//                
+//            },
+//            (double kP) -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                config.Slot0.kP = kP;
+//                
+//                this.getModuleStream().forEach(module ->
+//                    module.driveMotor.getConfigurator().apply(config)
+//                );
+//                
+//            }
+//        );
+//        
+//        builder.addDoubleProperty(
+//            "Swerve Module Velocity kD",
+//            () -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                return config.Slot0.kD;
+//                
+//            },
+//            (double kD) -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                config.Slot0.kD = kD;
+//                
+//                this.getModuleStream().forEach(module ->
+//                    module.driveMotor.getConfigurator().apply(config)
+//                );
+//                
+//            }
+//        );
         
 //        builder.addDoubleProperty(
 //            "Distance to Scoring Pose (in)",
