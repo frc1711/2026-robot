@@ -240,6 +240,13 @@ public class Swerve extends SubsystemBase {
         );
         
         builder.addDoubleProperty(
+            "Distance to Hub (inches)",
+            () -> VirtualField.getDistanceToHubCenterPoint(this.odometry.getTranslation()).in(Inches),
+            (double radiusInches) -> this.radiusLockSupplier =
+                () -> new RadiusLock(VirtualField.getHubCenterPoint(), Inches.of(radiusInches))
+        );
+        
+        builder.addDoubleProperty(
             "Swerve Linear Velocity (in/sec)",
             () -> this.getLinearVelocity().in(InchesPerSecond),
             null
