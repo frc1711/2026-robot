@@ -19,6 +19,7 @@ public class TestingTeleoperativeInputsScheme implements InputScheme {
 			.configureDefaultRobotCommands()
 			.useControllerJoysticksForDriving(controller1)
 			.useStartButtonToResetFieldHeading(controller1)
+			.useBumpersToEnableHeadingLock(controller1)
 			.useAButtonToShoot(controller1)
 			.useBButtonToPulse(controller1)
 			.useXButtonToIntake(controller1)
