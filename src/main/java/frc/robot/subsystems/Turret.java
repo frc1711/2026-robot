@@ -185,36 +185,54 @@ public class Turret extends SubsystemBase {
         
         builder.addDoubleProperty(
             "Turret Lower Wheel Speed (RPS)",
-            () -> this.getWheelSpeeds().getLowerWheelAngularVelocity().in(RotationsPerSecond),
+            () -> this.getActualWheelSpeeds().getLowerWheelAngularVelocity().in(RotationsPerSecond),
             (double rotationsPerSecond) -> this.setWheelSpeeds(new TurretWheelSpeeds(
                 () -> RotationsPerSecond.of(rotationsPerSecond),
-                this.getWheelSpeeds()::getUpperWheelAngularVelocity
+                this.getWheelSpeedsSetpoints()::getUpperWheelAngularVelocity
             ))
         );
         
         builder.addDoubleProperty(
             "Turret Upper Wheel Speed (RPS)",
-            () -> this.getWheelSpeeds().getUpperWheelAngularVelocity().in(RotationsPerSecond),
+            () -> this.getActualWheelSpeeds().getUpperWheelAngularVelocity().in(RotationsPerSecond),
             (double rotationsPerSecond) -> this.setWheelSpeeds(new TurretWheelSpeeds(
-                this.getWheelSpeeds()::getLowerWheelAngularVelocity,
+                this.getWheelSpeedsSetpoints()::getLowerWheelAngularVelocity,
                 () -> RotationsPerSecond.of(rotationsPerSecond)
             ))
         );
         
         builder.addDoubleProperty(
-            "Turret Lower Wheel Surface Speed (ft/s)",
-            () -> this.getWheelSpeeds().getLowerWheelSurfaceSpeed().in(FeetPerSecond),
-            (double feetPerSecond) -> this.setWheelSpeeds(TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
-                FeetPerSecond.of(feetPerSecond),
-                this.getWheelSpeeds().getUpperWheelSurfaceSpeed()
+            "Turret Lower Wheel Speed Setpoint (RPS)",
+            () -> this.getWheelSpeedsSetpoints().getLowerWheelAngularVelocity().in(RotationsPerSecond),
+            (double rotationsPerSecond) -> this.setWheelSpeeds(new TurretWheelSpeeds(
+                () -> RotationsPerSecond.of(rotationsPerSecond),
+                this.getWheelSpeedsSetpoints()::getUpperWheelAngularVelocity
             ))
         );
         
         builder.addDoubleProperty(
-            "Turret Upper Wheel Surface Speed (ft/s)",
-            () -> this.getWheelSpeeds().getUpperWheelSurfaceSpeed().in(FeetPerSecond),
+            "Turret Upper Wheel Speed Setpoint (RPS)",
+            () -> this.getWheelSpeedsSetpoints().getUpperWheelAngularVelocity().in(RotationsPerSecond),
+            (double rotationsPerSecond) -> this.setWheelSpeeds(new TurretWheelSpeeds(
+                this.getWheelSpeedsSetpoints()::getLowerWheelAngularVelocity,
+                () -> RotationsPerSecond.of(rotationsPerSecond)
+            ))
+        );
+        
+        builder.addDoubleProperty(
+            "Turret Lower Wheel Surface Speed (FPS)",
+            () -> this.getActualWheelSpeeds().getLowerWheelSurfaceSpeed().in(FeetPerSecond),
             (double feetPerSecond) -> this.setWheelSpeeds(TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
-                this.getWheelSpeeds().getLowerWheelSurfaceSpeed(),
+                FeetPerSecond.of(feetPerSecond),
+                this.getWheelSpeedsSetpoints().getUpperWheelSurfaceSpeed()
+            ))
+        );
+        
+        builder.addDoubleProperty(
+            "Turret Upper Wheel Surface Speed (FPS)",
+            () -> this.getActualWheelSpeeds().getUpperWheelSurfaceSpeed().in(FeetPerSecond),
+            (double feetPerSecond) -> this.setWheelSpeeds(TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+                this.getWheelSpeedsSetpoints().getLowerWheelSurfaceSpeed(),
                 FeetPerSecond.of(feetPerSecond)
             ))
         );
