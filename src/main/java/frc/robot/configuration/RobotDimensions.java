@@ -9,6 +9,18 @@ public class RobotDimensions {
     
     public static final AngularVelocity KRAKEN_X60_MAX_FREE_SPEED =
         Rotations.per(Minute).of(5800);
+    
+    public static final Distance FRAME_WIDTH = Inches.of(32.75);
+    
+    public static final Distance FRAME_LENGTH = Inches.of(21.75);
+    
+    public static final Distance BUMPER_THICKNESS = Inches.of(3.5);
+    
+    public static final Distance ROBOT_LENGTH =
+        FRAME_LENGTH.plus(BUMPER_THICKNESS.times(2));
+    
+    public static final Distance ROBOT_WIDTH =
+        FRAME_WIDTH.plus(BUMPER_THICKNESS.times(2));
 
     public static final Distance SWERVE_LR_WHEELBASE_DISTANCE = Inches.of(27.0825);
     
