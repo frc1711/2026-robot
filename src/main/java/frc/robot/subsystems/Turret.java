@@ -35,6 +35,8 @@ public class Turret extends SubsystemBase {
     protected final TalonFX upperWheelMotor;
     
     protected final TalonFX headingMotor;
+    
+    protected TurretWheelSpeeds wheelSpeeds;
 
     public final Commands commands;
     
@@ -45,6 +47,7 @@ public class Turret extends SubsystemBase {
         this.lowerWheelMotor = new TalonFX(CANDevice.TURRET_LOWER_WHEEL_MOTOR_CONTROLLER.id);
         this.upperWheelMotor = new TalonFX(CANDevice.TURRET_UPPER_WHEEL_MOTOR_CONTROLLER.id);
         this.headingMotor = new TalonFX(CANDevice.TURRET_HEADING_MOTOR_CONTROLLER.id);
+        this.wheelSpeeds = TurretWheelSpeeds.STOPPED;
         this.commands = new Commands();
         this.triggers = new Triggers();
         
@@ -121,14 +124,22 @@ public class Turret extends SubsystemBase {
         
     }
     
+    public TurretWheelSpeeds getWheelSpeedsSetpoints() {
+        
+        return this.wheelSpeeds;
+        
+    }
+    
     public void setWheelSpeeds(TurretWheelSpeeds wheelSpeeds) {
         
+        this.wheelSpeeds = wheelSpeeds;
+        
         this.lowerWheelMotor.setControl(new MotionMagicVelocityVoltage(
-            wheelSpeeds.getLowerWheelMotorShaftAngularVelocity()
+            this.wheelSpeeds.getLowerWheelMotorShaftAngularVelocity()
         ));
         
         this.upperWheelMotor.setControl(new MotionMagicVelocityVoltage(
-            wheelSpeeds.getUpperWheelMotorShaftAngularVelocity()
+            this.wheelSpeeds.getUpperWheelMotorShaftAngularVelocity()
         ));
         
     }
