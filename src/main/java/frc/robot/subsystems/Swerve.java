@@ -122,6 +122,12 @@ public class Swerve extends SubsystemBase {
         
     }
     
+    public RaptorsOdometry getOdometry() {
+        
+        return this.odometry;
+        
+    }
+    
     public ChassisSpeeds getActualChassisSpeeds() {
         
         return this.kinematics.toChassisSpeeds(
