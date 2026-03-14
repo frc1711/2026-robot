@@ -21,7 +21,7 @@ public class TestingTeleoperativeInputsScheme implements InputScheme {
 			.useStartButtonToResetFieldHeading(controller1)
 			.useBumpersToEnableHeadingLock(controller1)
 			.useAButtonToShoot(controller1)
-			.useBButtonToPulse(controller1)
+			.useYButtonToLockToHub(controller1)
 			.useXButtonToIntake(controller1)
 			.useBumpersToControlIntakeExtension(controller1)
 			.useBackButtonToCalibrateIntakeExtension(controller1);
