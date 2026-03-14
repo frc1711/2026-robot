@@ -110,7 +110,7 @@ public class ChassisSpeedsSupplierBuilder implements Supplier<ChassisSpeeds> {
             else if (povAngle > 225 && povAngle <= 315) isLeft = true;
             else isUp = true;
 
-            LinearVelocity speed = FeetPerSecond.of(1.5);
+            LinearVelocity speed = Swerve.MAX_LINEAR_VELOCITY.times(0.66);
             LinearVelocity vx = isUp ? speed : isDown ? speed.times(-1) : speed.times(0);
             LinearVelocity vy = isLeft ? speed : isRight ? speed.times(-1) : speed.times(0);
 
