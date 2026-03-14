@@ -42,7 +42,7 @@ public class Intake extends SubsystemBase {
         
         this.leftExtensionMotor.getConfigurator().apply(Intake.getLeftExtensionMotorConfig());
         this.rightExtensionMotor.getConfigurator().apply(Intake.getRightExtensionMotorConfig());
-        this.extensionRequest.Slot = 0;
+        this.rollerMotor.getConfigurator().apply(Intake.getRollerMotorConfig());
         
     }
 
@@ -76,6 +76,19 @@ public class Intake extends SubsystemBase {
         TalonFXConfiguration config = Intake.getLeftExtensionMotorConfig();
         
         config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        
+        return config;
+        
+    }
+    
+    protected static TalonFXConfiguration getRollerMotorConfig() {
+        
+        TalonFXConfiguration config = new TalonFXConfiguration();
+        
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        
+        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 1;
         
         return config;
         
