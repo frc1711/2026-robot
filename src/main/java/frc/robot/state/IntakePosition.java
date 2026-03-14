@@ -37,6 +37,12 @@ public class IntakePosition {
         
     }
     
+    public IntakePosition plus(Distance extension) {
+        
+        return new IntakePosition(this.offsetFromFullyStowed.plus(extension));
+        
+    }
+    
     public Distance getOffsetFromFullyStowed() {
         
         return this.offsetFromFullyStowed;
