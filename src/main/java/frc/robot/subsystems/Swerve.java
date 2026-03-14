@@ -53,6 +53,8 @@ public class Swerve extends SubsystemBase {
     
     protected final SwerveDriveKinematics kinematics;
     
+    protected final RaptorsOdometry odometry;
+    
     protected double speedMultiplier;
     
     protected ChassisSpeeds chassisSpeeds;
@@ -61,7 +63,7 @@ public class Swerve extends SubsystemBase {
     
     public final Commands commands;
 
-    public Swerve() {
+    public Swerve(RaptorsOdometry odometry) {
         
         this.modules = SwerveModuleConfiguration.getModuleConfigurations()
             .map(SwerveModule::new)
@@ -72,6 +74,7 @@ public class Swerve extends SubsystemBase {
                 .map(config -> config.positionInRobot)
                 .toArray(Translation2d[]::new)
         );
+        this.odometry = odometry;
         this.speedMultiplier = 1;
         this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
         this.headingLockSupplier = null;
