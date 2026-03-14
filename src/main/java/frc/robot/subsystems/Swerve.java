@@ -48,8 +48,6 @@ public class Swerve extends SubsystemBase {
     public static final AngularVelocity SLOW_MODE_MAX_ANGULAR_VELOCITY = DegreesPerSecond.of(60);
     
     protected final SwerveModule[] modules;
-    
-    protected final PIDController headingPIDController;
 
     protected final RaptorsPigeon2 gyro;
     
@@ -68,7 +66,6 @@ public class Swerve extends SubsystemBase {
         this.modules = SwerveModuleConfiguration.getModuleConfigurations()
             .map(SwerveModule::new)
             .toArray(SwerveModule[]::new);
-        this.headingPIDController = new PIDController(5, 0, 0);
         this.gyro = new RaptorsPigeon2(CANDevice.PIGEON_IMU);
         this.kinematics = new SwerveDriveKinematics(
             SwerveModuleConfiguration.getModuleConfigurations()
@@ -81,8 +78,6 @@ public class Swerve extends SubsystemBase {
         this.commands = new Commands();
         
 //        this.resetGyro();
-
-        headingPIDController.enableContinuousInput(0, 360);
         
         ShuffleboardTab shuffleboardCalibrationTab =
             Shuffleboard.getTab("Calibration");
@@ -172,7 +167,6 @@ public class Swerve extends SubsystemBase {
     public void calibrateFieldRelativeHeading(Angle currentHeading) {
         
         this.gyro.yaw.calibrate(currentHeading);
-        this.setFieldRelativeHeadingSetpoint(currentHeading.times(-1));
         
     }
     
@@ -180,16 +174,6 @@ public class Swerve extends SubsystemBase {
         
         return this.gyro.yaw.getAngle();
         
-    }
-    
-    public void setFieldRelativeHeadingSetpoint(Angle heading) {
-
-//        Pose2d existingPose = this.odometry.getPose();
-
-        this.headingPIDController.setSetpoint(heading.in(Degrees));
-
-//        this.odometry.resetPose(existingPose);
-
     }
     
     public LinearVelocity getLinearVelocity() {
@@ -226,13 +210,13 @@ public class Swerve extends SubsystemBase {
         builder.addDoubleProperty(
             "Heading",
             () -> this.getFieldRelativeHeading().in(Degrees),
-            (double headingDegrees) -> this.setFieldRelativeHeadingSetpoint(Degrees.of(headingDegrees))
+            (double headingDegrees) -> this.headingLockSupplier = () -> Degrees.of(headingDegrees)
         );
         
         builder.addDoubleProperty(
             "Heading Setpoint",
-            this.headingPIDController::getSetpoint,
-            (double headingDegrees) -> this.setFieldRelativeHeadingSetpoint(Degrees.of(headingDegrees))
+            () -> this.headingLockSupplier.get().in(Degrees),
+            (double headingDegrees) -> this.headingLockSupplier = () -> Degrees.of(headingDegrees)
         );
         
         builder.addDoubleProperty(
