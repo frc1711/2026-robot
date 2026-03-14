@@ -13,7 +13,7 @@ public class IntakePosition {
     
     public static final IntakePosition PARTIALLY_STOWED = new IntakePosition(Inches.of(7));
     
-    public static final IntakePosition INTAKING = new IntakePosition(Inches.of(11));
+    public static final IntakePosition INTAKING = new IntakePosition(Inches.of(9));
     
     public static final IntakePosition FULLY_EXTENDED = new IntakePosition(Inches.of(12));
 
