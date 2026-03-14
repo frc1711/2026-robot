@@ -117,10 +117,10 @@ public class Intake extends SubsystemBase {
     public boolean isStalling() {
         
         return (
-            Intake.this.leftExtensionMotor.getSupplyCurrent()
+            Intake.this.leftExtensionMotor.getStatorCurrent()
                 .getValue()
                 .gte(Intake.MINIMUM_STALL_DETECTION_CURRENT) ||
-            Intake.this.rightExtensionMotor.getSupplyCurrent()
+            Intake.this.rightExtensionMotor.getStatorCurrent()
                 .getValue()
                 .gte(Intake.MINIMUM_STALL_DETECTION_CURRENT)
         );
