@@ -218,4 +218,10 @@ public class Point extends Translation2d {
         
     }
     
+    public ChassisSpeeds toChassisSpeeds() {
+        
+        return this.toChassisSpeeds(0);
+        
+    }
+    
 }
