@@ -61,15 +61,16 @@ public class Turret extends SubsystemBase {
         
         TalonFXConfiguration config = new TalonFXConfiguration();
         
-        config.Slot0.kS = 0.25;
-        config.Slot0.kV = 0.12;
-        config.Slot0.kA = 0.01;
-        config.Slot0.kP = 0.11;
+        config.Slot0.kS = 0.2;
+        // 1rps @ 0.25v
+        // 2rps @ 0.36v
+        // 3rps @ 0.46v
+        config.Slot0.kV = 0.1;
+//        config.Slot0.kA = 0.01;
+        config.Slot0.kP = 0.5;
         
         config.MotionMagic.MotionMagicAcceleration = 400;
-        config.MotionMagic.MotionMagicJerk = 4000;
-        
-        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 1;
+//        config.MotionMagic.MotionMagicJerk = 4000;
 
 //    config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
         
@@ -80,13 +81,13 @@ public class Turret extends SubsystemBase {
         
         TalonFXConfiguration config = new TalonFXConfiguration();
         
-        config.Slot0.kS = 0.25;
-        config.Slot0.kV = 0.12;
-        config.Slot0.kA = 0.01;
-        config.Slot0.kP = 0.11;
+        config.Slot0.kS = 0.2;
+        config.Slot0.kV = 0.1;
+//        config.Slot0.kA = 0.01;
+        config.Slot0.kP = 0.5;
         
         config.MotionMagic.MotionMagicAcceleration = 400;
-        config.MotionMagic.MotionMagicJerk = 4000;
+//        config.MotionMagic.MotionMagicJerk = 4000;
 
 //    config.Slot0.StaticFeedforwardSign = StaticFeedforwardSignValue.UseVelocitySign;
         
