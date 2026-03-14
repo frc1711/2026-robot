@@ -24,6 +24,7 @@ public class Robot extends TimedRobot {
   public void robotInit() {
 
     Auton.initializeShuffleboardSelector();
+    this.robotContainer.init();
 //    this.robotContainer.swerve.calibrateFieldRelativeHeading(Degrees.of(180));
 
   }

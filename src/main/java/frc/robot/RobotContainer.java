@@ -52,6 +52,16 @@ public class RobotContainer {
     );
     
   }
+  
+  public void init() {
+    
+    RobotContainer.CONTROLS_SCHEME.init(
+        this,
+        this.driverController,
+        this.operatorController
+    );
+    
+  }
 
   public void periodic() {
     
