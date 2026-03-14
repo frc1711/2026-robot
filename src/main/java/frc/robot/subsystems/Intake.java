@@ -27,8 +27,6 @@ public class Intake extends SubsystemBase {
     protected TalonFX rightExtensionMotor;
 
     protected TalonFX rollerMotor;
-    
-    protected MotionMagicVoltage extensionRequest;
 
     public final Commands commands;
     
@@ -39,7 +37,6 @@ public class Intake extends SubsystemBase {
         this.leftExtensionMotor = new TalonFX(CANDevice.INTAKE_LEFT_EXTENSION_MOTOR_CONTROLLER.id);
         this.rightExtensionMotor = new TalonFX(CANDevice.INTAKE_RIGHT_EXTENSION_MOTOR_CONTROLLER.id);
         this.rollerMotor = new TalonFX(CANDevice.INTAKE_ROLLER_MOTOR_CONTROLLER.id);
-        this.extensionRequest = new MotionMagicVoltage(Rotations.zero());
         this.commands = new Commands();
         this.triggers = new Triggers();
         
@@ -94,17 +91,13 @@ public class Intake extends SubsystemBase {
     
     public void goToPosition(IntakePosition position) {
 
-        Intake.this.leftExtensionMotor.setControl(
-            Intake.this.extensionRequest.withPosition(
-                position.getMotorShaftAngle()
-            )
-        );
+        Intake.this.leftExtensionMotor.setControl(new MotionMagicVoltage(
+            position.getMotorShaftAngle()
+        ));
         
-        Intake.this.rightExtensionMotor.setControl(
-            Intake.this.extensionRequest.withPosition(
-                position.getMotorShaftAngle()
-            )
-        );
+        Intake.this.rightExtensionMotor.setControl(new MotionMagicVoltage(
+            position.getMotorShaftAngle()
+        ));
         
     }
     
