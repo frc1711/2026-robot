@@ -138,5 +138,39 @@ public class DoubleUtilities {
                 Math.max(newValue, oldValue - maxIncrease);
 
     }
+    
+    /**
+     * Returns the next incremental value above (or below, if `reverse` is set
+     * to true) the given value.
+     * 
+     * @param value The value for which to retrieve a relative result.
+     * @param increment The increment to use when calculating the result
+     * relative to the input value.
+     * @param reverse If set to true, this method will instead return the
+     * 'previous' increment from the given input value.
+     * @return The next incremental value above (or below, if `reverse` is set
+     * to true) the given value.
+     */
+    public static double getNextIncrement(
+        double value,
+        double increment,
+        boolean reverse
+    ) {
+        
+        if (value % increment == 0) {
+            
+            return value + (reverse ? -increment : increment);
+            
+        } else {
+            
+            double multiplier = value / increment;
+            
+            return reverse
+                ? Math.floor(multiplier) * increment
+                : Math.ceil(multiplier) * increment;
+            
+        }
+        
+    }
 
 }
