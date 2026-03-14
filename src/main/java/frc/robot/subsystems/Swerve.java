@@ -451,7 +451,7 @@ public class Swerve extends SubsystemBase {
             
         }
         
-        public Command enabledPOIHeadingLock(
+        public Command enablePOIHeadingLock(
             Translation2d pointOfInterest,
             Angle relativeHeading
         ) {
@@ -476,9 +476,9 @@ public class Swerve extends SubsystemBase {
             
         }
         
-        public Command enabledPOIHeadingLock(Translation2d pointOfInterest) {
+        public Command enablePOIHeadingLock(Translation2d pointOfInterest) {
             
-            return this.enabledPOIHeadingLock(
+            return this.enablePOIHeadingLock(
                 pointOfInterest,
                 Direction.FORWARDS
             );
