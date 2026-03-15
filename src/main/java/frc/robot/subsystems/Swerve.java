@@ -571,6 +571,19 @@ public class Swerve extends SubsystemBase {
             
         }
         
+        public Command setModuleHeadings(Angle robotRelativeAngle) {
+            
+            return Swerve.this.runOnce(
+                () -> Swerve.this.getModuleStream().forEach(
+                    (module) -> module.updateModuleState(
+                        new SwerveModuleState(0, new Rotation2d(robotRelativeAngle)),
+                        false
+                    )
+                )
+            );
+            
+        }
+        
         public Command stop() {
             
             return new InstantCommand(Swerve.this::stop, Swerve.this);
