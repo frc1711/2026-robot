@@ -107,9 +107,9 @@ public class SwerveModule {
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
-//        config.Slot0.kS = 0.25;
-        config.Slot0.kV = 0.12;
-//        config.Slot0.kA = 0.1;
+        config.Slot0.kS = 0.18;
+        config.Slot0.kV = 0.115;
+        config.Slot0.kA = 0.01;
         config.Slot0.kP = 0.1;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
