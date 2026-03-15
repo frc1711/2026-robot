@@ -23,8 +23,9 @@ public class VirtualField {
 	
 	public static final Distance HUB_WIDTH = Inches.of(47);
 	
+	// FIM fields use the 'welded' version of the field layout.
 	public static final AprilTagFieldLayout APRIL_TAGS =
-		AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+		AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 	
 	public static final DriverStation.Alliance DEFAULT_ALLIANCE =
 		DriverStation.Alliance.Red;
