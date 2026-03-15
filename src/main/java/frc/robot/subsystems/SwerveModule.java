@@ -357,17 +357,24 @@ public class SwerveModule {
         
     }
     
-    public void updateModuleState(SwerveModuleState newState) {
+    public void updateModuleState(
+        SwerveModuleState newState,
+        boolean optimize
+    ) {
         
         Rotation2d currentSteeringHeading =
             new Rotation2d(this.getSteeringHeading());
         
-        newState.optimize(currentSteeringHeading);
-        
-        // Perform cosine speed compensation.
-        newState.speedMetersPerSecond *= newState.angle
-            .minus(currentSteeringHeading)
-            .getCos();
+        if (optimize) {
+            
+            newState.optimize(currentSteeringHeading);
+            
+            // Perform cosine speed compensation.
+            newState.speedMetersPerSecond *= newState.angle
+                .minus(currentSteeringHeading)
+                .getCos();
+            
+        }
         
         this.steerAngleSetpoint = newState.angle.getMeasure();
         this.driveVelocitySetpoint =
@@ -382,6 +389,12 @@ public class SwerveModule {
                 .withWheelSurfaceSpeed(this.driveVelocitySetpoint)
                 .getMotorShaftAngularVelocity()
         ));
+        
+    }
+    
+    public void updateModuleState(SwerveModuleState moduleState) {
+        
+        this.updateModuleState(moduleState, true);
         
     }
     
