@@ -140,7 +140,7 @@ public class VirtualField {
 
 	}
 
-	public static Translation2d getHubCenterPoint() {
+	public static Point getHubCenterPoint() {
 
 		return VirtualField.getHubCenterPoint(VirtualField.getAlliance());
 
