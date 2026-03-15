@@ -178,9 +178,20 @@ public class Swerve extends SubsystemBase {
         
     }
     
+    protected void setChassisSpeeds(ChassisSpeeds chassisSpeeds) {
+        
+        this.chassisSpeeds = chassisSpeeds;
+        
+        SwerveModuleState[] newModuleStates =
+            this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+        
+        this.applyModuleStates(newModuleStates);
+        
+    }
+    
     public void stop() {
         
-        this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
+        this.setChassisSpeeds(new ChassisSpeeds(0, 0, 0));
         
     }
     
@@ -217,16 +228,6 @@ public class Swerve extends SubsystemBase {
     public AngularVelocity getAngularVelocity() {
         
         return this.gyro.getYawAngularVelocity();
-        
-    }
-    
-    @Override
-    public void periodic() {
-        
-        SwerveModuleState[] newModuleStates =
-            this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
-        
-        this.applyModuleStates(newModuleStates);
         
     }
     
@@ -578,7 +579,7 @@ public class Swerve extends SubsystemBase {
         
         public Command drive(Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
             
-            return Swerve.this.run(() -> Swerve.this.chassisSpeeds = chassisSpeedsSupplier.get());
+            return Swerve.this.run(() -> Swerve.this.setChassisSpeeds(chassisSpeedsSupplier.get()));
             
         }
         
