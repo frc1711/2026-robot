@@ -42,6 +42,21 @@ public class ComplexCommands {
         
     }
     
+    public Command resetFieldHeading() {
+        
+        Command haltSwerve = this.robot.swerve.commands.useDriveSpeedMultiplier(0);
+        Command beginCalibration = this.robot.swerve.commands.calibrateFieldRelativeHeading()
+            .alongWith(this.robot.vision.commands.beginStableSeeding());
+        Command endCalibration = this.robot.vision.commands.beginUsingInternalLL4IMUAssist();
+        
+        return haltSwerve
+            .alongWith(beginCalibration)
+            .withTimeout(Seconds.of(2))
+            .andThen(endCalibration)
+            .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
+        
+    }
+    
     public Command intake() {
         
         Command prepareAndRunIntake =
