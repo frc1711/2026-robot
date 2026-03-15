@@ -146,6 +146,26 @@ public class VirtualField {
 
 	}
 	
+	public static Distance getDistanceToHubCenterPoint(
+		DriverStation.Alliance alliance,
+		Translation2d point
+	) {
+		
+		return Meters.of(
+			VirtualField.getHubCenterPoint(alliance).getDistance(point)
+		);
+		
+	}
+	
+	public static Distance getDistanceToHubCenterPoint(Translation2d point) {
+		
+		return VirtualField.getDistanceToHubCenterPoint(
+			VirtualField.getAlliance(),
+			point
+		);
+		
+	}
+	
 	public static FieldThird getFieldThirdForPosition(
 		DriverStation.Alliance alliance,
 		Translation2d position
