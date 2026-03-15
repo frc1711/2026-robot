@@ -25,6 +25,7 @@ public class Robot extends TimedRobot {
 
     Auton.initializeShuffleboardSelector();
     this.robotContainer.init();
+    this.robotContainer.vision.beginStableSeeding();
 //    this.robotContainer.swerve.calibrateFieldRelativeHeading(Degrees.of(180));
 
   }
@@ -44,7 +45,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-
+    
+    this.robotContainer.vision.beginUsingInternalLL4IMUAssist();
     this.autonCommand = Auton.runSelectedAuton(this.robotContainer);
 
   }
@@ -54,7 +56,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
-
+    
+    this.robotContainer.vision.beginUsingInternalLL4IMUAssist();
     this.robotContainer.configureTeleoperativeControls();
 
   }
