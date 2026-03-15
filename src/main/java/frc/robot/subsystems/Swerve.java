@@ -1,9 +1,13 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -15,10 +19,8 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.configuration.CANDevice;
 import frc.robot.configuration.Direction;
 import frc.robot.configuration.SwerveModuleConfiguration;
@@ -228,6 +230,27 @@ public class Swerve extends SubsystemBase {
     public AngularVelocity getAngularVelocity() {
         
         return this.gyro.getYawAngularVelocity();
+        
+    }
+    
+    public SysIdRoutine getDriveMotorsSysIdRoutine() {
+        
+        return new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                (state) -> SignalLogger.writeString("state", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                (volts) -> this.getModuleStream().forEach((module) -> {
+                    module.steerMotor.setControl(new MotionMagicVoltage(0));
+                    module.driveMotor.setControl(new VoltageOut(volts.in(Volts)));
+                }),
+                null,
+                this
+            )
+        );
         
     }
     
@@ -754,6 +777,22 @@ public class Swerve extends SubsystemBase {
 //            });
 //            
 //        }
+        
+        public Command sysIdDriveQuasistatic(SysIdRoutine.Direction direction) {
+            
+            return this.setModuleHeadings(Degrees.of(0))
+                .andThen(edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(1)))
+                .andThen(Swerve.this.getDriveMotorsSysIdRoutine().quasistatic(direction));
+            
+        }
+        
+        public Command sysIdDriveDynamic(SysIdRoutine.Direction direction) {
+            
+            return this.setModuleHeadings(Degrees.of(0))
+                .andThen(edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(1)))
+                .andThen(Swerve.this.getDriveMotorsSysIdRoutine().dynamic(direction));
+            
+        }
         
     }
     
