@@ -59,9 +59,7 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder useStartButtonToResetFieldHeading(CommandXboxController controller) {
 		
-		controller.start().onTrue(
-			this.robot.swerve.commands.calibrateFieldRelativeHeading()
-		);
+		controller.start().onTrue(this.robot.complexCommands.resetFieldHeading());
 		
 		return this;
 		
