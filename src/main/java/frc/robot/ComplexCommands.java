@@ -6,13 +6,17 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.configuration.Direction;
 import frc.robot.math.DoubleSupplierBuilder;
+import frc.robot.math.Point;
+import frc.robot.math.PointSupplierBuilder;
 import frc.robot.state.IntakePosition;
 import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.util.ChassisSpeedsSupplierBuilder;
 import frc.robot.util.VirtualField;
 
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -28,9 +32,14 @@ public class ComplexCommands {
     
     public Command drive(CommandXboxController controller) {
         
+        Supplier<Point> translationInput = PointSupplierBuilder.getTranslationPointSupplier(controller); 
         DoubleSupplier rotationInput = DoubleSupplierBuilder.getRotationDoubleSupplier(controller);
-        Trigger driverIsTryingToManuallyTurn = new Trigger(() -> rotationInput.getAsDouble() != 0);
-        driverIsTryingToManuallyTurn.onTrue(this.robot.swerve.commands.disableHeadingLock());
+        
+        Trigger driverIsTryingToManuallyTranslate = new Trigger(() -> translationInput.get().getNorm() != 0);
+        Trigger driverIsTryingToManuallyRotate = new Trigger(() -> rotationInput.getAsDouble() != 0);
+        
+        driverIsTryingToManuallyTranslate.whileTrue(this.robot.swerve.commands.disablePOIRadiusLock());
+        driverIsTryingToManuallyRotate.whileTrue(this.robot.swerve.commands.disableHeadingLock());
         
         return this.robot.swerve.commands.drive(
             ChassisSpeedsSupplierBuilder.fromControllerJoysticks(controller)
