@@ -24,6 +24,8 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 			.useAButtonToShoot(controller2)
 			.useBButtonToPulse(controller2)
 			.useXButtonToIntake(controller2)
+			.useDPadDownToOuttake(controller2)
+			.useYButtonToShootManually(controller2)
 			.useBumpersToControlIntakeExtension(controller2)
 			.useTriggersForIndexing(controller2)
 			.useBackButtonToCalibrateIntakeExtension(controller2);
