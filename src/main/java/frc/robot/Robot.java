@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.configuration.DoublePreference;
 
 public class Robot extends TimedRobot {
 
@@ -17,6 +18,8 @@ public class Robot extends TimedRobot {
   public Robot() {
 
     this.robotContainer = new RobotContainer();
+    
+    DoublePreference.init();
 
   }
 
