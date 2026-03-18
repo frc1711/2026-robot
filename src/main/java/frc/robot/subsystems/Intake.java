@@ -206,7 +206,7 @@ public class Intake extends SubsystemBase {
         
         public Command pulseV3() {
             
-            IntakePosition innerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(-5));
+            IntakePosition innerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(-4));
             IntakePosition outerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(2));
             
             Command retract = this.goToPosition(innerPosition)
