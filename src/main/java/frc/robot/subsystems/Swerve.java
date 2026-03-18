@@ -206,7 +206,11 @@ public class Swerve extends SubsystemBase {
     
     public void calibrateFieldRelativeHeading(Angle currentHeading) {
         
+        Pose2d existingPose = this.odometry.getPose();
+        
         this.gyro.yaw.calibrate(currentHeading);
+        
+        this.odometry.resetPose(existingPose);
         
     }
     
