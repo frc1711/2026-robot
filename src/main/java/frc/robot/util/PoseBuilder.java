@@ -99,6 +99,18 @@ public class PoseBuilder implements Supplier<Pose2d> {
 			.withTranslation(ROBOT_RELATIVE, RobotDimensions.ROBOT_LENGTH.div(2), BACKWARDS);
 
 	}
+	
+	public static PoseBuilder getHubShootingPose(
+		Distance shootingRadius,
+		Angle shootingAngle
+	) {
+		
+		return PoseBuilder.fromPose(new Pose2d(VirtualField.getHubCenterPoint(), Rotation2d.kZero))
+			.withFieldRelativeHeading(RIGHT)
+			.withRotation(shootingAngle)
+			.withTranslation(ROBOT_RELATIVE, shootingRadius, RIGHT);
+		
+	}
 
 //	/**
 //	 * Returns a pose for scoring on the reef, facing the AprilTag with the
