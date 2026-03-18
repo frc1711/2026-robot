@@ -70,6 +70,19 @@ public class ComplexCommands {
         
     }
     
+    public Command outtake() {
+        
+        Command prepareAndRunIntake =
+            this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
+                .andThen(this.robot.intake.commands.intake(() -> -0.65));
+        Runnable resetIntakePosition = () ->
+            this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
+        
+        return prepareAndRunIntake
+            .finallyDo(resetIntakePosition);
+        
+    }
+    
     public Command shoot(
         TurretWheelSpeeds turretState,
         Time spinupWaitTime
