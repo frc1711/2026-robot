@@ -14,7 +14,6 @@ import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
-import static edu.wpi.first.units.Units.*;
 import static frc.robot.configuration.Direction.*;
 import static frc.robot.util.PoseBuilder.CoordinateSystem.*;
 
