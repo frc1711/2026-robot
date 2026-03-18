@@ -62,11 +62,10 @@ public class ComplexCommands {
         Command prepareAndRunIntake =
             this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
                 .andThen(this.robot.intake.commands.intake(() -> 0.65));
-        Command driveSlowly = this.robot.swerve.commands.useDriveSpeedMultiplier(0.3);
         Runnable resetIntakePosition = () ->
             this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
         
-        return prepareAndRunIntake.alongWith(driveSlowly)
+        return prepareAndRunIntake
             .finallyDo(resetIntakePosition);
         
     }
