@@ -3,12 +3,14 @@ package frc.robot;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.math.DoubleSupplierBuilder;
 import frc.robot.state.IntakePosition;
 import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.util.ChassisSpeedsSupplierBuilder;
+import frc.robot.util.VirtualField;
 
 import java.util.function.DoubleSupplier;
 
@@ -85,32 +87,51 @@ public class ComplexCommands {
     
     public Command shoot(
         TurretWheelSpeeds turretState,
-        Time spinupWaitTime
+        Time spinupWaitTime,
+        boolean withLock
     ) {
         
+        
+        Command headingLock = this.robot.swerve.commands.enablePOIHeadingLock(
+            VirtualField.getHubCenterPoint(),
+            Direction.RIGHT
+        );
+        Command radiusLock = this.robot.swerve.commands.enablePOIRadiusLock(
+            VirtualField.getHubCenterPoint(),
+            Feet.of(9)
+        );
+        Command enableLocks = withLock
+            ? headingLock.alongWith(radiusLock)
+            : new InstantCommand();
         Command spinUpShooter = this.robot.turret.commands.shoot(turretState);
-        Command agitate = this.robot.agitator.commands.agitate()
-            .alongWith(this.robot.intake.commands.pulseV1());
+//        Command agitate = this.robot.agitator.commands.agitate()
+        Command pulse = this.robot.intake.commands.pulseV3();
         Command waitForSpinup = Commands.waitTime(spinupWaitTime);
+//        Command waitForHeadingLock = Commands.waitUntil(this.robot.swerve.headingLock::hasLock);
+//        Command waitForRadiusLock = Commands.waitUntil(this.robot.swerve.radiusLock::hasLock);
+        Command waitUntilReady = waitForSpinup;
         Command feedShooter = this.robot.indexer.commands.forward();
         
-        return spinUpShooter
-            .alongWith(agitate)
-            .alongWith(waitForSpinup.andThen(feedShooter));
+        return enableLocks.andThen(
+            spinUpShooter
+                .alongWith(pulse)
+                .alongWith(waitUntilReady.andThen(feedShooter))
+        );
         
     }
     
     public Command shoot(
-        TurretWheelSpeeds turretState
+        TurretWheelSpeeds turretState,
+        boolean withLocks
     ) {
         
-        return this.shoot(turretState, Seconds.of(0.5));
+        return this.shoot(turretState, Seconds.of(0.5), withLocks);
         
     }
     
     public Command shoot() {
         
-        return this.shoot(TurretWheelSpeeds.MID_SHOT);
+        return this.shoot(TurretWheelSpeeds.MID_SHOT, true);
         
     }
     
