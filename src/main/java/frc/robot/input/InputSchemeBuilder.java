@@ -128,6 +128,24 @@ public class InputSchemeBuilder {
 		
 	}
 	
+	public InputSchemeBuilder useDPadDownToOuttake(CommandXboxController controller) {
+		
+		controller.povDown().whileTrue(this.robot.complexCommands.outtake());
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useYButtonToShootManually(CommandXboxController controller) {
+		
+		controller.y().whileTrue(
+			this.robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+		);
+		
+		return this;
+		
+	}
+	
 	public InputSchemeBuilder useDPadToControlRawIntakeExtension(
 		CommandXboxController controller
 	) {
