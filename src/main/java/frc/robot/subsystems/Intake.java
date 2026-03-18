@@ -210,7 +210,7 @@ public class Intake extends SubsystemBase {
             IntakePosition outerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(2));
             
             Command retract = this.goToPosition(innerPosition)
-                .withTimeout(Seconds.of(0.15));
+                .withTimeout(Seconds.of(0.2));
             Command extend = this.goToPosition(outerPosition);
             Command delay = edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(0.4));
             Runnable resetPosition = () -> this.goToPosition(IntakePosition.PARTIALLY_STOWED);
