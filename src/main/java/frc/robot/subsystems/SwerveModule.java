@@ -107,12 +107,12 @@ public class SwerveModule {
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
-        config.Slot0.kS = 0.18;
-        config.Slot0.kV = 0.115;
-        config.Slot0.kA = 0.01;
-        config.Slot0.kP = 0.1;
-        config.Slot0.kI = 0;
-        config.Slot0.kD = 0;
+        config.Slot0.kS = this.configuration.kS;
+        config.Slot0.kV = this.configuration.kV;
+        config.Slot0.kA = this.configuration.kA;
+        config.Slot0.kP = this.configuration.kP;
+        config.Slot0.kI = this.configuration.kI;
+        config.Slot0.kD = this.configuration.kD;
         
         // Cruise velocity is intentionally unconfigured -- the control mode we
         // are using (velocity) does not need a separate max velocity to be set.
