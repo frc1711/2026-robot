@@ -19,8 +19,8 @@ public class TurretWheelSpeeds {
 	
 	public static final TurretWheelSpeeds CLOSE_SHOT =
 		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
-			FeetPerSecond.of(10),
-			FeetPerSecond.of(10).plus(FeetPerSecond.of(5))
+			FeetPerSecond.of(14.5),
+			FeetPerSecond.of(14.5).plus(FeetPerSecond.of(20))
 		);
 	
 	public static final TurretWheelSpeeds MID_SHOT =
