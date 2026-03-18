@@ -20,6 +20,7 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 			.useControllerJoysticksForDriving(controller1)
 			.useStartButtonToResetFieldHeading(controller1)
 			.useBumpersToEnableHeadingLock(controller1)
+			.useTriggersForSlowMode(controller1)
 			.useAButtonToShoot(controller2)
 			.useBButtonToPulse(controller2)
 			.useXButtonToIntake(controller2)
