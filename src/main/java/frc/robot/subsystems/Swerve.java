@@ -27,6 +27,7 @@ import frc.robot.configuration.SwerveModuleConfiguration;
 import frc.robot.devicewrappers.RaptorsPigeon2;
 import frc.robot.math.DoubleUtilities;
 import frc.robot.math.Point;
+import frc.robot.util.HeadingLock;
 import frc.robot.util.LogCommand;
 import frc.robot.util.RadiusLock;
 import frc.robot.util.VirtualField;
@@ -68,9 +69,9 @@ public class Swerve extends SubsystemBase {
     
     protected ChassisSpeeds chassisSpeeds;
     
-    public Supplier<Angle> headingLockSupplier;
+    public final HeadingLock headingLock;
     
-    public Supplier<RadiusLock> radiusLockSupplier;
+    public final RadiusLock radiusLock;
     
     public final Commands commands;
 
@@ -88,8 +89,8 @@ public class Swerve extends SubsystemBase {
         this.odometry = odometry;
         this.driveSpeedMultiplier = 1;
         this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
-        this.headingLockSupplier = null;
-        this.radiusLockSupplier = null;
+        this.headingLock = new HeadingLock(this);
+        this.radiusLock = new RadiusLock(this);
         this.commands = new Commands();
         
 //        this.resetGyro();
@@ -233,6 +234,14 @@ public class Swerve extends SubsystemBase {
         
     }
     
+    @Override
+    public void periodic() {
+        
+        this.headingLock.periodic();
+        this.radiusLock.periodic();
+        
+    }
+    
     public SysIdRoutine getDriveMotorsSysIdRoutine() {
         
         return new SysIdRoutine(
@@ -260,20 +269,41 @@ public class Swerve extends SubsystemBase {
         builder.addDoubleProperty(
             "Heading",
             () -> this.getFieldRelativeHeading().in(Degrees),
-            (double headingDegrees) -> this.headingLockSupplier = () -> Degrees.of(headingDegrees)
+            (double headingDegrees) -> this.headingLock.enable(() -> Degrees.of(headingDegrees))
         );
         
         builder.addDoubleProperty(
             "Heading Setpoint",
-            () -> this.headingLockSupplier == null ? -1 : this.headingLockSupplier.get().in(Degrees),
-            (double headingDegrees) -> this.headingLockSupplier = () -> Degrees.of(headingDegrees)
+            () -> this.headingLock.isEnabled() ? this.headingLock.getHeading().in(Degrees) : -1,
+            (double headingDegrees) -> this.headingLock.enable(() -> Degrees.of(headingDegrees))
+        );
+        
+        builder.addStringProperty(
+            "Heading Lock",
+            () -> {
+                if (!this.headingLock.isEnabled()) return "DISABLED";
+                else if (!this.headingLock.hasLock()) return "HOMING";
+                else return "LOCKED";
+            },
+            null
+        );
+        
+        builder.addStringProperty(
+            "Radius Lock",
+            () -> {
+                if (!this.radiusLock.isEnabled()) return "DISABLED";
+                else if (!this.headingLock.hasLock()) return "HOMING";
+                else return "LOCKED";
+            },
+            null
         );
         
         builder.addDoubleProperty(
             "Distance to Hub (inches)",
             () -> VirtualField.getDistanceToHubCenterPoint(this.odometry.getTranslation()).in(Inches),
-            (double radiusInches) -> this.radiusLockSupplier =
-                () -> new RadiusLock(VirtualField.getHubCenterPoint(), Inches.of(radiusInches))
+            null
+//            (double radiusInches) -> this.radiusLockSupplier =
+//                () -> new RadiusLock(VirtualField.getHubCenterPoint(), Inches.of(radiusInches))
         );
         
         builder.addDoubleProperty(
@@ -451,9 +481,7 @@ public class Swerve extends SubsystemBase {
 
         public Command disableHeadingLock() {
 
-            return new InstantCommand(
-                () -> Swerve.this.headingLockSupplier = null
-            );
+            return new InstantCommand(Swerve.this.headingLock::disable);
 
         }
         
@@ -462,7 +490,7 @@ public class Swerve extends SubsystemBase {
         ) {
             
             return new InstantCommand(
-                () -> Swerve.this.headingLockSupplier = headingSupplier
+                () -> Swerve.this.headingLock.enable(headingSupplier) 
             );
             
         }
@@ -483,11 +511,11 @@ public class Swerve extends SubsystemBase {
                Angle actualHeading = Swerve.this.getFieldRelativeHeading();
                Angle tolerance = Degrees.of(5);
                boolean isRobotAlreadyAtHeadingLock =
-                   Swerve.this.headingLockSupplier != null &&
-                   actualHeading.isNear(Swerve.this.headingLockSupplier.get(), tolerance);
+                   Swerve.this.headingLock.isEnabled() &&
+                   actualHeading.isNear(Swerve.this.headingLock.getHeading(), tolerance);
                
                Angle originalHeading = isRobotAlreadyAtHeadingLock
-                   ? Swerve.this.headingLockSupplier.get()
+                   ? Swerve.this.headingLock.getHeading()
                    : Swerve.this.getFieldRelativeHeading();
                
                Angle nextHeading = Degrees.of(DoubleUtilities.getNextIncrement(
@@ -507,21 +535,17 @@ public class Swerve extends SubsystemBase {
             Angle relativeHeading
         ) {
             
-            return new InstantCommand(() -> {
+            return this.enableDynamicHeadingLock(() -> {
                 
-                Swerve.this.headingLockSupplier = () -> {
-                    
-                    Pose2d currentPose = Swerve.this.odometry.getPose();
-                    
-                    if (currentPose == null) return Degrees.zero();
-                    
-                    Translation2d deltaTranslation = pointOfInterest
-                        .minus(currentPose.getTranslation());
-                    
-                    return deltaTranslation.getAngle().getMeasure()
-                        .plus(relativeHeading);
-                    
-                };
+                Pose2d currentPose = Swerve.this.odometry.getPose();
+                
+                if (currentPose == null) return Degrees.zero();
+                
+                Translation2d deltaTranslation = pointOfInterest
+                    .minus(currentPose.getTranslation());
+                
+                return deltaTranslation.getAngle().getMeasure()
+                    .plus(relativeHeading);
                 
             });
             
@@ -538,9 +562,7 @@ public class Swerve extends SubsystemBase {
         
         public Command disablePOIRadiusLock() {
             
-            return new InstantCommand(
-                () -> Swerve.this.radiusLockSupplier = null
-            );
+            return new InstantCommand(Swerve.this.radiusLock::disable);
             
         }
         
@@ -550,8 +572,10 @@ public class Swerve extends SubsystemBase {
         ) {
             
             return new InstantCommand(
-                () -> Swerve.this.radiusLockSupplier =
-                    () -> new RadiusLock(pointOfInterest, radius)
+                () -> Swerve.this.radiusLock.enable(
+                    () -> pointOfInterest,
+                    () -> radius
+                )
             );
             
         }
