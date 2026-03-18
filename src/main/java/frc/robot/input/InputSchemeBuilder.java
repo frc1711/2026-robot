@@ -5,10 +5,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
 import frc.robot.configuration.Direction;
 import frc.robot.state.IntakePosition;
+import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.subsystems.Swerve;
 import frc.robot.util.VirtualField;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.*;
 
 public class InputSchemeBuilder {
 	
@@ -91,9 +92,9 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	public InputSchemeBuilder useYButtonToLockToHub(CommandXboxController controller) {
+	public InputSchemeBuilder useYButtonToHeadingLockToHub(CommandXboxController controller) {
 		
-		controller.y().onTrue(this.robot.swerve.commands.enabledPOIHeadingLock(
+		controller.y().onTrue(this.robot.swerve.commands.enablePOIHeadingLock(
 			VirtualField.getHubCenterPoint(),
 			Direction.RIGHT
 		));
