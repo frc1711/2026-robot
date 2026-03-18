@@ -71,7 +71,7 @@ public class Intake extends SubsystemBase {
         config.Slot0.kD = 0;
 
         config.MotionMagic.MotionMagicCruiseVelocity = 50;
-        config.MotionMagic.MotionMagicAcceleration = 50;
+        config.MotionMagic.MotionMagicAcceleration = 80;
         config.MotionMagic.MotionMagicJerk = 1000;
         
         config.HardwareLimitSwitch.ForwardLimitEnable = false;
