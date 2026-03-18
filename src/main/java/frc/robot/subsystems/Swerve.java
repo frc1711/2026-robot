@@ -397,8 +397,8 @@ public class Swerve extends SubsystemBase {
             
             this.modules[0].addSendableFields(builder, "Front Left");
             this.modules[1].addSendableFields(builder, "Front Right");
-            this.modules[2].addSendableFields(builder, "Rear Left");
-            this.modules[3].addSendableFields(builder, "Rear Right");
+            this.modules[2].addSendableFields(builder, "Back Left");
+            this.modules[3].addSendableFields(builder, "Back Right");
             
             builder.addDoubleProperty(
                 "Robot Angle",
