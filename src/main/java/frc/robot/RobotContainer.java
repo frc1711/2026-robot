@@ -5,14 +5,14 @@
 package frc.robot;
 
 import frc.robot.input.InputScheme;
-import frc.robot.input.inputschemes.TestingTeleoperativeInputsScheme;
+import frc.robot.input.inputschemes.StandardTeleoperativeInputsScheme;
 import frc.robot.subsystems.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 public class RobotContainer {
   
   protected static final InputScheme CONTROLS_SCHEME =
-      new TestingTeleoperativeInputsScheme();
+      new StandardTeleoperativeInputsScheme();
   
   public final Swerve swerve;
   
