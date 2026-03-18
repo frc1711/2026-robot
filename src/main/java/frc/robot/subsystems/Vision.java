@@ -48,6 +48,8 @@ public class Vision extends SubsystemBase {
 	
 	public void beginStableSeeding() {
 		
+		System.out.println("Beginning stable seeding mode...");
+		
 		for (RaptorsLimelight limelight: Vision.LIMELIGHTS) {
 			
 			limelight.setIMUMode(LimelightIMUMode.EXTERNAL_SEED);
@@ -57,6 +59,8 @@ public class Vision extends SubsystemBase {
 	}
 	
 	public void beginUsingInternalLL4IMUAssist() {
+		
+		System.out.println("Beginning to use internal LL4 IMU assist...");
 		
 		for (RaptorsLimelight limelight: Vision.LIMELIGHTS) {
 			
