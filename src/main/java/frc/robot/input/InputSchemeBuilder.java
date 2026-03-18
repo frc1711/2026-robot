@@ -114,7 +114,7 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder useBButtonToPulse(CommandXboxController controller) {
 		
-		controller.b().whileTrue(this.robot.intake.commands.pulseV1());
+		controller.b().whileTrue(this.robot.intake.commands.pulseV3());
 		
 		return this;
 		
