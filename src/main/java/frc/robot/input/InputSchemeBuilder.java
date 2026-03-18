@@ -104,6 +104,29 @@ public class InputSchemeBuilder {
 		
 	}
 	
+	public InputSchemeBuilder useBButtonToRadiusLockToHub(CommandXboxController controller) {
+		
+		controller.b().onTrue(this.robot.swerve.commands.enablePOIRadiusLock(
+			VirtualField.getHubCenterPoint(),
+			Feet.of(8)
+		));
+		
+		controller.b().onFalse(this.robot.swerve.commands.disablePOIRadiusLock());
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useTriggersForSlowMode(CommandXboxController controller) {
+		
+		controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+			.or(controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD))
+			.whileTrue(this.robot.swerve.commands.useDriveSpeedMultiplier(0.4));
+		
+		return this;
+		
+	}
+	
 	public InputSchemeBuilder useAButtonToShoot(CommandXboxController controller) {
 		
 		controller.a().whileTrue(this.robot.complexCommands.shoot());
