@@ -24,7 +24,7 @@ import static edu.wpi.first.units.Units.*;
 public class SwerveModule {
     
     public static final Time TIME_TO_MAX_DRIVE_ANGULAR_VELOCITY =
-        Seconds.of(0.25);
+        Seconds.of(0.5);
     
     public static final AngularAcceleration MAX_DRIVE_ANGULAR_ACCELERATION =
         RobotDimensions.KRAKEN_X60_MAX_FREE_SPEED
