@@ -14,6 +14,12 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_FRONT_LEFT_STEER_ENCODER,
 		DoublePreference.FRONT_LEFT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
 		SwerveDriveMotorGearRatio.RATIO_TWO,
+		0.19938,
+		0.11574,
+		0.0034994,
+		0.0019956,
+		0,
+		0,
 		true,
 		true
 	),
@@ -25,6 +31,12 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_FRONT_RIGHT_STEER_ENCODER,
 		DoublePreference.FRONT_RIGHT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
 		SwerveDriveMotorGearRatio.RATIO_TWO,
+		0.1944,
+		0.11547,
+		0.0034045,
+		0.0092993,
+		0,
+		0,
 		true,
 		false
 	),
@@ -36,6 +48,13 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_REAR_LEFT_STEER_ENCODER,
 		DoublePreference.REAR_LEFT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
 		SwerveDriveMotorGearRatio.RATIO_TWO,
+		0.16595,
+		0.11566,
+		0.0083564,
+//		0.086531,
+		0.002,
+		0,
+		0,
 		false,
 		true
 	),
@@ -47,6 +66,13 @@ public enum SwerveModuleConfiguration {
 		CANDevice.SWERVE_REAR_RIGHT_STEER_ENCODER,
 		DoublePreference.REAR_RIGHT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES,
 		SwerveDriveMotorGearRatio.RATIO_TWO,
+		0.12722,
+		0.11571,
+		0.012295,
+//		0.087194,
+		0.002,
+		0,
+		0,
 		false,
 		false
 	);
@@ -67,6 +93,18 @@ public enum SwerveModuleConfiguration {
 	
 	public final SwerveDriveMotorGearRatio gearRatio;
 	
+	public final double kS;
+	
+	public final double kV;
+	
+	public final double kA;
+	
+	public final double kP;
+	
+	public final double kI;
+	
+	public final double kD;
+	
 	public final boolean isFront;
 	
 	public final boolean isLeft;
@@ -83,6 +121,12 @@ public enum SwerveModuleConfiguration {
 		CANDevice steerEncoderCANDevice,
 		DoublePreference steerEncoderOffset,
 		SwerveDriveMotorGearRatio gearRatio,
+		double kS,
+		double kV,
+		double kA,
+		double kP,
+		double kI,
+		double kD,
 		boolean isFront,
 		boolean isLeft
 	) {
@@ -93,6 +137,12 @@ public enum SwerveModuleConfiguration {
 		this.steerEncoderCANDevice = steerEncoderCANDevice;
 		this.steerEncoderOffset = steerEncoderOffset;
 		this.gearRatio = gearRatio;
+		this.kS = kS;
+		this.kV = kV;
+		this.kA = kA;
+		this.kP = kP;
+		this.kI = kI;
+		this.kD = kD;
 		this.isFront = isFront;
 		this.isLeft = isLeft;
 		this.positionInRobot = new Translation2d(
