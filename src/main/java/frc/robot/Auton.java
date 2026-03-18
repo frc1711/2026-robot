@@ -1,12 +1,21 @@
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.*;
+import frc.robot.configuration.Direction;
+import frc.robot.configuration.RobotDimensions;
 import frc.robot.state.TurretWheelSpeeds;
+import frc.robot.util.ChassisSpeedsSupplierBuilder;
+import frc.robot.util.PoseBuilder;
+import frc.robot.util.VirtualField;
 
 import java.util.function.Function;
+
+import static edu.wpi.first.units.Units.*;
 
 public enum Auton {
 
@@ -16,11 +25,63 @@ public enum Auton {
 	),
 	
 	TRENCH_SHOT("Trench Shot", robot ->
-		robot.complexCommands.shoot(TurretWheelSpeeds.FAR_SHOT)
+		robot.complexCommands.shoot(TurretWheelSpeeds.FAR_SHOT, true)
 	),
 
 	BUMP_SHOT("Bump Shot", robot ->
-		robot.complexCommands.shoot(TurretWheelSpeeds.CLOSE_SHOT)
+		robot.complexCommands.shoot(TurretWheelSpeeds.CLOSE_SHOT, true)
+	),
+	
+	DEPOT_RUN("Depot Run", robot ->
+		robot.swerve.commands.goToPosition3(
+			PoseBuilder.fromPose(new Pose2d(VirtualField.getDepotFaceCenterPoint(), Rotation2d.kZero))
+				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(20), Direction.LEFT)
+				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(3), Direction.BACKWARDS)
+//				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(10), Direction.RIGHT)
+				.withFieldRelativeHeading(Degrees.of(225))
+				.get()
+		).andThen(
+			robot.complexCommands.intake()
+				.alongWith(
+					robot.swerve.commands.drive(ChassisSpeedsSupplierBuilder.right(FeetPerSecond.of(1))
+						.withFieldRelative(robot.swerve))
+				)
+				.withTimeout(3)
+		).andThen(
+//			robot.swerve.commands.drive(
+//				ChassisSpeedsSupplierBuilder.forwards(FeetPerSecond.of(2))
+//					.withFieldRelative(robot.swerve)
+//			).withTimeout(2)
+//		/*)*/.andThen(
+			robot.swerve.commands.goToPosition3(PoseBuilder.getHubShootingPose(Feet.of(9), Degrees.of(-30)).get())
+		).andThen(
+			robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+				.withTimeout(Seconds.of(15))
+		)
+	),
+	
+	DEPOT_RUN_WITH_INITIAL_BARRAGE("Depot Run (with initial barrage)", robot ->
+		robot.complexCommands.shoot(TurretWheelSpeeds.CLOSE_SHOT, false)
+			.withTimeout(Seconds.of(5))
+			.andThen(robot.swerve.commands.goToPosition3(
+				PoseBuilder.fromPose(new Pose2d(VirtualField.getDepotFaceCenterPoint(), Rotation2d.kZero))
+					.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, RobotDimensions.ROBOT_LENGTH.div(2), Direction.FORWARDS)
+					.withFieldRelativeHeading(Direction.BACKWARDS)
+					.get()
+			))
+			.andThen(
+				robot.complexCommands.intake()
+					.alongWith(robot.swerve.commands.drive(ChassisSpeedsSupplierBuilder.forwards(InchesPerSecond.of(9))))
+					.withTimeout(2)
+			).andThen(
+				robot.swerve.commands.drive(ChassisSpeedsSupplierBuilder.backwards(FeetPerSecond.of(2)))
+					.withTimeout(2)
+			).andThen(
+				robot.swerve.commands.goToPosition3(PoseBuilder.getHubShootingPose(Feet.of(9), Degrees.of(-30)).get())
+			).andThen(
+				robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+					.withTimeout(Seconds.of(15))
+			)
 	);
 
 	/**
