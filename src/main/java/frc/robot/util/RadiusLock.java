@@ -7,7 +7,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.*;
 import edu.wpi.first.units.measure.*;
-import frc.robot.math.Point;
+import frc.robot.math.Vector;
 import frc.robot.subsystems.Swerve;
 
 import java.util.function.Supplier;
@@ -148,19 +148,40 @@ public class RadiusLock {
 		
 		if (!this.isEnabled()) return chassisSpeeds;
 		
-		LinearVelocity correctionVelocity =
-			RadiusLock.INTRINSIC_LINEAR_VELOCITY_UNIT
-				.of(this.lastPIDValue + this.controller.getSetpoint().velocity);
+		Rotation2d robotHeading =
+			new Rotation2d(this.swerve.getFieldRelativeHeading());
+		Vector centerPoint = new Vector(this.centerPointSupplier.get());
 		
+		ChassisSpeeds originalFieldRelativeSpeeds =
+			ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, robotHeading);
+		Vector originalFieldRelativeSpeedsVector =
+			new Vector(originalFieldRelativeSpeeds);
+		
+		ChassisSpeeds tangentialSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+			originalFieldRelativeSpeedsVector
+				.isolateMagnitudeTangentTo(centerPoint)
+				.asChassisSpeeds(originalFieldRelativeSpeeds.omegaRadiansPerSecond),
+			robotHeading
+		);
+		
+		LinearVelocity controllerCorrectionVelocity =
+			RadiusLock.INTRINSIC_LINEAR_VELOCITY_UNIT.of(this.lastPIDValue);
+		LinearVelocity controllerSetpointVelocity =
+			RadiusLock.INTRINSIC_LINEAR_VELOCITY_UNIT
+				.of(this.controller.getSetpoint().velocity);
+		LinearVelocity controllerTotalVelocity = controllerCorrectionVelocity
+			.plus(controllerSetpointVelocity);
+
 		ChassisSpeeds correctiveSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-			new Point(this.swerve.getOdometry().getTranslation().minus(this.centerPointSupplier.get()))
-				.applyMaxNorm(correctionVelocity.times(Seconds.of(1)))
-				.toChassisSpeeds(),
+			new Vector(this.swerve.getOdometry().getTranslation())
+				.vectorTo(centerPoint)
+				.withMagnitude(controllerTotalVelocity.times(Seconds.of(-1)))
+				.asChassisSpeeds(),
 			new Rotation2d(swerve.getFieldRelativeHeading())
 		);
 		
 		correctiveSpeeds.omegaRadiansPerSecond =
-			chassisSpeeds.omegaRadiansPerSecond;
+			originalFieldRelativeSpeeds.omegaRadiansPerSecond;
 		
 		return correctiveSpeeds;
 		
