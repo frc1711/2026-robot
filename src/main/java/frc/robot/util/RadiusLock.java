@@ -105,6 +105,14 @@ public class RadiusLock {
 		
 	}
 	
+	public Distance getError() {
+		
+		return !this.isEnabled()
+			? RadiusLock.INTRINSIC_DISTANCE_UNITS.zero()
+			: this.getActualRadius().minus(this.radiusSupplier.get());
+		
+	}
+	
 	public boolean hasLock(Distance tolerance) {
 		
 		if (this.radiusSupplier == null) return false;
