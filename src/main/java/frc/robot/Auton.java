@@ -38,7 +38,7 @@ public enum Auton {
 				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(20), Direction.LEFT)
 				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(3), Direction.BACKWARDS)
 //				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(10), Direction.RIGHT)
-				.withFieldRelativeHeading(Degrees.of(225))
+				.withHeading(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Degrees.of(225))
 				.get()
 		).andThen(
 			robot.complexCommands.intake()
@@ -66,7 +66,7 @@ public enum Auton {
 			.andThen(robot.swerve.commands.goToPosition3(
 				PoseBuilder.fromPose(new Pose2d(VirtualField.getDepotFaceCenterPoint(), Rotation2d.kZero))
 					.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, RobotDimensions.ROBOT_LENGTH.div(2), Direction.FORWARDS)
-					.withFieldRelativeHeading(Direction.BACKWARDS)
+					.withHeading(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Direction.BACKWARDS)
 					.get()
 			))
 			.andThen(

@@ -39,7 +39,7 @@ public class RaptorsOdometry extends SubsystemBase {
 	protected static Pose2d getInitialPose() {
 		
 		return PoseBuilder.fromCenterFieldPose()
-			.withFieldRelativeHeading(Rotation2d.k180deg)
+			.withHeading(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Direction.BACKWARDS)
 			.get();
 		
 	}

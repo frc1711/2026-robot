@@ -94,7 +94,7 @@ public class PoseBuilder implements Supplier<Pose2d> {
 	public static PoseBuilder getAprilTagFacingPose(IntSupplier tagID) {
 
 		return PoseBuilder.getAprilTagPose(tagID)
-			.withRobotRelativeHeading(Rotation2d.k180deg)
+			.withRotation(BACKWARDS)
 			.withTranslation(ROBOT_RELATIVE, RobotDimensions.ROBOT_LENGTH.div(2), BACKWARDS);
 
 	}
@@ -105,7 +105,7 @@ public class PoseBuilder implements Supplier<Pose2d> {
 	) {
 		
 		return PoseBuilder.fromPose(new Pose2d(VirtualField.getHubCenterPoint(), Rotation2d.kZero))
-			.withFieldRelativeHeading(RIGHT)
+			.withHeading(FIELD_RELATIVE, RIGHT)
 			.withRotation(shootingAngle)
 			.withTranslation(ROBOT_RELATIVE, shootingRadius, RIGHT);
 		
