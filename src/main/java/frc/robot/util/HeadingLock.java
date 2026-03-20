@@ -93,9 +93,13 @@ public class HeadingLock {
 	
 	public Angle getHeading() {
 		
-		return this.headingSupplier != null
-			? this.headingSupplier.get()
-			: null;
+		if (!this.isEnabled()) return null;
+		
+		return Degrees.of(DoubleUtilities.normalizeToRange(
+			this.headingSupplier.get().in(Degrees),
+			-180,
+			180
+		));
 		
 	}
 	
