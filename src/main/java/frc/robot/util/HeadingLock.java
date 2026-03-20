@@ -9,6 +9,7 @@ import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.robot.math.DoubleUtilities;
 import frc.robot.subsystems.Swerve;
 
 import java.util.function.Supplier;
@@ -116,7 +117,7 @@ public class HeadingLock {
 		if (this.headingSupplier == null) return false;
 		
 		return this.swerve.getFieldRelativeHeading().isNear(
-			this.headingSupplier.get(),
+			this.getHeading(),
 			tolerance
 		);
 		
@@ -134,7 +135,7 @@ public class HeadingLock {
 		
 		this.lastPIDValue = this.controller.calculate(
 			this.swerve.getFieldRelativeHeading().in(HeadingLock.INTRINSIC_ANGLE_UNITS),
-			this.headingSupplier.get().in(HeadingLock.INTRINSIC_ANGLE_UNITS)
+			this.getHeading().in(HeadingLock.INTRINSIC_ANGLE_UNITS)
 		);
 		
 	}
