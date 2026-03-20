@@ -155,6 +155,46 @@ public class PoseBuilder implements Supplier<Pose2d> {
 
 	}
 	
+	public PoseBuilder withHeading(
+		CoordinateSystem coordinateSystem,
+		Rotation2d heading
+	) {
+		
+		return switch (coordinateSystem) {
+			
+			case BLUE_OUT -> this.with(pose -> new Pose2d(
+				pose.getTranslation(),
+				heading
+			));
+			
+			case RED_OUT -> this.with(pose -> new Pose2d(
+				pose.getTranslation(),
+				heading.plus(Rotation2d.k180deg)
+			));
+			
+			case FIELD_RELATIVE -> this.with(pose -> new Pose2d(
+				pose.getTranslation(),
+				heading.plus(VirtualField.isRedAlliance() ? Rotation2d.k180deg : Rotation2d.kZero)
+			));
+			
+			case ROBOT_RELATIVE -> this.with(pose -> new Pose2d(
+				pose.getTranslation(),
+				pose.getRotation().plus(heading)
+			));
+			
+		};
+		
+	}
+	
+	public PoseBuilder withHeading(
+		CoordinateSystem coordinateSystem,
+		Angle heading
+	) {
+		
+		return this.withHeading(coordinateSystem, new Rotation2d(heading));
+		
+	}
+	
 	public PoseBuilder withRotation(Rotation2d rotation) {
 
 		return this.with(pose -> new Pose2d(
