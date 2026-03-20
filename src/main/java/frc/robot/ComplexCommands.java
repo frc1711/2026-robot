@@ -5,18 +5,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.configuration.Direction;
-import frc.robot.math.DoubleSupplierBuilder;
-import frc.robot.math.Point;
-import frc.robot.math.PointSupplierBuilder;
 import frc.robot.state.IntakePosition;
 import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.util.ChassisSpeedsSupplierBuilder;
 import frc.robot.util.VirtualField;
-
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
