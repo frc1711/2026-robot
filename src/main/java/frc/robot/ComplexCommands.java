@@ -92,31 +92,28 @@ public class ComplexCommands {
         boolean withLock
     ) {
         
-        
-        Command headingLock = this.robot.swerve.commands.enablePOIHeadingLock(
-            VirtualField.getHubCenterPoint(),
-            Direction.RIGHT
-        );
-        Command radiusLock = this.robot.swerve.commands.enablePOIRadiusLock(
-            VirtualField.getHubCenterPoint(),
-            Feet.of(9)
-        );
-        Command enableLocks = withLock
-            ? headingLock.alongWith(radiusLock)
-            : new InstantCommand();
+        Command enableLock = !withLock
+            ? new InstantCommand()
+            : this.robot.swerve.commands.enablePOIHeadingAndRadiusLock(
+                VirtualField.getHubCenterPoint(),
+                Feet.of(9),
+                Direction.RIGHT
+            );
         Command spinUpShooter = this.robot.turret.commands.shoot(turretState);
-//        Command agitate = this.robot.agitator.commands.agitate()
         Command pulse = this.robot.intake.commands.pulseV3();
-        Command waitForSpinup = Commands.waitTime(spinupWaitTime);
-//        Command waitForHeadingLock = Commands.waitUntil(this.robot.swerve.headingLock::hasLock);
-//        Command waitForRadiusLock = Commands.waitUntil(this.robot.swerve.radiusLock::hasLock);
-        Command waitUntilReady = waitForSpinup;
+        Command waitForLocks = !withLock
+            ? new InstantCommand()
+            : Commands.waitUntil(() -> this.robot.swerve.headingLock.hasLock(Degrees.of(3)))
+                .alongWith(Commands.waitUntil(() -> this.robot.swerve.radiusLock.hasLock(Feet.of(1))));
+        Command waitUntilReady = Commands.waitTime(spinupWaitTime)
+            .alongWith(waitForLocks);
         Command feedShooter = this.robot.indexer.commands.forward();
         
-        return enableLocks.andThen(
-            spinUpShooter
-                .alongWith(pulse)
-                .alongWith(waitUntilReady.andThen(feedShooter))
+        return Commands.parallel(
+            enableLock,
+            spinUpShooter,
+            pulse,
+            waitUntilReady.andThen(feedShooter)
         );
         
     }
