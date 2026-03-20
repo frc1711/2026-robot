@@ -25,11 +25,11 @@ public enum Auton {
 	),
 	
 	TRENCH_SHOT("Trench Shot", robot ->
-		robot.complexCommands.shoot(TurretWheelSpeeds.FAR_SHOT, true)
+		robot.complexCommands.shoot(TurretWheelSpeeds.FAR_SHOT, false)
 	),
 
 	BUMP_SHOT("Bump Shot", robot ->
-		robot.complexCommands.shoot(TurretWheelSpeeds.CLOSE_SHOT, true)
+		robot.complexCommands.shoot(TurretWheelSpeeds.CLOSE_SHOT, false)
 	),
 	
 	DEPOT_RUN("Depot Run", robot ->
