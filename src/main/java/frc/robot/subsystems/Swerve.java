@@ -289,9 +289,14 @@ public class Swerve extends SubsystemBase {
         builder.addStringProperty(
             "Heading Lock",
             () -> {
+                
                 if (!this.headingLock.isEnabled()) return "DISABLED";
-                else if (!this.headingLock.hasLock()) return "HOMING";
-                else return "LOCKED";
+                
+                String state = this.headingLock.hasLock() ? "LOCKED" : "HOMING";
+                double errorDegrees = this.headingLock.getError().in(Degrees);
+                
+                return String.format("%s (%+.1f deg.)", state, errorDegrees);
+                
             },
             null
         );
@@ -299,9 +304,14 @@ public class Swerve extends SubsystemBase {
         builder.addStringProperty(
             "Radius Lock",
             () -> {
+                
                 if (!this.radiusLock.isEnabled()) return "DISABLED";
-                else if (!this.headingLock.hasLock()) return "HOMING";
-                else return "LOCKED";
+                
+                String state = this.radiusLock.hasLock() ? "LOCKED" : "HOMING";
+                double errorDegrees = this.radiusLock.getError().in(Inches);
+                
+                return String.format("%s (%+.1f in.)", state, errorDegrees);
+                
             },
             null
         );
