@@ -216,7 +216,11 @@ public class Swerve extends SubsystemBase {
     
     public Angle getFieldRelativeHeading() {
         
-        return this.gyro.yaw.getAngle();
+        return Degrees.of(DoubleUtilities.normalizeToRange(
+            this.gyro.yaw.getAngle().in(Degrees),
+            -180,
+            180
+        ));
         
     }
     
