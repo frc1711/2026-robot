@@ -32,15 +32,6 @@ public class ComplexCommands {
     
     public Command drive(CommandXboxController controller) {
         
-        Supplier<Point> translationInput = PointSupplierBuilder.getTranslationPointSupplier(controller); 
-        DoubleSupplier rotationInput = DoubleSupplierBuilder.getRotationDoubleSupplier(controller);
-        
-        Trigger driverIsTryingToManuallyTranslate = new Trigger(() -> translationInput.get().getNorm() != 0);
-        Trigger driverIsTryingToManuallyRotate = new Trigger(() -> rotationInput.getAsDouble() != 0);
-        
-        driverIsTryingToManuallyTranslate.whileTrue(this.robot.swerve.commands.disablePOIRadiusLock());
-        driverIsTryingToManuallyRotate.whileTrue(this.robot.swerve.commands.disableHeadingLock());
-        
         return this.robot.swerve.commands.drive(
             ChassisSpeedsSupplierBuilder.fromControllerJoysticks(controller)
                 .withAdditional(ChassisSpeedsSupplierBuilder.fromControllerDPad(controller))
