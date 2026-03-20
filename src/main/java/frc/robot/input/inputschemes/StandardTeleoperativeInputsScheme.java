@@ -18,6 +18,7 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 		(new InputSchemeBuilder(robotContainer))
 			.configureDefaultRobotCommands()
 			.useControllerJoysticksForDriving(controller1)
+			.disableRadiusLockOnJoystickInput(controller1)
 			.disableHeadingLockOnJoystickInput(controller1)
 			.useStartButtonToResetFieldHeading(controller1)
 			.useBumpersToEnableHeadingLock(controller1)
