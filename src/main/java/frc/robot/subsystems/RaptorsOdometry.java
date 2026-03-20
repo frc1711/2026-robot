@@ -8,6 +8,7 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.configuration.Direction;
 import frc.robot.configuration.FieldThird;
 import frc.robot.util.PoseBuilder;
 import frc.robot.util.VirtualField;
