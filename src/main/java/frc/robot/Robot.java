@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.configuration.DoublePreference;
 
+import static frc.robot.configuration.Direction.*;
+
 public class Robot extends TimedRobot {
 
   protected RobotContainer robotContainer;
@@ -20,6 +22,7 @@ public class Robot extends TimedRobot {
     this.robotContainer = new RobotContainer();
     
     DoublePreference.init();
+    this.robotContainer.swerve.calibrateFieldRelativeHeading(BACKWARDS);
 
   }
 
@@ -29,7 +32,6 @@ public class Robot extends TimedRobot {
     Auton.initializeShuffleboardSelector();
     this.robotContainer.init();
     this.robotContainer.vision.beginStableSeeding();
-//    this.robotContainer.swerve.calibrateFieldRelativeHeading(Degrees.of(180));
 
   }
 
