@@ -112,7 +112,7 @@ public class HeadingLock {
 	
 	public boolean hasLock() {
 		
-		return this.hasLock(Degrees.of(10));
+		return this.hasLock(Degrees.of(3));
 		
 	}
 	
