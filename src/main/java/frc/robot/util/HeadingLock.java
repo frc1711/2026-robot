@@ -103,6 +103,14 @@ public class HeadingLock {
 		
 	}
 	
+	public Angle getError() {
+		
+		return !this.isEnabled()
+			? HeadingLock.INTRINSIC_ANGLE_UNITS.zero()
+			: this.swerve.getFieldRelativeHeading().minus(this.getHeading());
+		
+	}
+	
 	public boolean hasLock(Angle tolerance) {
 		
 		if (this.headingSupplier == null) return false;
