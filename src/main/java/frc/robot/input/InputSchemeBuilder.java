@@ -2,12 +2,19 @@ package frc.robot.input;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotContainer;
 import frc.robot.configuration.Direction;
+import frc.robot.math.DoubleSupplierBuilder;
+import frc.robot.math.Point;
+import frc.robot.math.PointSupplierBuilder;
 import frc.robot.state.IntakePosition;
 import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.subsystems.Swerve;
 import frc.robot.util.VirtualField;
+
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -42,6 +49,32 @@ public class InputSchemeBuilder {
 		this.robot.swerve.setDefaultCommand(
 			this.robot.complexCommands.drive(controller)
 		);
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder disableRadiusLockOnJoystickInput(
+		CommandXboxController controller
+	) {
+		
+		Supplier<Point> translationInput = PointSupplierBuilder.getTranslationPointSupplier(controller);
+		Trigger driverIsTryingToManuallyTranslate = new Trigger(() -> translationInput.get().getNorm() != 0);
+		
+		driverIsTryingToManuallyTranslate.whileTrue(this.robot.swerve.commands.disablePOIRadiusLock());
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder disableHeadingLockOnJoystickInput(
+		CommandXboxController controller
+	) {
+		
+		DoubleSupplier rotationInput = DoubleSupplierBuilder.getRotationDoubleSupplier(controller);
+		Trigger driverIsTryingToManuallyRotate = new Trigger(() -> rotationInput.getAsDouble() != 0);
+		
+		driverIsTryingToManuallyRotate.whileTrue(this.robot.swerve.commands.disableHeadingLock());
 		
 		return this;
 		
