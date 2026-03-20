@@ -126,7 +126,7 @@ public class RadiusLock {
 	
 	public boolean hasLock() {
 		
-		return this.hasLock(Inches.of(5));
+		return this.hasLock(Inches.of(3));
 		
 	}
 	
