@@ -141,7 +141,12 @@ public class Turret extends SubsystemBase {
         
     }
     
-    
+    public void stopWheels() {
+        
+        this.lowerWheelMotor.stopMotor();
+        this.upperWheelMotor.stopMotor();
+        
+    }
     
     public boolean isAtWheelSpeeds(WheelSpeeds wheelSpeeds, double varianceThreshold) {
         
@@ -155,13 +160,6 @@ public class Turret extends SubsystemBase {
             .isNear(wheelSpeeds.getUpperWheelMotorShaftAngularVelocity(), varianceThreshold);
         
         return isLowerWheelAtSpeed && isUpperWheelAtSpeed;
-        
-    }
-    
-    public void stopWheels() {
-        
-        this.lowerWheelMotor.stopMotor();
-        this.upperWheelMotor.stopMotor();
         
     }
     
@@ -369,6 +367,14 @@ public class Turret extends SubsystemBase {
     }
     
     public class Triggers {
+        
+        public Trigger isAtWheelSpeeds(WheelSpeeds wheelSpeeds, double varianceThreshold) {
+            
+            return new Trigger(
+                () -> Turret.this.isAtWheelSpeeds(wheelSpeeds, varianceThreshold)
+            );
+            
+        }
         
         public Trigger isAtHeading(Heading heading, Angle tolerance) {
             
