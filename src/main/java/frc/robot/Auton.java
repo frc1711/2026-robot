@@ -36,8 +36,6 @@ public enum Auton {
 		robot.swerve.commands.goToPosition3(
 			PoseBuilder.fromPose(new Pose2d(VirtualField.getDepotFaceCenterPoint(), Rotation2d.kZero))
 				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(20), Direction.LEFT)
-				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(3), Direction.BACKWARDS)
-//				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(10), Direction.RIGHT)
 				.withHeading(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Degrees.of(225))
 				.get()
 		).andThen(
