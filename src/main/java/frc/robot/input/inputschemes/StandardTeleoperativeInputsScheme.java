@@ -24,7 +24,7 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 			.useBumpersToEnableHeadingLock(controller1)
 			.useTriggersForSlowMode(controller1)
 			.useAButtonToShoot(controller2)
-			.useBButtonToPulse(controller2)
+			.useBButtonToSafelyShoot(controller2)
 			.useXButtonToIntake(controller2)
 			.useDPadDownToOuttake(controller2)
 			.useYButtonToShootManually(controller2)
