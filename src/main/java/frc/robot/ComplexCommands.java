@@ -80,7 +80,7 @@ public class ComplexCommands {
     }
     
     public Command shoot(
-        TurretWheelSpeeds turretState,
+        Turret.WheelSpeeds turretState,
         Time spinupWaitTime,
         boolean withLock
     ) {
@@ -112,7 +112,7 @@ public class ComplexCommands {
     }
     
     public Command shoot(
-        TurretWheelSpeeds turretState,
+        Turret.WheelSpeeds turretState,
         boolean withLocks
     ) {
         
@@ -122,7 +122,7 @@ public class ComplexCommands {
     
     public Command shoot() {
         
-        return this.shoot(TurretWheelSpeeds.MID_SHOT, true);
+        return this.shoot(Turret.WheelSpeeds.MID_SHOT, true);
         
     }
     

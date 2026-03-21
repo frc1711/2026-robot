@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.configuration.Direction;
 import frc.robot.configuration.RobotDimensions;
-import frc.robot.state.TurretWheelSpeeds;
+import frc.robot.subsystems.Turret;
 import frc.robot.util.ChassisSpeedsSupplierBuilder;
 import frc.robot.util.PoseBuilder;
 import frc.robot.util.VirtualField;
@@ -25,11 +25,11 @@ public enum Auton {
 	),
 	
 	TRENCH_SHOT("Trench Shot", robot ->
-		robot.complexCommands.shoot(TurretWheelSpeeds.FAR_SHOT, false)
+		robot.complexCommands.shoot(Turret.WheelSpeeds.FAR_SHOT, false)
 	),
 
 	BUMP_SHOT("Bump Shot", robot ->
-		robot.complexCommands.shoot(TurretWheelSpeeds.CLOSE_SHOT, false)
+		robot.complexCommands.shoot(Turret.WheelSpeeds.CLOSE_SHOT, false)
 	),
 	
 	DEPOT_RUN("Depot Run", robot ->
@@ -55,13 +55,13 @@ public enum Auton {
 //		/*)*/.andThen(
 			robot.swerve.commands.goToPosition3(PoseBuilder.getHubShootingPose(Feet.of(9), Degrees.of(-30)).get())
 		).andThen(
-			robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+			robot.complexCommands.shoot(Turret.WheelSpeeds.MID_SHOT, false)
 				.withTimeout(Seconds.of(15))
 		)
 	),
 	
 	DEPOT_RUN_WITH_INITIAL_BARRAGE("Depot Run (with initial barrage)", robot ->
-		robot.complexCommands.shoot(TurretWheelSpeeds.CLOSE_SHOT, false)
+		robot.complexCommands.shoot(Turret.WheelSpeeds.CLOSE_SHOT, false)
 			.withTimeout(Seconds.of(5))
 			.andThen(robot.swerve.commands.goToPosition3(
 				PoseBuilder.fromPose(new Pose2d(VirtualField.getDepotFaceCenterPoint(), Rotation2d.kZero))
@@ -79,7 +79,7 @@ public enum Auton {
 			).andThen(
 				robot.swerve.commands.goToPosition3(PoseBuilder.getHubShootingPose(Feet.of(9), Degrees.of(-30)).get())
 			).andThen(
-				robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+				robot.complexCommands.shoot(Turret.WheelSpeeds.MID_SHOT, false)
 					.withTimeout(Seconds.of(15))
 			)
 	);

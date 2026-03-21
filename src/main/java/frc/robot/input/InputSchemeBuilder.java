@@ -9,8 +9,8 @@ import frc.robot.math.DoubleSupplierBuilder;
 import frc.robot.math.Point;
 import frc.robot.math.PointSupplierBuilder;
 import frc.robot.state.IntakePosition;
-import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.Turret;
 import frc.robot.util.VirtualField;
 
 import java.util.function.DoubleSupplier;
@@ -194,7 +194,7 @@ public class InputSchemeBuilder {
 	public InputSchemeBuilder useYButtonToShootManually(CommandXboxController controller) {
 		
 		controller.y().whileTrue(
-			this.robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+			this.robot.complexCommands.shoot(Turret.WheelSpeeds.MID_SHOT, false)
 		);
 		
 		return this;
