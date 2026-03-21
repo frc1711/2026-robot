@@ -175,6 +175,19 @@ public class InputSchemeBuilder {
 		
 	}
 	
+	public InputSchemeBuilder useBButtonToSafelyShoot(CommandXboxController controller) {
+		
+		controller.b().whileTrue(this.robot.complexCommands.shoot(
+			Turret.WheelSpeeds.MID_SHOT,
+			Seconds.of(0.5),
+			false,
+			false
+		));
+		
+		return this;
+		
+	}
+	
 	public InputSchemeBuilder useXButtonToIntake(CommandXboxController controller) {
 		
 		controller.x().whileTrue(this.robot.complexCommands.intake());
