@@ -10,11 +10,14 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.configuration.CANDevice;
 import frc.robot.state.IntakePosition;
+import frc.robot.util.LogCommand;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -44,6 +47,13 @@ public class Intake extends SubsystemBase {
         this.rightExtensionMotor.getConfigurator().apply(Intake.getRightExtensionMotorConfig());
         this.rollerMotor.getConfigurator().apply(Intake.getRollerMotorConfig());
         
+        ShuffleboardTab shuffleboardCalibrationTab =
+            Shuffleboard.getTab("Calibration");
+        
+        shuffleboardCalibrationTab.add(
+            this.commands.calibrateExtensionLimits()
+        );
+        
     }
 
     protected static TalonFXConfiguration getLeftExtensionMotorConfig() {
@@ -61,7 +71,7 @@ public class Intake extends SubsystemBase {
         config.Slot0.kD = 0;
 
         config.MotionMagic.MotionMagicCruiseVelocity = 50;
-        config.MotionMagic.MotionMagicAcceleration = 50;
+        config.MotionMagic.MotionMagicAcceleration = 80;
         config.MotionMagic.MotionMagicJerk = 1000;
         
         config.HardwareLimitSwitch.ForwardLimitEnable = false;
@@ -86,9 +96,9 @@ public class Intake extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
         
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
-        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 1;
+        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5;
         
         return config;
         
@@ -134,7 +144,10 @@ public class Intake extends SubsystemBase {
             return Intake.this.runOnce(() -> {
                 Intake.this.leftExtensionMotor.setPosition(Rotations.zero());
                 Intake.this.rightExtensionMotor.setPosition(Rotations.zero());
-            });
+            })
+                .andThen(new LogCommand("Intake extension limits calibrated."))
+                .withName("Calibrate Intake Extension Limits")
+                .ignoringDisable(true);
             
         }
 
@@ -188,6 +201,25 @@ public class Intake extends SubsystemBase {
             return spinRoller.alongWith(
                 pulse.repeatedly()
             ).finallyDo(() -> this.goToPosition(IntakePosition.PARTIALLY_STOWED));
+            
+        }
+        
+        public Command pulseV3() {
+            
+            IntakePosition innerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(-4));
+            IntakePosition outerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(2));
+            
+            Command retract = this.goToPosition(innerPosition)
+                .withTimeout(Seconds.of(0.2));
+            Command extend = this.goToPosition(outerPosition);
+            Command delay = edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(0.4));
+            Runnable resetPosition = () -> this.goToPosition(IntakePosition.PARTIALLY_STOWED);
+            
+            return retract
+                .andThen(extend)
+                .andThen(delay)
+                .repeatedly()
+                .finallyDo(resetPosition);
             
         }
         

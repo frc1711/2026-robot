@@ -6,6 +6,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.configuration.LimelightIMUMode;
 import frc.robot.devicewrappers.RaptorsLimelight;
 import frc.robot.util.VirtualField;
 
@@ -15,7 +18,7 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
-public class Vision {
+public class Vision extends SubsystemBase {
 	
 	protected static final RaptorsLimelight[] LIMELIGHTS = new RaptorsLimelight[] {
 		RaptorsLimelight.LEFT_LIMELIGHT,
@@ -28,6 +31,8 @@ public class Vision {
 	
 	protected final Supplier<AngularVelocity> angularVelocitySupplier;
 	
+	public final Commands commands;
+	
 	public Vision(
 		Supplier<Angle> headingSupplier,
 		Supplier<LinearVelocity> linearVelocitySupplier,
@@ -37,26 +42,42 @@ public class Vision {
 		this.headingSupplier = headingSupplier;
 		this.linearVelocitySupplier = linearVelocitySupplier;
 		this.angularVelocitySupplier = angularVelocitySupplier;
+		this.commands = new Commands();
 	
+	}
+	
+	public void beginStableSeeding() {
+		
+		System.out.println("Beginning stable seeding mode...");
+		
+		for (RaptorsLimelight limelight: Vision.LIMELIGHTS) {
+			
+			limelight.setIMUMode(LimelightIMUMode.EXTERNAL_SEED);
+			
+		}
+		
+	}
+	
+	public void beginUsingInternalLL4IMUAssist() {
+		
+		System.out.println("Beginning to use internal LL4 IMU assist...");
+		
+		for (RaptorsLimelight limelight: Vision.LIMELIGHTS) {
+			
+			limelight.setIMUMode(LimelightIMUMode.INTERNAL_EXTERNAL_ASSIST);
+			
+		}
+		
 	}
 	
 	public List<VisionMeasurement> getMeasurements() {
 		
-		boolean shouldUpdateVision = (
-			this.angularVelocitySupplier.get().lt(DegreesPerSecond.of(80)) &&
-			this.linearVelocitySupplier.get().lt(FeetPerSecond.of(1.5))
-		);
-		
-		if (!shouldUpdateVision) return List.of();
-		
-		Angle limelightYaw = this.headingSupplier.get()
-			.plus(Degrees.of(VirtualField.isRedAlliance() ? 180 : 0));
-		
-		for (RaptorsLimelight limelight: Vision.LIMELIGHTS) {
-			
-			limelight.setRobotOrientation(limelightYaw);
-			
-		}
+//		boolean shouldUpdateVision = (
+//			this.angularVelocitySupplier.get().lt(DegreesPerSecond.of(80)) &&
+//			this.linearVelocitySupplier.get().lt(FeetPerSecond.of(4))
+//		);
+//		
+//		if (!shouldUpdateVision) return List.of();
 		
 		double maxTagDistInMeters = Feet.of(10).in(Meters);
 		double maxTagAmbiguity = 0.6;
@@ -100,10 +121,44 @@ public class Vision {
 		
 	}
 	
+	@Override
+	public void periodic() {
+		
+		if (this.headingSupplier != null) {
+			
+			Angle limelightYaw = this.headingSupplier.get()
+				.plus(Degrees.of(VirtualField.isRedAlliance() ? 180 : 0));
+			
+			for (RaptorsLimelight limelight: Vision.LIMELIGHTS) {
+				
+				limelight.setRobotOrientation(limelightYaw);
+				
+			}
+			
+		}
+		
+	}
+	
 	public record VisionMeasurement(
 		Pose2d visionRobotPoseMeters,
 		double timestampSeconds,
 		Matrix<N3, N1> visionMeasurementStdDevs
 	) {}
+	
+	public class Commands {
+		
+		public Command beginStableSeeding() {
+			
+			return Vision.this.runOnce(Vision.this::beginStableSeeding);
+			
+		}
+		
+		public Command beginUsingInternalLL4IMUAssist() {
+			
+			return Vision.this.runOnce(Vision.this::beginUsingInternalLL4IMUAssist);
+			
+		}
+		
+	}
 	
 }

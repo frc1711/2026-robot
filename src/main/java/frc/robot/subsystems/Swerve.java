@@ -1,9 +1,13 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -15,16 +19,18 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.DeferredCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.configuration.CANDevice;
 import frc.robot.configuration.Direction;
 import frc.robot.configuration.SwerveModuleConfiguration;
 import frc.robot.devicewrappers.RaptorsPigeon2;
 import frc.robot.math.DoubleUtilities;
+import frc.robot.math.Point;
+import frc.robot.util.HeadingLock;
 import frc.robot.util.LogCommand;
+import frc.robot.util.RadiusLock;
+import frc.robot.util.VirtualField;
 
 import java.util.Set;
 import java.util.function.Supplier;
@@ -59,11 +65,13 @@ public class Swerve extends SubsystemBase {
     
     protected final RaptorsOdometry odometry;
     
-    protected double speedMultiplier;
+    protected double driveSpeedMultiplier;
     
     protected ChassisSpeeds chassisSpeeds;
     
-    public Supplier<Angle> headingLockSupplier;
+    public final HeadingLock headingLock;
+    
+    public final RadiusLock radiusLock;
     
     public final Commands commands;
 
@@ -79,9 +87,10 @@ public class Swerve extends SubsystemBase {
                 .toArray(Translation2d[]::new)
         );
         this.odometry = odometry;
-        this.speedMultiplier = 1;
+        this.driveSpeedMultiplier = 1;
         this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
-        this.headingLockSupplier = null;
+        this.headingLock = new HeadingLock(this);
+        this.radiusLock = new RadiusLock(this);
         this.commands = new Commands();
         
 //        this.resetGyro();
@@ -97,6 +106,7 @@ public class Swerve extends SubsystemBase {
             this.commands.calibrateFieldRelativeHeading()
         );
         
+        SmartDashboard.putData("Swerve", this);
         SmartDashboard.putData("Swerve Drive", this.getSwerveStateSendable());
         
     }
@@ -121,6 +131,12 @@ public class Swerve extends SubsystemBase {
         
     }
     
+    public RaptorsOdometry getOdometry() {
+        
+        return this.odometry;
+        
+    }
+    
     public ChassisSpeeds getActualChassisSpeeds() {
         
         return this.kinematics.toChassisSpeeds(
@@ -133,7 +149,13 @@ public class Swerve extends SubsystemBase {
     
     public void setDriveSpeedMultiplier(double speedMultiplier) {
         
-        this.speedMultiplier = MathUtil.clamp(speedMultiplier, 0, 1);
+        this.driveSpeedMultiplier = MathUtil.clamp(speedMultiplier, 0, 1);
+        
+    }
+    
+    public double getDriveSpeedMultiplier() {
+        
+        return this.driveSpeedMultiplier;
         
     }
     
@@ -159,9 +181,20 @@ public class Swerve extends SubsystemBase {
         
     }
     
+    protected void setChassisSpeeds(ChassisSpeeds chassisSpeeds) {
+        
+        this.chassisSpeeds = chassisSpeeds;
+        
+        SwerveModuleState[] newModuleStates =
+            this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+        
+        this.applyModuleStates(newModuleStates);
+        
+    }
+    
     public void stop() {
         
-        this.chassisSpeeds = new ChassisSpeeds(0, 0, 0);
+        this.setChassisSpeeds(new ChassisSpeeds(0, 0, 0));
         
     }
     
@@ -173,7 +206,11 @@ public class Swerve extends SubsystemBase {
     
     public void calibrateFieldRelativeHeading(Angle currentHeading) {
         
+        Pose2d existingPose = this.odometry.getPose();
+        
         this.gyro.yaw.calibrate(currentHeading);
+        
+        this.odometry.resetPose(existingPose);
         
     }
     
@@ -204,10 +241,29 @@ public class Swerve extends SubsystemBase {
     @Override
     public void periodic() {
         
-        SwerveModuleState[] newModuleStates =
-            this.kinematics.toSwerveModuleStates(this.chassisSpeeds);
+        this.headingLock.periodic();
+        this.radiusLock.periodic();
         
-        this.applyModuleStates(newModuleStates);
+    }
+    
+    public SysIdRoutine getDriveMotorsSysIdRoutine() {
+        
+        return new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                (state) -> SignalLogger.writeString("state", state.toString())
+            ),
+            new SysIdRoutine.Mechanism(
+                (volts) -> this.getModuleStream().forEach((module) -> {
+                    module.steerMotor.setControl(new MotionMagicVoltage(0));
+                    module.driveMotor.setControl(new VoltageOut(volts.in(Volts)));
+                }),
+                null,
+                this
+            )
+        );
         
     }
     
@@ -217,13 +273,41 @@ public class Swerve extends SubsystemBase {
         builder.addDoubleProperty(
             "Heading",
             () -> this.getFieldRelativeHeading().in(Degrees),
-            (double headingDegrees) -> this.headingLockSupplier = () -> Degrees.of(headingDegrees)
+            (double headingDegrees) -> this.headingLock.enable(() -> Degrees.of(headingDegrees))
         );
         
         builder.addDoubleProperty(
             "Heading Setpoint",
-            () -> this.headingLockSupplier.get().in(Degrees),
-            (double headingDegrees) -> this.headingLockSupplier = () -> Degrees.of(headingDegrees)
+            () -> this.headingLock.isEnabled() ? this.headingLock.getHeading().in(Degrees) : -1,
+            (double headingDegrees) -> this.headingLock.enable(() -> Degrees.of(headingDegrees))
+        );
+        
+        builder.addStringProperty(
+            "Heading Lock",
+            () -> {
+                if (!this.headingLock.isEnabled()) return "DISABLED";
+                else if (!this.headingLock.hasLock()) return "HOMING";
+                else return "LOCKED";
+            },
+            null
+        );
+        
+        builder.addStringProperty(
+            "Radius Lock",
+            () -> {
+                if (!this.radiusLock.isEnabled()) return "DISABLED";
+                else if (!this.headingLock.hasLock()) return "HOMING";
+                else return "LOCKED";
+            },
+            null
+        );
+        
+        builder.addDoubleProperty(
+            "Distance to Hub (inches)",
+            () -> VirtualField.getDistanceToHubCenterPoint(this.odometry.getTranslation()).in(Inches),
+            null
+//            (double radiusInches) -> this.radiusLockSupplier =
+//                () -> new RadiusLock(VirtualField.getHubCenterPoint(), Inches.of(radiusInches))
         );
         
         builder.addDoubleProperty(
@@ -232,53 +316,53 @@ public class Swerve extends SubsystemBase {
             null
         );
         
-        builder.addDoubleProperty(
-            "Swerve Module Velocity kP",
-            () -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                return config.Slot0.kP;
-                
-            },
-            (double kP) -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                config.Slot0.kP = kP;
-                
-                this.getModuleStream().forEach(module ->
-                    module.driveMotor.getConfigurator().apply(config)
-                );
-                
-            }
-        );
-        
-        builder.addDoubleProperty(
-            "Swerve Module Velocity kD",
-            () -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                return config.Slot0.kD;
-                
-            },
-            (double kD) -> {
-                
-                TalonFXConfiguration config = new TalonFXConfiguration();
-                this.modules[0].driveMotor.getConfigurator().refresh(config);
-                
-                config.Slot0.kD = kD;
-                
-                this.getModuleStream().forEach(module ->
-                    module.driveMotor.getConfigurator().apply(config)
-                );
-                
-            }
-        );
+//        builder.addDoubleProperty(
+//            "Swerve Module Velocity kP",
+//            () -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                return config.Slot0.kP;
+//                
+//            },
+//            (double kP) -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                config.Slot0.kP = kP;
+//                
+//                this.getModuleStream().forEach(module ->
+//                    module.driveMotor.getConfigurator().apply(config)
+//                );
+//                
+//            }
+//        );
+//        
+//        builder.addDoubleProperty(
+//            "Swerve Module Velocity kD",
+//            () -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                return config.Slot0.kD;
+//                
+//            },
+//            (double kD) -> {
+//                
+//                TalonFXConfiguration config = new TalonFXConfiguration();
+//                this.modules[0].driveMotor.getConfigurator().refresh(config);
+//                
+//                config.Slot0.kD = kD;
+//                
+//                this.getModuleStream().forEach(module ->
+//                    module.driveMotor.getConfigurator().apply(config)
+//                );
+//                
+//            }
+//        );
         
 //        builder.addDoubleProperty(
 //            "Distance to Scoring Pose (in)",
@@ -317,8 +401,8 @@ public class Swerve extends SubsystemBase {
             
             this.modules[0].addSendableFields(builder, "Front Left");
             this.modules[1].addSendableFields(builder, "Front Right");
-            this.modules[2].addSendableFields(builder, "Rear Left");
-            this.modules[3].addSendableFields(builder, "Rear Right");
+            this.modules[2].addSendableFields(builder, "Back Left");
+            this.modules[3].addSendableFields(builder, "Back Right");
             
             builder.addDoubleProperty(
                 "Robot Angle",
@@ -364,9 +448,12 @@ public class Swerve extends SubsystemBase {
         
         public Command useDriveSpeedMultiplier(double multiplier) {
             
-            return edu.wpi.first.wpilibj2.command.Commands
-                .runOnce(() -> Swerve.this.setDriveSpeedMultiplier(Math.min(multiplier, 1)))
-                .finallyDo(() -> Swerve.this.setDriveSpeedMultiplier(1));
+            Runnable resetMultiplier = () -> Swerve.this.setDriveSpeedMultiplier(1);
+            
+            return edu.wpi.first.wpilibj2.command.Commands.startEnd(
+                () -> Swerve.this.setDriveSpeedMultiplier(Math.min(multiplier, 1)),
+                resetMultiplier
+            ).finallyDo(resetMultiplier);
             
         }
         
@@ -398,17 +485,23 @@ public class Swerve extends SubsystemBase {
 
         public Command disableHeadingLock() {
 
-            return new InstantCommand(
-                () -> Swerve.this.headingLockSupplier = null
-            );
+            return new InstantCommand(Swerve.this.headingLock::disable);
 
+        }
+        
+        public Command enableDynamicHeadingLock(
+            Supplier<Angle> headingSupplier
+        ) {
+            
+            return new InstantCommand(
+                () -> Swerve.this.headingLock.enable(headingSupplier) 
+            );
+            
         }
 
         public Command enableStaticHeadingLock(Angle heading) {
 
-            return new InstantCommand(
-                () -> Swerve.this.headingLockSupplier = () -> heading
-            );
+            return this.enableDynamicHeadingLock(() -> heading);
 
         }
         
@@ -422,11 +515,11 @@ public class Swerve extends SubsystemBase {
                Angle actualHeading = Swerve.this.getFieldRelativeHeading();
                Angle tolerance = Degrees.of(5);
                boolean isRobotAlreadyAtHeadingLock =
-                   Swerve.this.headingLockSupplier != null &&
-                   actualHeading.isNear(Swerve.this.headingLockSupplier.get(), tolerance);
+                   Swerve.this.headingLock.isEnabled() &&
+                   actualHeading.isNear(Swerve.this.headingLock.getHeading(), tolerance);
                
                Angle originalHeading = isRobotAlreadyAtHeadingLock
-                   ? Swerve.this.headingLockSupplier.get()
+                   ? Swerve.this.headingLock.getHeading()
                    : Swerve.this.getFieldRelativeHeading();
                
                Angle nextHeading = Degrees.of(DoubleUtilities.getNextIncrement(
@@ -441,37 +534,71 @@ public class Swerve extends SubsystemBase {
             
         }
         
-        public Command enabledPOIHeadingLock(
+        public Command enablePOIHeadingLock(
             Translation2d pointOfInterest,
             Angle relativeHeading
         ) {
             
-            return new InstantCommand(() -> {
+            return this.enableDynamicHeadingLock(() -> {
                 
-                Swerve.this.headingLockSupplier = () -> {
-                    
-                    Pose2d currentPose = Swerve.this.odometry.getPose();
-                    
-                    if (currentPose == null) return Degrees.zero();
-                    
-                    Translation2d deltaTranslation = pointOfInterest
-                        .minus(currentPose.getTranslation());
-                    
-                    return deltaTranslation.getAngle().getMeasure()
-                        .plus(relativeHeading);
-                    
-                };
+                Pose2d currentPose = Swerve.this.odometry.getPose();
+                
+                if (currentPose == null) return Degrees.zero();
+                
+                Translation2d deltaTranslation = pointOfInterest
+                    .minus(currentPose.getTranslation());
+                
+                return deltaTranslation.getAngle().getMeasure()
+                    .plus(relativeHeading);
                 
             });
             
         }
         
-        public Command enabledPOIHeadingLock(Translation2d pointOfInterest) {
+        public Command enablePOIHeadingLock(Translation2d pointOfInterest) {
             
-            return this.enabledPOIHeadingLock(
+            return this.enablePOIHeadingLock(
                 pointOfInterest,
                 Direction.FORWARDS
             );
+            
+        }
+        
+        public Command disablePOIRadiusLock() {
+            
+            return new InstantCommand(Swerve.this.radiusLock::disable);
+            
+        }
+        
+        public Command enablePOIRadiusLock(
+            Point pointOfInterest,
+            Distance radius
+        ) {
+            
+            return new InstantCommand(
+                () -> Swerve.this.radiusLock.enable(
+                    () -> pointOfInterest,
+                    () -> radius
+                )
+            );
+            
+        }
+        
+        public Command disablePOIHeadingAndRadiusLock() {
+            
+            return this.disableHeadingLock()
+                .andThen(this.disablePOIRadiusLock());
+            
+        }
+        
+        public Command enablePOIHeadingAndRadiusLock(
+            Point pointOfInterest,
+            Distance radius,
+            Angle relativeHeading
+        ) {
+            
+            return this.enablePOIHeadingLock(pointOfInterest, relativeHeading)
+                .andThen(this.enablePOIRadiusLock(pointOfInterest, radius));
             
         }
         
@@ -495,6 +622,19 @@ public class Swerve extends SubsystemBase {
             
         }
         
+        public Command setModuleHeadings(Angle robotRelativeAngle) {
+            
+            return Swerve.this.runOnce(
+                () -> Swerve.this.getModuleStream().forEach(
+                    (module) -> module.updateModuleState(
+                        new SwerveModuleState(0, new Rotation2d(robotRelativeAngle)),
+                        false
+                    )
+                )
+            );
+            
+        }
+        
         public Command stop() {
             
             return new InstantCommand(Swerve.this::stop, Swerve.this);
@@ -503,7 +643,7 @@ public class Swerve extends SubsystemBase {
         
         public Command drive(Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
             
-            return Swerve.this.run(() -> Swerve.this.chassisSpeeds = chassisSpeedsSupplier.get());
+            return Swerve.this.run(() -> Swerve.this.setChassisSpeeds(chassisSpeedsSupplier.get()));
             
         }
         
@@ -665,6 +805,22 @@ public class Swerve extends SubsystemBase {
 //            });
 //            
 //        }
+        
+        public Command sysIdDriveQuasistatic(SysIdRoutine.Direction direction) {
+            
+            return this.setModuleHeadings(Degrees.of(0))
+                .andThen(edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(1)))
+                .andThen(Swerve.this.getDriveMotorsSysIdRoutine().quasistatic(direction));
+            
+        }
+        
+        public Command sysIdDriveDynamic(SysIdRoutine.Direction direction) {
+            
+            return this.setModuleHeadings(Degrees.of(0))
+                .andThen(edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(1)))
+                .andThen(Swerve.this.getDriveMotorsSysIdRoutine().dynamic(direction));
+            
+        }
         
     }
     

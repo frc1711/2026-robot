@@ -1,12 +1,8 @@
 package frc.robot.util;
 
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.math.DoubleSupplierBuilder;
@@ -110,7 +106,7 @@ public class ChassisSpeedsSupplierBuilder implements Supplier<ChassisSpeeds> {
             else if (povAngle > 225 && povAngle <= 315) isLeft = true;
             else isUp = true;
 
-            LinearVelocity speed = FeetPerSecond.of(1.5);
+            LinearVelocity speed = Swerve.MAX_LINEAR_VELOCITY.times(0.66);
             LinearVelocity vx = isUp ? speed : isDown ? speed.times(-1) : speed.times(0);
             LinearVelocity vy = isLeft ? speed : isRight ? speed.times(-1) : speed.times(0);
 
@@ -162,39 +158,13 @@ public class ChassisSpeedsSupplierBuilder implements Supplier<ChassisSpeeds> {
 
     }
 
-//    public ChassisSpeedsSupplierBuilder withSlowModeCheck(Swerve swerve) {
-//
-//        return new ChassisSpeedsSupplierBuilder(() -> {
-//
-//            ChassisSpeeds chassisSpeeds = this.get();
-//
-//            if (!swerve.isSlowModeEnabled) return chassisSpeeds;
-//
-//            Translation2d originalLinearSpeeds = new Translation2d(
-//                chassisSpeeds.vxMetersPerSecond,
-//                chassisSpeeds.vyMetersPerSecond
-//            );
-//
-//            Translation2d newLinearSpeeds = new Translation2d(
-//                originalLinearSpeeds.getNorm() * (
-//                    Swerve.SLOW_MODE_MAX_LINEAR_VELOCITY.in(InchesPerSecond) /
-//                    Swerve.MAX_LINEAR_VELOCITY.in(InchesPerSecond)
-//                ),
-//                originalLinearSpeeds.getAngle()
-//            );
-//
-//            return new ChassisSpeeds(
-//                newLinearSpeeds.getX(),
-//                newLinearSpeeds.getY(),
-//                chassisSpeeds.omegaRadiansPerSecond * (
-//                    Swerve.SLOW_MODE_MAX_ANGULAR_VELOCITY.in(DegreesPerSecond) /
-//                    Swerve.MAX_ANGULAR_VELOCITY.in(DegreesPerSecond)
-//                )
-//            );
-//
-//        });
-//
-//    }
+    public ChassisSpeedsSupplierBuilder withSpeedMultiplierCheck(Swerve swerve) {
+
+        return new ChassisSpeedsSupplierBuilder(
+            () -> this.get().times(swerve.getDriveSpeedMultiplier())
+        );
+
+    }
 
     public ChassisSpeedsSupplierBuilder withMaxVelocityCheck() {
         
@@ -224,51 +194,18 @@ public class ChassisSpeedsSupplierBuilder implements Supplier<ChassisSpeeds> {
     }
     
     public ChassisSpeedsSupplierBuilder withHeadingLock(Swerve swerve) {
-
-        ProfiledPIDController headingLockController = new ProfiledPIDController(
-            10,
-            0,
-            0,
-            new TrapezoidProfile.Constraints(
-                RotationsPerSecond.of(1).in(DegreesPerSecond),
-                Swerve.MAX_ANGULAR_ACCELERATION.in(DegreesPerSecondPerSecond)
-            )
+        
+        return new ChassisSpeedsSupplierBuilder(
+            () -> swerve.headingLock.apply(this.get())
         );
         
-        headingLockController.enableContinuousInput(-180, 180);
+    }
+    
+    public ChassisSpeedsSupplierBuilder withRadiusLock(Swerve swerve) {
         
-        return new ChassisSpeedsSupplierBuilder(() -> {
-            
-            ChassisSpeeds chassisSpeeds = this.get();
-            Angle headingLock = swerve.headingLockSupplier != null
-                ? swerve.headingLockSupplier.get()
-                : Degrees.zero();
-            
-            if (swerve.headingLockSupplier == null) {
-                
-                headingLockController.reset(
-                    swerve.getFieldRelativeHeading().in(Degrees)
-                );
-                
-            }
-            
-            AngularVelocity headingCorrection = DegreesPerSecond.of(
-                headingLockController.calculate(
-                    swerve.getFieldRelativeHeading().in(Degrees),
-                    headingLock.in(Degrees)
-                )
-            );
-            double omegaRadiansPerSecond = swerve.headingLockSupplier != null
-                ? headingCorrection.in(RadiansPerSecond)
-                : chassisSpeeds.omegaRadiansPerSecond;
-            
-            return new ChassisSpeeds(
-                chassisSpeeds.vxMetersPerSecond,
-                chassisSpeeds.vyMetersPerSecond,
-                omegaRadiansPerSecond
-            );
-            
-        });
+        return new ChassisSpeedsSupplierBuilder(
+            () -> swerve.radiusLock.apply(this.get())
+        );
         
     }
 

@@ -21,7 +21,7 @@ public enum DoublePreference implements DoubleSupplier {
     
     REAR_RIGHT_SWERVE_MODULE_ENCODER_OFFSET_DEGREES("Rear Right Swerve Module Encoder Offset", 0),
 
-    JOYSTICK_DEADBAND("Joystick Deadband", 0.05),
+    JOYSTICK_DEADBAND("Joystick Deadband", 0.1),
 
     LINEAR_INPUT_POWER_SMOOTHING("Linear Input Power Smoothing", 3);
     

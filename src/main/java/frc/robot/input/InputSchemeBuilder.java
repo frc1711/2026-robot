@@ -5,10 +5,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
 import frc.robot.configuration.Direction;
 import frc.robot.state.IntakePosition;
+import frc.robot.state.TurretWheelSpeeds;
 import frc.robot.subsystems.Swerve;
 import frc.robot.util.VirtualField;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.*;
 
 public class InputSchemeBuilder {
 	
@@ -59,9 +60,7 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder useStartButtonToResetFieldHeading(CommandXboxController controller) {
 		
-		controller.start().onTrue(
-			this.robot.swerve.commands.calibrateFieldRelativeHeading()
-		);
+		controller.start().onTrue(this.robot.complexCommands.resetFieldHeading());
 		
 		return this;
 		
@@ -93,12 +92,35 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	public InputSchemeBuilder useYButtonToLockToHub(CommandXboxController controller) {
+	public InputSchemeBuilder useYButtonToHeadingLockToHub(CommandXboxController controller) {
 		
-		controller.y().onTrue(this.robot.swerve.commands.enabledPOIHeadingLock(
+		controller.y().onTrue(this.robot.swerve.commands.enablePOIHeadingLock(
 			VirtualField.getHubCenterPoint(),
 			Direction.RIGHT
 		));
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useBButtonToRadiusLockToHub(CommandXboxController controller) {
+		
+		controller.b().onTrue(this.robot.swerve.commands.enablePOIRadiusLock(
+			VirtualField.getHubCenterPoint(),
+			Feet.of(8)
+		));
+		
+		controller.b().onFalse(this.robot.swerve.commands.disablePOIRadiusLock());
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useTriggersForSlowMode(CommandXboxController controller) {
+		
+		controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+			.or(controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD))
+			.whileTrue(this.robot.swerve.commands.useDriveSpeedMultiplier(0.4));
 		
 		return this;
 		
@@ -114,7 +136,7 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder useBButtonToPulse(CommandXboxController controller) {
 		
-		controller.b().whileTrue(this.robot.intake.commands.pulseV1());
+		controller.b().whileTrue(this.robot.intake.commands.pulseV3());
 		
 		return this;
 		
@@ -123,6 +145,24 @@ public class InputSchemeBuilder {
 	public InputSchemeBuilder useXButtonToIntake(CommandXboxController controller) {
 		
 		controller.x().whileTrue(this.robot.complexCommands.intake());
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useDPadDownToOuttake(CommandXboxController controller) {
+		
+		controller.povDown().whileTrue(this.robot.complexCommands.outtake());
+		
+		return this;
+		
+	}
+	
+	public InputSchemeBuilder useYButtonToShootManually(CommandXboxController controller) {
+		
+		controller.y().whileTrue(
+			this.robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+		);
 		
 		return this;
 		

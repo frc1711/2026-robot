@@ -24,7 +24,7 @@ import static edu.wpi.first.units.Units.*;
 public class SwerveModule {
     
     public static final Time TIME_TO_MAX_DRIVE_ANGULAR_VELOCITY =
-        Seconds.of(0.25);
+        Seconds.of(0.5);
     
     public static final AngularAcceleration MAX_DRIVE_ANGULAR_ACCELERATION =
         RobotDimensions.KRAKEN_X60_MAX_FREE_SPEED
@@ -107,12 +107,12 @@ public class SwerveModule {
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
-//        config.Slot0.kS = 0.25;
-        config.Slot0.kV = 0.12;
-//        config.Slot0.kA = 0.1;
-        config.Slot0.kP = 0.1;
-        config.Slot0.kI = 0;
-        config.Slot0.kD = 0;
+        config.Slot0.kS = this.configuration.kS;
+        config.Slot0.kV = this.configuration.kV;
+        config.Slot0.kA = this.configuration.kA;
+        config.Slot0.kP = this.configuration.kP;
+        config.Slot0.kI = this.configuration.kI;
+        config.Slot0.kD = this.configuration.kD;
         
         // Cruise velocity is intentionally unconfigured -- the control mode we
         // are using (velocity) does not need a separate max velocity to be set.
@@ -357,17 +357,24 @@ public class SwerveModule {
         
     }
     
-    public void updateModuleState(SwerveModuleState newState) {
+    public void updateModuleState(
+        SwerveModuleState newState,
+        boolean optimize
+    ) {
         
         Rotation2d currentSteeringHeading =
             new Rotation2d(this.getSteeringHeading());
         
-        newState.optimize(currentSteeringHeading);
-        
-        // Perform cosine speed compensation.
-        newState.speedMetersPerSecond *= newState.angle
-            .minus(currentSteeringHeading)
-            .getCos();
+        if (optimize) {
+            
+            newState.optimize(currentSteeringHeading);
+            
+            // Perform cosine speed compensation.
+            newState.speedMetersPerSecond *= newState.angle
+                .minus(currentSteeringHeading)
+                .getCos();
+            
+        }
         
         this.steerAngleSetpoint = newState.angle.getMeasure();
         this.driveVelocitySetpoint =
@@ -382,6 +389,12 @@ public class SwerveModule {
                 .withWheelSurfaceSpeed(this.driveVelocitySetpoint)
                 .getMotorShaftAngularVelocity()
         ));
+        
+    }
+    
+    public void updateModuleState(SwerveModuleState moduleState) {
+        
+        this.updateModuleState(moduleState, true);
         
     }
     

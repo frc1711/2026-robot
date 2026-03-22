@@ -3,10 +3,12 @@ package frc.robot.util;
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.configuration.Direction;
 import frc.robot.configuration.FieldThird;
 import frc.robot.math.Point;
 
@@ -23,8 +25,9 @@ public class VirtualField {
 	
 	public static final Distance HUB_WIDTH = Inches.of(47);
 	
+	// FIM fields use the 'welded' version of the field layout.
 	public static final AprilTagFieldLayout APRIL_TAGS =
-		AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltAndymark);
+		AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 	
 	public static final DriverStation.Alliance DEFAULT_ALLIANCE =
 		DriverStation.Alliance.Red;
@@ -139,10 +142,59 @@ public class VirtualField {
 
 	}
 
-	public static Translation2d getHubCenterPoint() {
+	public static Point getHubCenterPoint() {
 
 		return VirtualField.getHubCenterPoint(VirtualField.getAlliance());
 
+	}
+	
+	public static Point getDepotFaceCenterPoint(DriverStation.Alliance alliance) {
+		
+		return new Point(
+			PoseBuilder.fromPose(new Pose2d(
+				VirtualField.getHubCenterPoint(alliance),
+					Rotation2d.kZero
+			))
+				.withTranslation(
+					PoseBuilder.CoordinateSystem.FIELD_RELATIVE,
+					Inches.of(182.11).minus(Inches.of(27)),
+					Direction.BACKWARDS
+				)
+				.withTranslation(
+					PoseBuilder.CoordinateSystem.FIELD_RELATIVE,
+					Inches.of(75.93),
+					Direction.LEFT
+				)
+				.get()
+				.getTranslation()
+		);
+		
+	}
+	
+	public static Point getDepotFaceCenterPoint() {
+		
+		return VirtualField.getDepotFaceCenterPoint(VirtualField.getAlliance());
+		
+	}
+	
+	public static Distance getDistanceToHubCenterPoint(
+		DriverStation.Alliance alliance,
+		Translation2d point
+	) {
+		
+		return Meters.of(
+			VirtualField.getHubCenterPoint(alliance).getDistance(point)
+		);
+		
+	}
+	
+	public static Distance getDistanceToHubCenterPoint(Translation2d point) {
+		
+		return VirtualField.getDistanceToHubCenterPoint(
+			VirtualField.getAlliance(),
+			point
+		);
+		
 	}
 	
 	public static FieldThird getFieldThirdForPosition(

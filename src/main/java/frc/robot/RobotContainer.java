@@ -5,20 +5,18 @@
 package frc.robot;
 
 import frc.robot.input.InputScheme;
-import frc.robot.input.inputschemes.TestingTeleoperativeInputsScheme;
+import frc.robot.input.inputschemes.StandardTeleoperativeInputsScheme;
 import frc.robot.subsystems.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 public class RobotContainer {
   
   protected static final InputScheme CONTROLS_SCHEME =
-      new TestingTeleoperativeInputsScheme();
+      new StandardTeleoperativeInputsScheme();
   
   public final Swerve swerve;
   
   public final Intake intake;
-  
-  public final Agitator agitator;
   
   public final Indexer indexer;
   
@@ -36,9 +34,7 @@ public class RobotContainer {
   
   public RobotContainer() {
     
-    
     this.intake = new Intake();
-    this.agitator = new Agitator();
     this.indexer = new Indexer();
     this.turret = new Turret();
     this.odometry = new RaptorsOdometry();
