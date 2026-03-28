@@ -7,7 +7,13 @@ package frc.robot;
 import frc.robot.input.InputScheme;
 import frc.robot.input.inputschemes.StandardTeleoperativeInputsScheme;
 import frc.robot.subsystems.*;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.util.HubShiftUtil;
 
 public class RobotContainer {
   
@@ -51,6 +57,12 @@ public class RobotContainer {
     this.odometry.injectSwerve(this.swerve);
     this.odometry.injectVision(this.vision);
     
+    // Reset hub shift timer when enabling
+    RobotModeTriggers.teleop().onTrue(Commands.runOnce(HubShiftUtil::initialize));
+    RobotModeTriggers.autonomous().onTrue(Commands.runOnce(HubShiftUtil::initialize));
+    RobotModeTriggers.disabled()
+        .onTrue(Commands.runOnce(HubShiftUtil::initialize).ignoringDisable(true));
+    
   }
 
   /**
@@ -63,7 +75,6 @@ public class RobotContainer {
         this.driverController,
         this.operatorController
     );
-    
   }
   
   public void init() {
@@ -84,5 +95,13 @@ public class RobotContainer {
         this.operatorController
     );
     
+  }
+
+  public void updateDashboardOutputs() {
+    SmartDashboard.putString("Hub/Shift Time Remaining",
+            String.format("%.1f", Math.max(HubShiftUtil.getOfficialShiftInfo().remainingTime(), 0.0)));
+    SmartDashboard.putBoolean("Hub/Hub Active", HubShiftUtil.getOfficialShiftInfo().active());
+    SmartDashboard.putString("Hub/Current Shift", HubShiftUtil.getOfficialShiftInfo().currentShift().toString());
+    SmartDashboard.putBoolean("Hub/Won Auto", HubShiftUtil.getFirstActiveAlliance() != DriverStation.getAlliance().orElse(Alliance.Blue));
   }
 }

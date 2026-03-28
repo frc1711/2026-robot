@@ -38,6 +38,8 @@ public class Robot extends TimedRobot {
 
     CommandScheduler.getInstance().run();
 
+    robotContainer.updateDashboardOutputs();
+
   }
 
   @Override
