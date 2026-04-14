@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.configuration.Direction;
 import frc.robot.state.IntakePosition;
-import frc.robot.state.TurretWheelSpeeds;
+import frc.robot.subsystems.*;
 import frc.robot.util.ChassisSpeedsSupplierBuilder;
 import frc.robot.util.VirtualField;
 
@@ -16,16 +16,31 @@ import static edu.wpi.first.units.Units.*;
 public class ComplexCommands {
     
     protected final RobotContainer robot;
+    
+    protected final Swerve.Commands swerve;
+    
+    protected final Intake.Commands intake;
+    
+    protected final Indexer.Commands indexer;
+    
+    protected final Turret.Commands turret;
+    
+    protected final Vision.Commands vision;
 
     public ComplexCommands(RobotContainer robotContainer) {
         
         this.robot = robotContainer;
+        this.swerve = robotContainer.swerve.commands;
+        this.intake = robotContainer.intake.commands;
+        this.indexer = robotContainer.indexer.commands;
+        this.turret = robotContainer.turret.commands;
+        this.vision = robotContainer.vision.commands;
         
     }
     
     public Command drive(CommandXboxController controller) {
         
-        return this.robot.swerve.commands.drive(
+        return this.swerve.drive(
             ChassisSpeedsSupplierBuilder.fromControllerJoysticks(controller)
                 .withAdditional(ChassisSpeedsSupplierBuilder.fromControllerDPad(controller))
                 .withFieldRelative(this.robot.swerve)
@@ -40,10 +55,10 @@ public class ComplexCommands {
     
     public Command resetFieldHeading() {
         
-        Command haltSwerve = this.robot.swerve.commands.useDriveSpeedMultiplier(0);
-        Command beginCalibration = this.robot.swerve.commands.calibrateFieldRelativeHeading()
-            .alongWith(this.robot.vision.commands.beginStableSeeding());
-        Command endCalibration = this.robot.vision.commands.beginUsingInternalLL4IMUAssist();
+        Command haltSwerve = this.swerve.useDriveSpeedMultiplier(0);
+        Command beginCalibration = this.swerve.calibrateFieldRelativeHeading()
+            .alongWith(this.vision.beginStableSeeding());
+        Command endCalibration = this.vision.beginUsingInternalLL4IMUAssist();
         
         return haltSwerve
             .alongWith(beginCalibration)
@@ -56,8 +71,8 @@ public class ComplexCommands {
     public Command intake() {
         
         Command prepareAndRunIntake =
-            this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
-                .andThen(this.robot.intake.commands.intake(() -> 0.65));
+            this.intake.goToPosition(IntakePosition.INTAKING)
+                .andThen(this.intake.intake(() -> 0.65));
         Runnable resetIntakePosition = () ->
             this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
         
@@ -69,8 +84,8 @@ public class ComplexCommands {
     public Command outtake() {
         
         Command prepareAndRunIntake =
-            this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
-                .andThen(this.robot.intake.commands.intake(() -> -0.65));
+            this.intake.goToPosition(IntakePosition.INTAKING)
+                .andThen(this.intake.intake(() -> -0.65));
         Runnable resetIntakePosition = () ->
             this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
         
@@ -87,7 +102,7 @@ public class ComplexCommands {
         
         Command enableLock = !withLock
             ? new InstantCommand()
-            : this.robot.swerve.commands.enablePOIHeadingAndRadiusLock(
+            : this.swerve.enablePOIHeadingAndRadiusLock(
                 VirtualField.getHubCenterPoint(),
                 Feet.of(9),
                 Direction.RIGHT
@@ -100,7 +115,7 @@ public class ComplexCommands {
                 .alongWith(Commands.waitUntil(() -> this.robot.swerve.radiusLock.hasLock(Feet.of(1))));
         Command waitUntilReady = Commands.waitTime(spinupWaitTime)
             .alongWith(waitForLocks);
-        Command feedShooter = this.robot.indexer.commands.forward();
+        Command feedShooter = this.indexer.forward();
         
         return Commands.parallel(
             enableLock,
