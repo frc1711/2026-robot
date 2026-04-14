@@ -5,24 +5,31 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.configuration.CANDevice;
 
 public class Indexer extends SubsystemBase {
     
-    protected static final double DEFAULT_SPEED = 0.8;
+    protected static final double BELT_DEFAULT_SPEED = 0.7;
     
-    protected final TalonFX motor;
+    protected final TalonFX beltMotor;
     
     public final Commands commands;
 
+    public double beltSpeed = 0.7;
+
     public Indexer() {
         
-        this.motor = new TalonFX(CANDevice.INDEXER_MOTOR_CONTROLLER.id);
+        this.beltMotor = new TalonFX(CANDevice.BELT_INDEXER_MOTOR_CONTROLLER.id);
         this.commands = new Commands();
         
-        this.motor.getConfigurator().apply(Indexer.getMotorConfig());
+        this.beltMotor.getConfigurator().apply(Indexer.getMotorConfig());
+
+        SmartDashboard.putData("Indexer", this);
         
     }
     
@@ -41,35 +48,38 @@ public class Indexer extends SubsystemBase {
     
     public void stop() {
         
-        this.motor.stopMotor();
+        this.beltMotor.stopMotor();
         
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addDoubleProperty(
+            "IndexerSpeeds/Belt Speeds",
+            () -> this.beltSpeed, 
+            (double d) -> this.beltSpeed = d
+        );
     }
     
     public class Commands {
         
-        public Command spin(double speed) {
+        public Command spin(boolean reversed) {
             
             return Indexer.this.startEnd(
-                () -> Indexer.this.motor.set(speed),
+                () -> Indexer.this.beltMotor.set(reversed ? -Indexer.this.beltSpeed : Indexer.this.beltSpeed),
                 Indexer.this::stop
             );
             
         }
         
-        public Command spin() {
-            
-            return this.spin(Indexer.DEFAULT_SPEED);
-            
-        }
-        
         public Command forward() {
             
-            return this.spin(Indexer.DEFAULT_SPEED);
+            return this.spin(true);
         }
 
         public Command backward() {
             
-            return this.spin(-Indexer.DEFAULT_SPEED);
+            return this.spin(false);
             
         }
     }

@@ -16,28 +16,10 @@ public class TestingTeleoperativeInputsScheme implements InputScheme {
 	) {
 		
 		(new InputSchemeBuilder(robotContainer))
-			.configureDefaultRobotCommands()
 			.useControllerJoysticksForDriving(controller1)
 			.useStartButtonToResetFieldHeading(controller1)
-			.useBumpersToEnableHeadingLock(controller1)
-			.useAButtonToShoot(controller1)
-			.useYButtonToLockToHub(controller1)
-			.useXButtonToIntake(controller1)
-			.useBumpersToControlIntakeExtension(controller1)
-			.useBackButtonToCalibrateIntakeExtension(controller1);
-		
-	}
-	
-	@Override
-	public void init(
-		RobotContainer robot,
-		CommandXboxController controller1,
-		CommandXboxController controller2
-	) {
-		
-		InputScheme.super.init(robot, controller1, controller2);
-		
-		robot.intake.goToPosition(IntakePosition.FULLY_STOWED);
+			.useTriggersForIndexing(controller1)
+			.useYButtonToShootManually(controller1);
 		
 	}
 	

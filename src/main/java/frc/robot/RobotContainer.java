@@ -25,6 +25,8 @@ public class RobotContainer {
   // public final Intake intake;
   
   public final Indexer indexer;
+
+  public final Agitator agitator;
   
   public final Turret turret;
 
@@ -53,6 +55,7 @@ public class RobotContainer {
         this.swerve::getLinearVelocity,
         this.swerve::getAngularVelocity
     );
+    this.agitator = new Agitator();
     this.complexCommands = new ComplexCommands(this);
     this.driverController = new CommandXboxController(0);
     this.operatorController = new CommandXboxController(1);

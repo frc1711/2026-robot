@@ -1,11 +1,12 @@
 package frc.robot.input;
 
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
 import frc.robot.configuration.Direction;
 import frc.robot.state.IntakePosition;
-import frc.robot.state.TurretWheelSpeeds;
+import frc.robot.state.FlyWheelSpeeds;
 import frc.robot.subsystems.Swerve;
 import frc.robot.util.VirtualField;
 
@@ -66,55 +67,55 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	public InputSchemeBuilder useBumpersToEnableHeadingLock(CommandXboxController controller) {
+	// public InputSchemeBuilder useBumpersToEnableHeadingLock(CommandXboxController controller) {
 		
-		Angle increment = Degrees.of(90);
-		Swerve.Commands swerve = this.robot.swerve.commands;
+	// 	Angle increment = Degrees.of(90);
+	// 	Swerve.Commands swerve = this.robot.swerve.commands;
 		
-		controller.leftBumper()
-			.onTrue(swerve.jumpToNextHeadingLockAngle(increment, false));
+	// 	controller.leftBumper()
+	// 		.onTrue(swerve.jumpToNextHeadingLockAngle(increment, false));
 		
-		controller.rightBumper()
-			.onTrue(swerve.jumpToNextHeadingLockAngle(increment, true));
+	// 	controller.rightBumper()
+	// 		.onTrue(swerve.jumpToNextHeadingLockAngle(increment, true));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useABXYButtonsToUseHeadingLock(CommandXboxController controller) {
+	// public InputSchemeBuilder useABXYButtonsToUseHeadingLock(CommandXboxController controller) {
 		
-		controller.y().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.FORWARDS));
-		controller.x().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.LEFT));
-		controller.b().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.RIGHT));
-		controller.a().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.BACKWARDS));
+	// 	controller.y().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.FORWARDS));
+	// 	controller.x().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.LEFT));
+	// 	controller.b().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.RIGHT));
+	// 	controller.a().onTrue(this.robot.swerve.commands.enableStaticHeadingLock(Direction.BACKWARDS));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useYButtonToHeadingLockToHub(CommandXboxController controller) {
+	// public InputSchemeBuilder useYButtonToHeadingLockToHub(CommandXboxController controller) {
 		
-		controller.y().onTrue(this.robot.swerve.commands.enablePOIHeadingLock(
-			VirtualField.getHubCenterPoint(),
-			Direction.RIGHT
-		));
+	// 	controller.y().onTrue(this.robot.swerve.commands.enablePOIHeadingLock(
+	// 		VirtualField.getHubCenterPoint(),
+	// 		Direction.RIGHT
+	// 	));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useBButtonToRadiusLockToHub(CommandXboxController controller) {
+	// public InputSchemeBuilder useBButtonToRadiusLockToHub(CommandXboxController controller) {
 		
-		controller.b().onTrue(this.robot.swerve.commands.enablePOIRadiusLock(
-			VirtualField.getHubCenterPoint(),
-			Feet.of(8)
-		));
+	// 	controller.b().onTrue(this.robot.swerve.commands.enablePOIRadiusLock(
+	// 		VirtualField.getHubCenterPoint(),
+	// 		Feet.of(8)
+	// 	));
 		
-		controller.b().onFalse(this.robot.swerve.commands.disablePOIRadiusLock());
+	// 	controller.b().onFalse(this.robot.swerve.commands.disablePOIRadiusLock());
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
 	public InputSchemeBuilder useTriggersForSlowMode(CommandXboxController controller) {
 		
@@ -126,117 +127,117 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	public InputSchemeBuilder useAButtonToShoot(CommandXboxController controller) {
+	// public InputSchemeBuilder useAButtonToShoot(CommandXboxController controller) {
 		
-		controller.a().whileTrue(this.robot.complexCommands.shoot());
+	// 	controller.a().whileTrue(this.robot.complexCommands.shoot());
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useBButtonToPulse(CommandXboxController controller) {
+	// public InputSchemeBuilder useBButtonToPulse(CommandXboxController controller) {
 		
-		controller.b().whileTrue(this.robot.intake.commands.pulseV3());
+	// 	controller.b().whileTrue(this.robot.intake.commands.pulseV3());
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useXButtonToIntake(CommandXboxController controller) {
+	// public InputSchemeBuilder useXButtonToIntake(CommandXboxController controller) {
 		
-		controller.x().whileTrue(this.robot.complexCommands.intake());
+	// 	controller.x().whileTrue(this.robot.complexCommands.intake());
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useDPadDownToOuttake(CommandXboxController controller) {
+	// public InputSchemeBuilder useDPadDownToOuttake(CommandXboxController controller) {
 		
-		controller.povDown().whileTrue(this.robot.complexCommands.outtake());
+	// 	controller.povDown().whileTrue(this.robot.complexCommands.outtake());
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
 	public InputSchemeBuilder useYButtonToShootManually(CommandXboxController controller) {
 		
 		controller.y().whileTrue(
-			this.robot.complexCommands.shoot(TurretWheelSpeeds.MID_SHOT, false)
+			Commands.runOnce(() -> this.robot.flyWheel.setDutyCycle())
 		);
 		
 		return this;
 		
 	}
 	
-	public InputSchemeBuilder useDPadToControlRawIntakeExtension(
-		CommandXboxController controller
-	) {
+	// public InputSchemeBuilder useDPadToControlRawIntakeExtension(
+	// 	CommandXboxController controller
+	// ) {
 		
-		controller.povDown().whileTrue(this.robot.intake.commands.extend(-0.1));
-		controller.povUp().whileTrue(this.robot.intake.commands.extend(0.1));
+	// 	controller.povDown().whileTrue(this.robot.intake.commands.extend(-0.1));
+	// 	controller.povUp().whileTrue(this.robot.intake.commands.extend(0.1));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useDPadToControlRawTurretRotation(
-		CommandXboxController controller
-	) {
+	// public InputSchemeBuilder useDPadToControlRawTurretRotation(
+	// 	CommandXboxController controller
+	// ) {
 		
-		controller.povLeft().whileTrue(this.robot.turret.commands.adjustHeading(-0.1));
-		controller.povRight().whileTrue(this.robot.turret.commands.adjustHeading(0.1));
+	// 	controller.povLeft().whileTrue(this.robot.turret.commands.adjustHeading(-0.1));
+	// 	controller.povRight().whileTrue(this.robot.turret.commands.adjustHeading(0.1));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useBumpersToControlIntakeExtension(
-		CommandXboxController controller
-	) {
+	// public InputSchemeBuilder useBumpersToControlIntakeExtension(
+	// 	CommandXboxController controller
+	// ) {
 		
-		controller.leftBumper().onTrue(this.robot.intake.commands.goToPosition(
-			IntakePosition.FULLY_STOWED
-		));
+	// 	controller.leftBumper().onTrue(this.robot.intake.commands.goToPosition(
+	// 		IntakePosition.FULLY_STOWED
+	// 	));
 		
-		controller.rightBumper().onTrue(this.robot.intake.commands.goToPosition(
-			IntakePosition.PARTIALLY_STOWED
-		));
+	// 	controller.rightBumper().onTrue(this.robot.intake.commands.goToPosition(
+	// 		IntakePosition.PARTIALLY_STOWED
+	// 	));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useTriggersToControlRawIntakeExtension(
-		CommandXboxController controller
-	) {
+	// public InputSchemeBuilder useTriggersToControlRawIntakeExtension(
+	// 	CommandXboxController controller
+	// ) {
 		
-		controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
-			.onTrue(this.robot.intake.commands.extend(-0.1));
+	// 	controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+	// 		.onTrue(this.robot.intake.commands.extend(-0.1));
 		
-		controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
-			.onTrue(this.robot.intake.commands.extend(0.1));
+	// 	controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+	// 		.onTrue(this.robot.intake.commands.extend(0.1));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
-	public InputSchemeBuilder useTriggersToControlIntakeExtension(
-		CommandXboxController controller
-	) {
+	// public InputSchemeBuilder useTriggersToControlIntakeExtension(
+	// 	CommandXboxController controller
+	// ) {
 		
-		controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
-			.onTrue(this.robot.intake.commands.goToPosition(
-				IntakePosition.FULLY_STOWED
-			));
+	// 	controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+	// 		.onTrue(this.robot.intake.commands.goToPosition(
+	// 			IntakePosition.FULLY_STOWED
+	// 		));
 		
-		controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
-			.onTrue(this.robot.intake.commands.goToPosition(
-				IntakePosition.PARTIALLY_STOWED
-			));
+	// 	controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
+	// 		.onTrue(this.robot.intake.commands.goToPosition(
+	// 			IntakePosition.PARTIALLY_STOWED
+	// 		));
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
 	public InputSchemeBuilder useTriggersForIndexing(
 		CommandXboxController controller
@@ -246,21 +247,21 @@ public class InputSchemeBuilder {
 			.whileTrue(this.robot.indexer.commands.backward());
 		
 		controller.rightTrigger()
-			.whileTrue(this.robot.indexer.commands.forward());
+			.whileTrue(this.robot.complexCommands.index(Seconds.of(0.25)));
 		
 		return this;
 		
 	}
 	
-	public InputSchemeBuilder useBackButtonToCalibrateIntakeExtension(
-		CommandXboxController controller
-	) {
+	// public InputSchemeBuilder useBackButtonToCalibrateIntakeExtension(
+	// 	CommandXboxController controller
+	// ) {
 		
-		controller.back()
-			.onTrue(this.robot.intake.commands.calibrateExtensionLimits());
+	// 	controller.back()
+	// 		.onTrue(this.robot.intake.commands.calibrateExtensionLimits());
 		
-		return this;
+	// 	return this;
 		
-	}
+	// }
 	
 }

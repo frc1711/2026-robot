@@ -16,34 +16,15 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 	) {
 		
 		(new InputSchemeBuilder(robotContainer))
-			.configureDefaultRobotCommands()
 			.useControllerJoysticksForDriving(controller1)
 			.useStartButtonToResetFieldHeading(controller1)
-			.useBumpersToEnableHeadingLock(controller1)
 			.useTriggersForSlowMode(controller1)
-			.useAButtonToShoot(controller2)
-			.useBButtonToPulse(controller2)
-			.useXButtonToIntake(controller2)
-			.useDPadDownToOuttake(controller2)
-			.useYButtonToShootManually(controller2)
-			.useBumpersToControlIntakeExtension(controller2)
 			.useTriggersForIndexing(controller2)
-			.useBackButtonToCalibrateIntakeExtension(controller2);
+			.useYButtonToShootManually(controller2);
 		
 	}
 	
-	@Override
-	public void init(
-		RobotContainer robot,
-		CommandXboxController controller1,
-		CommandXboxController controller2
-	) {
-		
-		InputScheme.super.init(robot, controller1, controller2);
-		
-		robot.intake.goToPosition(IntakePosition.FULLY_STOWED);
-		
-	}
+	
 	
 	@Override
 	public void periodic(

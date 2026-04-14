@@ -4,6 +4,9 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.configuration.CANDevice;
@@ -12,11 +15,13 @@ import static edu.wpi.first.units.Units.Seconds;
 
 public class Agitator extends SubsystemBase {
     
-    protected static final double DEFAULT_SPEED = 0.3;
+    protected static final double DEFAULT_SPEED = 0.5;
     
     protected final TalonFX motor;
 
     public final Commands commands;
+
+    public double rollerSpeed = 0.5;
 
     public Agitator() {
         
@@ -24,6 +29,8 @@ public class Agitator extends SubsystemBase {
         this.commands = new Commands();
         
         this.motor.getConfigurator().apply(Agitator.getMotorConfig());
+
+        SmartDashboard.putData("Indexer", this);
         
     }
     
@@ -45,28 +52,31 @@ public class Agitator extends SubsystemBase {
         this.motor.stopMotor();
         
     }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addDoubleProperty(
+            "IndexerSpeeds/Roller Speeds", 
+            () -> this.rollerSpeed, 
+            (double d) -> this.rollerSpeed = d
+        );
+    }
     
     public class Commands {
         
-        public Command spin(double speed) {
+        public Command spin(boolean reversed) {
             
             return Agitator.this.startEnd(
-                () -> Agitator.this.motor.set(speed),
+                () -> Agitator.this.motor.set(reversed ? Agitator.this.rollerSpeed : -Agitator.this.rollerSpeed),
                 Agitator.this::stop
             );
             
         }
         
-        public Command spin() {
-            
-            return this.spin(Agitator.DEFAULT_SPEED);
-            
-        }
-        
         public Command agitate(double speed) {
             
-            return this.spin(speed).withTimeout(Seconds.of(0.75))
-                .andThen(this.spin(-speed).withTimeout(Seconds.of(0.25)))
+            return this.spin(false).withTimeout(Seconds.of(0.75))
+                .andThen(this.spin(true).withTimeout(Seconds.of(0.25)))
                 .repeatedly();
             
         }
