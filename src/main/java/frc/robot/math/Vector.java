@@ -477,15 +477,18 @@ public class Vector {
 	}
 	
 	/**
-	 * Returns this vector represented as a Point, where the x and y components
-	 * of the Point correspond to the x and y components of this vector,
-	 * respectively.
+	 * Returns this vector represented as a Translation2d, where the x and y
+	 * components of the Translation2d correspond to the x and y components of
+	 * this vector, respectively.
 	 * 
-	 * @return This vector represented as a Point.
+	 * @return This vector represented as a Translation2d.
 	 */
-	public Point asPoint() {
+	public Translation2d asTranslation2d() {
 		
-		return new Point(this.getXComponent(), this.getYComponent());
+		return new Translation2d(
+			this.getXComponent().in(Meters),
+			this.getYComponent().in(Meters)
+		);
 		
 	}
 	
