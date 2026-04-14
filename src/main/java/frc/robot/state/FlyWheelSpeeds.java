@@ -9,28 +9,28 @@ import java.util.function.Supplier;
 
 import static edu.wpi.first.units.Units.*;
 
-public class TurretWheelSpeeds {
+public class FlyWheelSpeeds {
 	
-	public static final TurretWheelSpeeds STOPPED =
-		TurretWheelSpeeds.fromStaticAngularWheelVelocities(
+	public static final FlyWheelSpeeds STOPPED =
+		FlyWheelSpeeds.fromStaticAngularWheelVelocities(
 			RotationsPerSecond.zero(),
 			RotationsPerSecond.zero()
 		);
 	
-	public static final TurretWheelSpeeds CLOSE_SHOT =
-		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+	public static final FlyWheelSpeeds CLOSE_SHOT =
+		FlyWheelSpeeds.fromStaticWheelSurfaceVelocities(
 			FeetPerSecond.of(14.5),
 			FeetPerSecond.of(14.5).plus(FeetPerSecond.of(20))
 		);
 	
-	public static final TurretWheelSpeeds MID_SHOT =
-		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+	public static final FlyWheelSpeeds MID_SHOT =
+		FlyWheelSpeeds.fromStaticWheelSurfaceVelocities(
 			FeetPerSecond.of(17.5),
 			FeetPerSecond.of(17.5).plus(FeetPerSecond.of(20))
 		);
 	
-	public static final TurretWheelSpeeds FAR_SHOT =
-		TurretWheelSpeeds.fromStaticWheelSurfaceVelocities(
+	public static final FlyWheelSpeeds FAR_SHOT =
+		FlyWheelSpeeds.fromStaticWheelSurfaceVelocities(
 			FeetPerSecond.of(30),
 			FeetPerSecond.of(30).plus(FeetPerSecond.of(15))
 		);
@@ -39,7 +39,7 @@ public class TurretWheelSpeeds {
 	
 	Supplier<AngularVelocity> upperWheelAngularVelocitySupplier;
 	
-	public TurretWheelSpeeds(
+	public FlyWheelSpeeds(
 		Supplier<AngularVelocity> lowerWheelAngularVelocitySupplier,
 		Supplier<AngularVelocity> upperWheelAngularVelocitySupplier
 	) {
@@ -49,52 +49,48 @@ public class TurretWheelSpeeds {
 		
 	}
 	
-	public static TurretWheelSpeeds fromDynamicAngularMotorShaftVelocities(
+	public static FlyWheelSpeeds fromDynamicAngularMotorShaftVelocities(
 		Supplier<AngularVelocity> lowerMotorShaftAngularVelocitySupplier,
 		Supplier<AngularVelocity> upperMotorShaftAngularVelocitySupplier
 	) {
 		
-		return new TurretWheelSpeeds(
-			() -> lowerMotorShaftAngularVelocitySupplier.get()
-				.times(RobotDimensions.TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT)
-				.div(RobotDimensions.TURRET_LOWER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT),
+		return new FlyWheelSpeeds(
+			() -> lowerMotorShaftAngularVelocitySupplier.get(),
 			() -> upperMotorShaftAngularVelocitySupplier.get()
-				.times(RobotDimensions.TURRET_UPPER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT)
-				.div(RobotDimensions.TURRET_UPPER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
 		);
 		
 	}
 	
-	public static TurretWheelSpeeds fromDynamicAngularWheelVelocities(
+	public static FlyWheelSpeeds fromDynamicAngularWheelVelocities(
 		Supplier<AngularVelocity> lowerWheelAngularVelocitySupplier,
 		Supplier<AngularVelocity> upperWheelAngularVelocitySupplier
 	) {
 		
-		return new TurretWheelSpeeds(
+		return new FlyWheelSpeeds(
 			lowerWheelAngularVelocitySupplier,
 			upperWheelAngularVelocitySupplier
 		);
 		
 	}
 	
-	public static TurretWheelSpeeds fromStaticAngularWheelVelocities(
+	public static FlyWheelSpeeds fromStaticAngularWheelVelocities(
 		AngularVelocity lowerWheelAngularVelocity,
 		AngularVelocity upperWheelAngularVelocity
 	) {
 		
-		return new TurretWheelSpeeds(
+		return new FlyWheelSpeeds(
 			() -> lowerWheelAngularVelocity,
 			() -> upperWheelAngularVelocity
 		);
 		
 	}
 	
-	public static TurretWheelSpeeds fromRelativeDynamicAngularWheelVelocities(
+	public static FlyWheelSpeeds fromRelativeDynamicAngularWheelVelocities(
 		Supplier<AngularVelocity> lowerWheelAngularVelocitySupplier,
 		DoubleSupplier upperWheelRelativeSpeedMultiplierSupplier
 	) {
 		
-		return new TurretWheelSpeeds(
+		return new FlyWheelSpeeds(
 			lowerWheelAngularVelocitySupplier,
 			() -> lowerWheelAngularVelocitySupplier.get()
 				.times(upperWheelRelativeSpeedMultiplierSupplier.getAsDouble())
@@ -102,12 +98,12 @@ public class TurretWheelSpeeds {
 		
 	}
 	
-	public static TurretWheelSpeeds fromRelativeStaticAngularWheelVelocities(
+	public static FlyWheelSpeeds fromRelativeStaticAngularWheelVelocities(
 		AngularVelocity lowerWheelAngularVelocity,
 		double upperWheelRelativeSpeedMultiplier
 	) {
 		
-		return new TurretWheelSpeeds(
+		return new FlyWheelSpeeds(
 			() -> lowerWheelAngularVelocity,
 			() -> lowerWheelAngularVelocity
 				.times(upperWheelRelativeSpeedMultiplier)
@@ -115,12 +111,12 @@ public class TurretWheelSpeeds {
 		
 	}
 	
-	public static TurretWheelSpeeds fromDynamicWheelSurfaceVelocities(
+	public static FlyWheelSpeeds fromDynamicWheelSurfaceVelocities(
 		Supplier<LinearVelocity> lowerWheelSurfaceVelocitySupplier,
 		Supplier<LinearVelocity> upperWheelSurfaceVelocitySupplier
 	) {
 		
-		return new TurretWheelSpeeds(
+		return new FlyWheelSpeeds(
 			() -> RotationsPerSecond.of(
 				lowerWheelSurfaceVelocitySupplier.get().in(InchesPerSecond) /
 				RobotDimensions.TURRET_LOWER_WHEEL_CIRCUMFERENCE.in(Inches)
@@ -133,21 +129,21 @@ public class TurretWheelSpeeds {
 		
 	}
 	
-	public static TurretWheelSpeeds fromStaticWheelSurfaceVelocities(
+	public static FlyWheelSpeeds fromStaticWheelSurfaceVelocities(
 		LinearVelocity lowerWheelSurfaceVelocity,
 		LinearVelocity upperWheelSurfaceVelocity
 	) {
 		
-		return TurretWheelSpeeds.fromDynamicWheelSurfaceVelocities(
+		return FlyWheelSpeeds.fromDynamicWheelSurfaceVelocities(
 			() -> lowerWheelSurfaceVelocity,
 			() -> upperWheelSurfaceVelocity
 		);
 		
 	}
 	
-	public TurretWheelSpeeds withScaling(double scalingFactor) {
+	public FlyWheelSpeeds withScaling(double scalingFactor) {
 		
-		return new TurretWheelSpeeds(
+		return new FlyWheelSpeeds(
 			() -> this.getLowerWheelAngularVelocity().times(scalingFactor),
 			() -> this.getUpperWheelAngularVelocity().times(scalingFactor)
 		);

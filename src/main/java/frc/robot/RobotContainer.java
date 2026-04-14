@@ -22,11 +22,13 @@ public class RobotContainer {
   
   public final Swerve swerve;
   
-  public final Intake intake;
+  // public final Intake intake;
   
   public final Indexer indexer;
   
   public final Turret turret;
+
+  public final Flywheel flyWheel;
   
   public final Vision vision;
   
@@ -40,9 +42,10 @@ public class RobotContainer {
   
   public RobotContainer() {
     
-    this.intake = new Intake();
+    // this.intake = new Intake();
     this.indexer = new Indexer();
     this.turret = new Turret();
+    this.flyWheel = new Flywheel();
     this.odometry = new RaptorsOdometry();
     this.swerve = new Swerve(this.odometry);
     this.vision = new Vision(
@@ -103,5 +106,6 @@ public class RobotContainer {
     SmartDashboard.putBoolean("Hub/Hub Active", HubShiftUtil.getOfficialShiftInfo().active());
     SmartDashboard.putString("Hub/Current Shift", HubShiftUtil.getOfficialShiftInfo().currentShift().toString());
     SmartDashboard.putBoolean("Hub/Won Auto", HubShiftUtil.getFirstActiveAlliance() != DriverStation.getAlliance().orElse(Alliance.Blue));
+    SmartDashboard.putData("Swerve", swerve);
   }
 }

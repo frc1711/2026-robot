@@ -55,7 +55,7 @@ public class RobotDimensions {
     
     public static final int TURRET_ROTATION_DRIVING_PULLEY_TOOTH_COUNT = 11;
     
-    public static final int TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT = 136;
+    public static final int TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT = 130;
     
     public static final int TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT = 24;
     

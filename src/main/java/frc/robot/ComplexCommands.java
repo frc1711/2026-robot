@@ -11,7 +11,7 @@ import frc.robot.math.DoubleSupplierBuilder;
 import frc.robot.math.Point;
 import frc.robot.math.PointSupplierBuilder;
 import frc.robot.state.IntakePosition;
-import frc.robot.state.TurretWheelSpeeds;
+import frc.robot.state.FlyWheelSpeeds;
 import frc.robot.util.ChassisSpeedsSupplierBuilder;
 import frc.robot.util.VirtualField;
 
@@ -57,8 +57,7 @@ public class ComplexCommands {
     public Command resetFieldHeading() {
         
         Command haltSwerve = this.robot.swerve.commands.useDriveSpeedMultiplier(0);
-        Command beginCalibration = this.robot.swerve.commands.calibrateFieldRelativeHeading()
-            .alongWith(this.robot.vision.commands.beginStableSeeding());
+        Command beginCalibration = this.robot.swerve.commands.calibrateFieldRelativeHeading();
         Command endCalibration = this.robot.vision.commands.beginUsingInternalLL4IMUAssist();
         
         return haltSwerve
@@ -69,34 +68,34 @@ public class ComplexCommands {
         
     }
     
-    public Command intake() {
+//     public Command intake() {
         
-        Command prepareAndRunIntake =
-            this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
-                .andThen(this.robot.intake.commands.intake(() -> 0.65));
-        Runnable resetIntakePosition = () ->
-            this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
+//         Command prepareAndRunIntake =
+//             this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
+//                 .andThen(this.robot.intake.commands.intake(() -> 0.65));
+//         Runnable resetIntakePosition = () ->
+//             this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
         
-        return prepareAndRunIntake
-            .finallyDo(resetIntakePosition);
+//         return prepareAndRunIntake
+//             .finallyDo(resetIntakePosition);
         
-    }
+//     }
     
-    public Command outtake() {
+//     public Command outtake() {
         
-        Command prepareAndRunIntake =
-            this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
-                .andThen(this.robot.intake.commands.intake(() -> -0.65));
-        Runnable resetIntakePosition = () ->
-            this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
+//         Command prepareAndRunIntake =
+//             this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
+//                 .andThen(this.robot.intake.commands.intake(() -> -0.65));
+//         Runnable resetIntakePosition = () ->
+//             this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
         
-        return prepareAndRunIntake
-            .finallyDo(resetIntakePosition);
+//         return prepareAndRunIntake
+//             .finallyDo(resetIntakePosition);
         
-    }
+//     }
     
     public Command shoot(
-        TurretWheelSpeeds turretState,
+        FlyWheelSpeeds turretState,
         Time spinupWaitTime,
         boolean withLock
     ) {
@@ -113,9 +112,9 @@ public class ComplexCommands {
         Command enableLocks = withLock
             ? headingLock.alongWith(radiusLock)
             : new InstantCommand();
-        Command spinUpShooter = this.robot.turret.commands.shoot(turretState);
+        Command spinUpShooter = this.robot.flyWheel.commands.shoot(turretState);
 //        Command agitate = this.robot.agitator.commands.agitate()
-        Command pulse = this.robot.intake.commands.pulseV3();
+//        Command pulse = this.robot.intake.commands.pulseV3();
         Command waitForSpinup = Commands.waitTime(spinupWaitTime);
 //        Command waitForHeadingLock = Commands.waitUntil(this.robot.swerve.headingLock::hasLock);
 //        Command waitForRadiusLock = Commands.waitUntil(this.robot.swerve.radiusLock::hasLock);
@@ -124,14 +123,27 @@ public class ComplexCommands {
         
         return enableLocks.andThen(
             spinUpShooter
-                .alongWith(pulse)
                 .alongWith(waitUntilReady.andThen(feedShooter))
         );
         
     }
+
+    public Command index(
+        Time waitTime
+    ) {
+
+        Command spinUpIndexer = this.robot.indexer.commands.forward();
+        Command agitate = this.robot.agitator.commands.agitate();
+        Command waitForSpinup = Commands.waitTime(waitTime);
+        
+        return spinUpIndexer.alongWith(
+            waitForSpinup.andThen(agitate)
+        );
+
+    }
     
     public Command shoot(
-        TurretWheelSpeeds turretState,
+        FlyWheelSpeeds turretState,
         boolean withLocks
     ) {
         
@@ -141,7 +153,7 @@ public class ComplexCommands {
     
     public Command shoot() {
         
-        return this.shoot(TurretWheelSpeeds.MID_SHOT, true);
+        return this.shoot(FlyWheelSpeeds.MID_SHOT, true);
         
     }
     
