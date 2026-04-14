@@ -50,11 +50,6 @@ public class Vector {
 	
 	public Vector(Translation2d point) {
 		
-//		this.magnitudeMeters = point.getNorm();
-//		this.headingRadians = point.getAngle()
-//			.getMeasure()
-//			.in(Vector.INTRINSIC_ANGLE_UNIT);
-		
 		this(
 			point.getMeasureX(),
 			point.getMeasureY()
