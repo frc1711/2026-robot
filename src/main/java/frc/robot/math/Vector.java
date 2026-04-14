@@ -83,6 +83,36 @@ public class Vector {
 		
 	}
 	
+	public static Vector average(Translation2d... points) {
+		
+		Vector sum = Stream.of(points)
+			.map(Vector::new)
+			.reduce(Vector.ZERO, Vector::plus);
+		
+		return sum.dividedBy(points.length);
+		
+	}
+	
+	public static Vector average(Pose2d... poses) {
+		
+		Vector sum = Stream.of(poses)
+			.map(Vector::new)
+			.reduce(Vector.ZERO, Vector::plus);
+		
+		return sum.dividedBy(poses.length);
+		
+	}
+	
+	public static Vector average(ChassisSpeeds... chassisSpeeds) {
+		
+		Vector sum = Stream.of(chassisSpeeds)
+			.map(Vector::new)
+			.reduce(Vector.ZERO, Vector::plus);
+		
+		return sum.dividedBy(chassisSpeeds.length);
+		
+	}
+	
 	public Distance getMagnitude() {
 		
 		return Vector.INTRINSIC_DISTANCE_UNIT.of(this.magnitudeMeters);
@@ -223,12 +253,48 @@ public class Vector {
 		
 	}
 	
+	public Vector plus(Translation2d other) {
+		
+		return this.plus(new Vector(other));
+		
+	}
+	
+	public Vector plus(Pose2d other) {
+		
+		return this.plus(new Vector(other));
+		
+	}
+	
+	public Vector plus(ChassisSpeeds other) {
+		
+		return this.plus(new Vector(other));
+		
+	}
+	
 	public Vector minus(Vector other) {
 		
 		return new Vector(
 			this.getXComponent().minus(other.getXComponent()),
 			this.getYComponent().minus(other.getYComponent())
 		);
+		
+	}
+	
+	public Vector minus(Translation2d other) {
+		
+		return this.minus(new Vector(other));
+		
+	}
+	
+	public Vector minus(Pose2d other) {
+		
+		return this.minus(new Vector(other));
+		
+	}
+	
+	public Vector minus(ChassisSpeeds other) {
+		
+		return this.minus(new Vector(other));
 		
 	}
 	
@@ -259,6 +325,12 @@ public class Vector {
 		
 	}
 	
+	public Vector rotatedBy(Rotation2d angle) {
+		
+		return this.rotatedBy(angle.getMeasure());
+		
+	}
+	
 	/**
 	 * Returns the vector that extends from this vector to the specified other
 	 * vector, i.e. the vector that, when added to this vector, results in
@@ -275,6 +347,24 @@ public class Vector {
 		
 	}
 	
+	public Vector vectorTo(Translation2d other) {
+		
+		return this.vectorTo(new Vector(other));
+		
+	}
+	
+	public Vector vectorTo(Pose2d other) {
+		
+		return this.vectorTo(new Vector(other));
+		
+	}
+	
+	public Vector vectorTo(ChassisSpeeds other) {
+		
+		return this.vectorTo(new Vector(other));
+		
+	}
+	
 	/**
 	 * Returns the distance between this vector and the specified other vector,
 	 * i.e. the magnitude of the vector that extends from this vector to the
@@ -284,9 +374,27 @@ public class Vector {
 	 * @return The distance between this vector and the specified other vector.
 	 * @see Vector#vectorTo(Vector)
 	 */
-	public Distance distanceTo(Vector other) {
+	public Distance magnitudeTo(Vector other) {
 		
 		return this.vectorTo(other).getMagnitude();
+		
+	}
+	
+	public Distance magnitudeTo(Translation2d other) {
+		
+		return this.magnitudeTo(new Vector(other));
+		
+	}
+	
+	public Distance magnitudeTo(Pose2d other) {
+		
+		return this.magnitudeTo(new Vector(other));
+		
+	}
+	
+	public Distance magnitudeTo(ChassisSpeeds other) {
+		
+		return this.magnitudeTo(new Vector(other));
 		
 	}
 	
@@ -302,6 +410,24 @@ public class Vector {
 	public Angle headingTo(Vector other) {
 		
 		return this.vectorTo(other).getHeading();
+		
+	}
+	
+	public Angle headingTo(Translation2d other) {
+		
+		return this.headingTo(new Vector(other));
+		
+	}
+	
+	public Angle headingTo(Pose2d other) {
+		
+		return this.headingTo(new Vector(other));
+		
+	}
+	
+	public Angle headingTo(ChassisSpeeds other) {
+		
+		return this.headingTo(new Vector(other));
 		
 	}
 	
