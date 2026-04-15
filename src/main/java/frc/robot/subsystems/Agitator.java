@@ -12,7 +12,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 public class Agitator extends SubsystemBase {
     
-    protected static final double DEFAULT_SPEED = 0.3;
+    protected static final double DEFAULT_SPEED = 0.25;
     
     protected final TalonFX motor;
 
@@ -32,7 +32,7 @@ public class Agitator extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
         
         config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
         config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5;
         
