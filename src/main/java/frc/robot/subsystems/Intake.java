@@ -8,20 +8,25 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.*;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.configuration.CANDevice;
+import frc.robot.configuration.RobotDimensions;
 import frc.robot.state.IntakePosition;
 import frc.robot.util.LogCommand;
 
 import static edu.wpi.first.units.Units.*;
 
 public class Intake extends SubsystemBase {
+    
+    protected static final Time TIME_TO_MAX_EXTENSION = Seconds.of(0.5);
+    
+    protected static final Time TIME_TO_MAX_EXTENSION_VELOCITY = Seconds.of(0.25);
     
     protected static final Current MINIMUM_STALL_DETECTION_CURRENT = Amps.of(20);
     
@@ -61,18 +66,39 @@ public class Intake extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
         
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-        config.Slot0.kS = 0.1;
-        config.Slot0.kV = 0.5;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         
-        config.Slot0.kP = 6;
+        config.CurrentLimits.StatorCurrentLimit = 50;
+        config.CurrentLimits.StatorCurrentLimitEnable = true;
+
+//        config.Slot0.kS = 1;
+//        config.Slot0.kV = 0.5;
+        
+        config.Slot0.kP = 20;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
-
-        config.MotionMagic.MotionMagicCruiseVelocity = 50;
-        config.MotionMagic.MotionMagicAcceleration = 80;
-        config.MotionMagic.MotionMagicJerk = 1000;
+        
+        double maxExtensionVelocityInchesPerSecond =
+            IntakePosition.FULLY_EXTENDED.getOffsetFromFullyStowed()
+                .div(Intake.TIME_TO_MAX_EXTENSION)
+                .in(InchesPerSecond);
+        double maxExtensionVelocityTeethPerSecond =
+            maxExtensionVelocityInchesPerSecond /
+                RobotDimensions.INTAKE_EXTENSION_GEAR_RACK_PITCH.in(Inches);
+        double maxExtensionVelocityRotationsPerSecond =
+            maxExtensionVelocityTeethPerSecond /
+                RobotDimensions.INTAKE_EXTENSION_GEAR_TOOTH_COUNT;
+        
+        config.MotionMagic.MotionMagicCruiseVelocity =
+            maxExtensionVelocityRotationsPerSecond;
+        
+        double maxExtensionAccelerationRotationsPerSecondPerSecond =
+            maxExtensionVelocityRotationsPerSecond /
+                Intake.TIME_TO_MAX_EXTENSION_VELOCITY.in(Seconds);
+        
+        config.MotionMagic.MotionMagicAcceleration =
+            maxExtensionAccelerationRotationsPerSecondPerSecond;
+//        config.MotionMagic.MotionMagicJerk = 1000;
         
         config.HardwareLimitSwitch.ForwardLimitEnable = false;
         config.HardwareLimitSwitch.ReverseLimitEnable = false;
@@ -85,7 +111,7 @@ public class Intake extends SubsystemBase {
         
         TalonFXConfiguration config = Intake.getLeftExtensionMotorConfig();
         
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
         return config;
         
@@ -96,7 +122,7 @@ public class Intake extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
         
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         
         config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5;
         
