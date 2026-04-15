@@ -18,6 +18,8 @@ public class RobotContainer {
   
   public final Intake intake;
   
+  public final Agitator agitator;
+  
   public final Indexer indexer;
   
   public final Turret turret;
@@ -35,6 +37,7 @@ public class RobotContainer {
   public RobotContainer() {
     
     this.intake = new Intake();
+    this.agitator = new Agitator();
     this.indexer = new Indexer();
     this.turret = new Turret();
     this.odometry = new RaptorsOdometry();

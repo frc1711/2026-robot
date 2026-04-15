@@ -21,6 +21,8 @@ public class ComplexCommands {
     
     protected final Intake.Commands intake;
     
+    protected final Agitator.Commands agitator;
+    
     protected final Indexer.Commands indexer;
     
     protected final Turret.Commands turret;
@@ -32,6 +34,7 @@ public class ComplexCommands {
         this.robot = robotContainer;
         this.swerve = robotContainer.swerve.commands;
         this.intake = robotContainer.intake.commands;
+        this.agitator = robotContainer.agitator.commands;
         this.indexer = robotContainer.indexer.commands;
         this.turret = robotContainer.turret.commands;
         this.vision = robotContainer.vision.commands;
