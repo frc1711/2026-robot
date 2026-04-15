@@ -2,51 +2,44 @@ package frc.robot.devicewrappers;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
-import frc.robot.configuration.Direction;
 import frc.robot.configuration.LimelightCameraOrientation;
 import frc.robot.configuration.LimelightIMUMode;
-import frc.robot.configuration.RobotDimensions;
 
 import static edu.wpi.first.units.Units.*;
 
 public class RaptorsLimelight {
 	
-	public static final RaptorsLimelight LEFT_LIMELIGHT = new RaptorsLimelight(
-		"limelight-left",
+	public static final RaptorsLimelight FRONT_LIMELIGHT = new RaptorsLimelight(
+		"limelight-front",
 		"10.17.11.11",
 		new LimelightCameraOrientation()
-			.withRightOffset(RobotDimensions.FRAME_WIDTH.div(2).minus(Inches.of(1.75)).times(-1))
-			.withUpwardOffset(Inches.of(7.5))
+			.withRightOffset(Meters.of(-0.032512))
+			.withUpwardOffset(Meters.of(0.46512))
+			.withForwardOffset(Meters.of(-0.1914398))
 			.withPitchOffset(Degrees.of(20))
-			.withYawOffset(Direction.LEFT)
-	);
-	
-	public static final RaptorsLimelight RIGHT_LIMELIGHT = new RaptorsLimelight(
-		"limelight-right",
-		"10.17.11.12",
-		new LimelightCameraOrientation()
-			.withRightOffset(RobotDimensions.FRAME_WIDTH.div(2).minus(Inches.of(1.75)))
-			.withUpwardOffset(Inches.of(7.5))
-			.withPitchOffset(Degrees.of(20))
-			.withYawOffset(Direction.RIGHT)
+//			.withYawOffset(Direction.LEFT)
 	);
 	
 	public static final RaptorsLimelight REAR_LIMELIGHT = new RaptorsLimelight(
 		"limelight-rear",
+		"10.17.11.12",
+		new LimelightCameraOrientation()
+			.withRightOffset(Meters.of(0.247777))
+			.withUpwardOffset(Meters.of(0.4651248))
+			.withForwardOffset(Meters.of(-0.2512568))
+			.withPitchOffset(Degrees.of(20))
+			.withYawOffset(Degrees.of(170))
+	);
+	
+	public static final RaptorsLimelight LEFT_LIMELIGHT = new RaptorsLimelight(
+		"limelight-left",
 		"10.17.11.13",
 		new LimelightCameraOrientation()
 	);
 	
-	public static final RaptorsLimelight FRONT_LIMELIGHT = new RaptorsLimelight(
-		"limelight-front",
+	public static final RaptorsLimelight RIGHT_LIMELIGHT = new RaptorsLimelight(
+		"limelight-right",
 		"10.17.11.14",
-		new LimelightCameraOrientation()
-	);
-	
-	public static final RaptorsLimelight TURRET_LIMELIGHT = new RaptorsLimelight(
-		"limelight-turret",
-		"10.17.11.15",
 		new LimelightCameraOrientation()
 	);
 	
