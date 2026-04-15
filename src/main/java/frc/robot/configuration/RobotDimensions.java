@@ -51,24 +51,21 @@ public class RobotDimensions {
     
     public static final Distance HTD5_BELT_PITCH = Millimeters.of(5);
     
-    public static final int INTAKE_EXTENSION_PULLEY_TOOTH_COUNT = 11;
+    public static final int INTAKE_EXTENSION_GEAR_TOOTH_COUNT = 20;
+    
+    public static final int INTAKE_EXTENSION_GEAR_RACK_DIAMETRAL_PITCH = 20;
+    
+    public static final Distance INTAKE_EXTENSION_GEAR_RACK_PITCH =
+        Inches.of(Math.PI / RobotDimensions.INTAKE_EXTENSION_GEAR_RACK_DIAMETRAL_PITCH);
     
     public static final int TURRET_ROTATION_DRIVING_PULLEY_TOOTH_COUNT = 11;
     
-    public static final int TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT = 136;
-    
-    public static final int TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT = 24;
-    
-    public static final int TURRET_LOWER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT = 36;
+    public static final int TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT = 130;
     
     public static final Distance TURRET_LOWER_WHEEL_DIAMETER = Inches.of(4);
     
     public static final Distance TURRET_LOWER_WHEEL_CIRCUMFERENCE =
         RobotDimensions.TURRET_LOWER_WHEEL_DIAMETER.times(Math.PI);
-    
-    public static final int TURRET_UPPER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT = 24;
-    
-    public static final int TURRET_UPPER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT = 30;
     
     public static final Distance TURRET_UPPER_WHEEL_DIAMETER = Inches.of(4);
     
