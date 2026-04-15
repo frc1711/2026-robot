@@ -67,6 +67,8 @@ public class Turret extends SubsystemBase {
         
         TalonFXConfiguration config = new TalonFXConfiguration();
         
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        
         config.Slot0.kS = 0.2;
         // 1rps @ 0.25v
         // 2rps @ 0.36v
@@ -86,6 +88,8 @@ public class Turret extends SubsystemBase {
     protected static TalonFXConfiguration getUpperWheelMotorConfig() {
         
         TalonFXConfiguration config = Turret.getLowerWheelMotorConfig();
+        
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         
         return config;
         
@@ -458,12 +462,8 @@ public class Turret extends SubsystemBase {
         ) {
             
             return new WheelSpeeds(
-                () -> lowerMotorShaftAngularVelocitySupplier.get()
-                    .times(RobotDimensions.TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT)
-                    .div(RobotDimensions.TURRET_LOWER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT),
-                () -> upperMotorShaftAngularVelocitySupplier.get()
-                    .times(RobotDimensions.TURRET_UPPER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT)
-                    .div(RobotDimensions.TURRET_UPPER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
+                lowerMotorShaftAngularVelocitySupplier,
+                upperMotorShaftAngularVelocitySupplier
             );
             
         }
@@ -559,9 +559,7 @@ public class Turret extends SubsystemBase {
         
         public AngularVelocity getLowerWheelMotorShaftAngularVelocity() {
             
-            return this.lowerWheelAngularVelocitySupplier.get()
-                .times(RobotDimensions.TURRET_LOWER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
-                .div(RobotDimensions.TURRET_LOWER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT);
+            return this.lowerWheelAngularVelocitySupplier.get();
             
         }
         
@@ -580,9 +578,7 @@ public class Turret extends SubsystemBase {
         
         public AngularVelocity getUpperWheelMotorShaftAngularVelocity() {
             
-            return this.upperWheelAngularVelocitySupplier.get()
-                .times(RobotDimensions.TURRET_UPPER_WHEEL_DRIVEN_PULLEY_TOOTH_COUNT)
-                .div(RobotDimensions.TURRET_UPPER_WHEEL_DRIVING_PULLEY_TOOTH_COUNT);
+            return this.upperWheelAngularVelocitySupplier.get();
             
         }
         
