@@ -15,13 +15,11 @@ import static edu.wpi.first.units.Units.Seconds;
 
 public class Agitator extends SubsystemBase {
     
-    protected static final double DEFAULT_SPEED = 0.5;
+    protected static final double DEFAULT_SPEED = 0.25;
     
     protected final TalonFX motor;
 
     public final Commands commands;
-
-    public double rollerSpeed = 0.5;
 
     public Agitator() {
         
@@ -52,22 +50,13 @@ public class Agitator extends SubsystemBase {
         this.motor.stopMotor();
         
     }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.addDoubleProperty(
-            "IndexerSpeeds/Roller Speeds", 
-            () -> this.rollerSpeed, 
-            (double d) -> this.rollerSpeed = d
-        );
-    }
     
     public class Commands {
         
-        public Command spin(boolean reversed) {
+        public Command spin(double speed, boolean reversed) {
             
             return Agitator.this.startEnd(
-                () -> Agitator.this.motor.set(reversed ? Agitator.this.rollerSpeed : -Agitator.this.rollerSpeed),
+                () -> Agitator.this.motor.set(reversed ? speed : -speed),
                 Agitator.this::stop
             );
             
@@ -75,8 +64,8 @@ public class Agitator extends SubsystemBase {
         
         public Command agitate(double speed) {
             
-            return this.spin(false).withTimeout(Seconds.of(0.75))
-                .andThen(this.spin(true).withTimeout(Seconds.of(0.25)))
+            return this.spin(speed, false).withTimeout(Seconds.of(0.75))
+                .andThen(this.spin(speed, true).withTimeout(Seconds.of(0.25)))
                 .repeatedly();
             
         }

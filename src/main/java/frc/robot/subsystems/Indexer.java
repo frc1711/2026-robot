@@ -20,11 +20,9 @@ public class Indexer extends SubsystemBase {
     
     public final Commands commands;
 
-    public double beltSpeed = 0.7;
-
     public Indexer() {
         
-        this.beltMotor = new TalonFX(CANDevice.BELT_INDEXER_MOTOR_CONTROLLER.id);
+        this.beltMotor = new TalonFX(CANDevice.INDEXER_MOTOR_CONTROLLER.id);
         this.commands = new Commands();
         
         this.beltMotor.getConfigurator().apply(Indexer.getMotorConfig());
@@ -51,22 +49,13 @@ public class Indexer extends SubsystemBase {
         this.beltMotor.stopMotor();
         
     }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.addDoubleProperty(
-            "IndexerSpeeds/Belt Speeds",
-            () -> this.beltSpeed, 
-            (double d) -> this.beltSpeed = d
-        );
-    }
     
     public class Commands {
         
         public Command spin(boolean reversed) {
             
             return Indexer.this.startEnd(
-                () -> Indexer.this.beltMotor.set(reversed ? -Indexer.this.beltSpeed : Indexer.this.beltSpeed),
+                () -> Indexer.this.beltMotor.set(reversed ? -Indexer.BELT_DEFAULT_SPEED : Indexer.BELT_DEFAULT_SPEED),
                 Indexer.this::stop
             );
             
