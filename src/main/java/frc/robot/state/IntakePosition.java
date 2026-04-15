@@ -13,9 +13,9 @@ public class IntakePosition {
     
     public static final IntakePosition PARTIALLY_STOWED = new IntakePosition(Inches.of(7));
     
-    public static final IntakePosition INTAKING = new IntakePosition(Inches.of(9));
+    public static final IntakePosition INTAKING = new IntakePosition(Inches.of(10.75));
     
-    public static final IntakePosition FULLY_EXTENDED = new IntakePosition(Inches.of(12));
+    public static final IntakePosition FULLY_EXTENDED = new IntakePosition(Inches.of(11));
 
     protected final Distance offsetFromFullyStowed;
 
@@ -29,8 +29,8 @@ public class IntakePosition {
         
         return new IntakePosition(
             motorShaftAngle.div(Rotations.one()).times(
-                RobotDimensions.HTD5_BELT_PITCH.times(
-                    RobotDimensions.INTAKE_EXTENSION_PULLEY_TOOTH_COUNT
+                RobotDimensions.INTAKE_EXTENSION_GEAR_RACK_PITCH.times(
+                    RobotDimensions.INTAKE_EXTENSION_GEAR_TOOTH_COUNT
                 )
             )
         );
@@ -52,8 +52,8 @@ public class IntakePosition {
     public Angle getMotorShaftAngle() {
         
         return this.offsetFromFullyStowed.div(
-            RobotDimensions.HTD5_BELT_PITCH.times(
-                RobotDimensions.INTAKE_EXTENSION_PULLEY_TOOTH_COUNT
+            RobotDimensions.INTAKE_EXTENSION_GEAR_RACK_PITCH.times(
+                RobotDimensions.INTAKE_EXTENSION_GEAR_TOOTH_COUNT
             )
         ).times(Rotations.one());
         
