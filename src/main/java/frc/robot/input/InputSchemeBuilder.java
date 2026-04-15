@@ -30,7 +30,7 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder configureDefaultRobotCommands() {
 		
-//		this.robot.intake.setDefaultCommand(this.robot.intake.commands.goToPosition(IntakePosition.PARTIALLY_STOWED));
+		this.robot.intake.setDefaultCommand(this.robot.intake.commands.goToPosition(IntakePosition.PARTIALLY_STOWED));
 		
 		return this;
 		
@@ -127,13 +127,13 @@ public class InputSchemeBuilder {
 		
 	}
 	
-	// public InputSchemeBuilder useAButtonToShoot(CommandXboxController controller) {
+	public InputSchemeBuilder useAButtonToShoot(CommandXboxController controller) {
 		
-	// 	controller.a().whileTrue(this.robot.complexCommands.shoot());
+		controller.a().whileTrue(this.robot.complexCommands.shoot());
 		
-	// 	return this;
+		return this;
 		
-	// }
+	}
 	
 	// public InputSchemeBuilder useBButtonToPulse(CommandXboxController controller) {
 		
@@ -143,21 +143,21 @@ public class InputSchemeBuilder {
 		
 	// }
 	
-	// public InputSchemeBuilder useXButtonToIntake(CommandXboxController controller) {
+	public InputSchemeBuilder useXButtonToIntake(CommandXboxController controller) {
 		
-	// 	controller.x().whileTrue(this.robot.complexCommands.intake());
+		controller.x().whileTrue(this.robot.complexCommands.intake());
 		
-	// 	return this;
+		return this;
 		
-	// }
+	}
 	
-	// public InputSchemeBuilder useDPadDownToOuttake(CommandXboxController controller) {
+	public InputSchemeBuilder useDPadDownToOuttake(CommandXboxController controller) {
 		
-	// 	controller.povDown().whileTrue(this.robot.complexCommands.outtake());
+		controller.povDown().whileTrue(this.robot.complexCommands.outtake());
 		
-	// 	return this;
+		return this;
 		
-	// }
+	}
 	
 	public InputSchemeBuilder useYButtonToShootManually(CommandXboxController controller) {
 		

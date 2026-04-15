@@ -57,7 +57,8 @@ public class ComplexCommands {
     public Command resetFieldHeading() {
         
         Command haltSwerve = this.robot.swerve.commands.useDriveSpeedMultiplier(0);
-        Command beginCalibration = this.robot.swerve.commands.calibrateFieldRelativeHeading();
+        Command beginCalibration = this.robot.swerve.commands.calibrateFieldRelativeHeading()
+            .alongWith(this.robot.vision.commands.beginStableSeeding());
         Command endCalibration = this.robot.vision.commands.beginUsingInternalLL4IMUAssist();
         
         return haltSwerve
@@ -68,31 +69,31 @@ public class ComplexCommands {
         
     }
     
-//     public Command intake() {
+    public Command intake() {
         
-//         Command prepareAndRunIntake =
-//             this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
-//                 .andThen(this.robot.intake.commands.intake(() -> 0.65));
-//         Runnable resetIntakePosition = () ->
-//             this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
+        Command prepareAndRunIntake =
+            this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
+                .andThen(this.robot.intake.commands.intake(() -> 0.65));
+        Runnable resetIntakePosition = () ->
+            this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
         
-//         return prepareAndRunIntake
-//             .finallyDo(resetIntakePosition);
+        return prepareAndRunIntake
+            .finallyDo(resetIntakePosition);
         
-//     }
+    }
     
-//     public Command outtake() {
+    public Command outtake() {
         
-//         Command prepareAndRunIntake =
-//             this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
-//                 .andThen(this.robot.intake.commands.intake(() -> -0.65));
-//         Runnable resetIntakePosition = () ->
-//             this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
+        Command prepareAndRunIntake =
+            this.robot.intake.commands.goToPosition(IntakePosition.INTAKING)
+                .andThen(this.robot.intake.commands.intake(() -> -0.65));
+        Runnable resetIntakePosition = () ->
+            this.robot.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
         
-//         return prepareAndRunIntake
-//             .finallyDo(resetIntakePosition);
+        return prepareAndRunIntake
+            .finallyDo(resetIntakePosition);
         
-//     }
+    }
     
     public Command shoot(
         FlyWheelSpeeds turretState,
@@ -114,16 +115,15 @@ public class ComplexCommands {
             : new InstantCommand();
         Command spinUpShooter = this.robot.flyWheel.commands.shoot(turretState);
 //        Command agitate = this.robot.agitator.commands.agitate()
-//        Command pulse = this.robot.intake.commands.pulseV3();
+        Command pulse = this.robot.intake.commands.pulseV3();
         Command waitForSpinup = Commands.waitTime(spinupWaitTime);
 //        Command waitForHeadingLock = Commands.waitUntil(this.robot.swerve.headingLock::hasLock);
 //        Command waitForRadiusLock = Commands.waitUntil(this.robot.swerve.radiusLock::hasLock);
-        Command waitUntilReady = waitForSpinup;
-        Command feedShooter = this.robot.indexer.commands.forward();
+        Command feedShooter = this.index(Seconds.of(0.25));
         
         return enableLocks.andThen(
             spinUpShooter
-                .alongWith(waitUntilReady.andThen(feedShooter))
+                .alongWith(waitForSpinup.andThen(feedShooter.alongWith(pulse)))
         );
         
     }
@@ -153,7 +153,7 @@ public class ComplexCommands {
     
     public Command shoot() {
         
-        return this.shoot(FlyWheelSpeeds.MID_SHOT, true);
+        return this.shoot(FlyWheelSpeeds.MID_SHOT, false);
         
     }
     

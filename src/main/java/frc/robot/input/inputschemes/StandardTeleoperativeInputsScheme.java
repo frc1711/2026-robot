@@ -20,7 +20,9 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 			.useStartButtonToResetFieldHeading(controller1)
 			.useTriggersForSlowMode(controller1)
 			.useTriggersForIndexing(controller2)
-			.useYButtonToShootManually(controller2);
+			.useAButtonToShoot(controller2)
+			.useXButtonToIntake(controller2)
+			.useDPadDownToOuttake(controller2);
 		
 	}
 	

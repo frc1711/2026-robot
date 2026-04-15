@@ -22,7 +22,7 @@ public class RobotContainer {
   
   public final Swerve swerve;
   
-  // public final Intake intake;
+  public final Intake intake;
   
   public final Indexer indexer;
 
@@ -44,7 +44,7 @@ public class RobotContainer {
   
   public RobotContainer() {
     
-    // this.intake = new Intake();
+    this.intake = new Intake();
     this.indexer = new Indexer();
     this.turret = new Turret();
     this.flyWheel = new Flywheel();
@@ -69,6 +69,10 @@ public class RobotContainer {
     RobotModeTriggers.disabled()
         .onTrue(Commands.runOnce(HubShiftUtil::initialize).ignoringDisable(true));
     
+  }
+
+  public void addSubsystemsToDashboard() {
+    SmartDashboard.putData("Swerve", swerve);
   }
 
   /**
@@ -109,6 +113,5 @@ public class RobotContainer {
     SmartDashboard.putBoolean("Hub/Hub Active", HubShiftUtil.getOfficialShiftInfo().active());
     SmartDashboard.putString("Hub/Current Shift", HubShiftUtil.getOfficialShiftInfo().currentShift().toString());
     SmartDashboard.putBoolean("Hub/Won Auto", HubShiftUtil.getFirstActiveAlliance() != DriverStation.getAlliance().orElse(Alliance.Blue));
-    SmartDashboard.putData("Swerve", swerve);
   }
 }
