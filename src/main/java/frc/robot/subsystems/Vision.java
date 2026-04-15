@@ -21,8 +21,8 @@ import static edu.wpi.first.units.Units.*;
 public class Vision extends SubsystemBase {
 	
 	protected static final RaptorsLimelight[] LIMELIGHTS = new RaptorsLimelight[] {
-		RaptorsLimelight.LEFT_LIMELIGHT,
-		RaptorsLimelight.RIGHT_LIMELIGHT,
+		RaptorsLimelight.FRONT_LIMELIGHT,
+		RaptorsLimelight.REAR_LIMELIGHT,
 	};
 	
 	protected final Supplier<Angle> headingSupplier;
