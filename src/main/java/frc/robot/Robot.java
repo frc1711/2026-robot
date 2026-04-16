@@ -31,6 +31,7 @@ public class Robot extends TimedRobot {
 
     Auton.initializeShuffleboardSelector();
     this.robotContainer.init();
+    this.robotContainer.vision.initializeCameras();
     this.robotContainer.vision.beginStableSeeding();
 
   }
