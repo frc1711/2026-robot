@@ -43,6 +43,7 @@ public class RobotContainer {
     this.odometry = new RaptorsOdometry();
     this.swerve = new Swerve(this.odometry);
     this.vision = new Vision(
+        this.swerve.getOdometry()::getPose,
         this.swerve::getFieldRelativeHeading,
         this.swerve::getLinearVelocity,
         this.swerve::getAngularVelocity
