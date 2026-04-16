@@ -59,6 +59,8 @@ public class Intake extends SubsystemBase {
             this.commands.calibrateExtensionLimits()
         );
         
+        Shuffleboard.getTab("Subsystems").add("Intake", this);
+        
     }
 
     protected static TalonFXConfiguration getLeftExtensionMotorConfig() {
@@ -162,7 +164,30 @@ public class Intake extends SubsystemBase {
         );
         
     }
-
+    
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        
+        builder.addDoubleProperty(
+            "Left Extension Length (inches)",
+            () -> IntakePosition
+                .fromMotorShaftAngle(this.leftExtensionMotor.getPosition().getValue())
+                .getOffsetFromFullyStowed()
+                .in(Inches),
+            null
+        );
+        
+        builder.addDoubleProperty(
+            "Right Extension Length (inches)",
+            () -> IntakePosition
+                .fromMotorShaftAngle(this.rightExtensionMotor.getPosition().getValue())
+                .getOffsetFromFullyStowed()
+                .in(Inches),
+            null
+        );
+        
+    }
+    
     public class Commands {
         
         public Command calibrateExtensionLimits() {
