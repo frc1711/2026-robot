@@ -9,15 +9,20 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.configuration.CANDevice;
+import frc.robot.configuration.Direction;
 import frc.robot.configuration.RobotDimensions;
+import frc.robot.util.LogCommand;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -25,6 +30,12 @@ import java.util.function.Supplier;
 import static edu.wpi.first.units.Units.*;
 
 public class Turret extends SubsystemBase {
+    
+    protected static final AngularVelocity MAX_HEADING_ANGULAR_VELOCITY =
+        RotationsPerSecond.of(4);
+    
+    protected static final AngularAcceleration MAX_HEADING_ANGULAR_ACCELERATION =
+        RotationsPerSecondPerSecond.of(20);
     
     protected static final AngleUnit DEFAULT_HEADING_UNITS = Degrees;
     
@@ -41,6 +52,8 @@ public class Turret extends SubsystemBase {
     protected final TalonFX headingMotor;
     
     protected WheelSpeeds wheelSpeeds;
+    
+    protected Supplier<Angle> headingSupplier;
 
     public final Commands commands;
     
@@ -52,12 +65,20 @@ public class Turret extends SubsystemBase {
         this.upperWheelMotor = new TalonFX(CANDevice.TURRET_UPPER_WHEEL_MOTOR_CONTROLLER.id);
         this.headingMotor = new TalonFX(CANDevice.TURRET_HEADING_MOTOR_CONTROLLER.id);
         this.wheelSpeeds = WheelSpeeds.STOPPED;
+        this.headingSupplier = null;
         this.commands = new Commands();
         this.triggers = new Triggers();
         
         this.lowerWheelMotor.getConfigurator().apply(Turret.getLowerWheelMotorConfig());
         this.upperWheelMotor.getConfigurator().apply(Turret.getUpperWheelMotorConfig());
         this.headingMotor.getConfigurator().apply(Turret.getHeadingMotorConfiguration());
+        
+        ShuffleboardTab shuffleboardCalibrationTab =
+            Shuffleboard.getTab("Calibration");
+        
+        shuffleboardCalibrationTab.add(
+            this.commands.calibrateHeading()
+        );
         
         Shuffleboard.getTab("Subsystems").add("Turret", this);
         
@@ -100,17 +121,24 @@ public class Turret extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
         
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         
-        config.Slot0.kS = 0.1;
-        config.Slot0.kV = 1;
-        config.Slot0.kP = 0.5;
+        config.Slot0.kS = 0.23125;
+        config.Slot0.kV = 0.097048;
+        config.Slot0.kP = 40;
         config.Slot0.kI = 0;
         config.Slot0.kD = 0;
         
-        config.MotionMagic.MotionMagicCruiseVelocity = 25;
-        config.MotionMagic.MotionMagicAcceleration = 25;
+        config.MotionMagic.MotionMagicCruiseVelocity =
+            Turret.MAX_HEADING_ANGULAR_VELOCITY.in(RotationsPerSecond);
+        config.MotionMagic.MotionMagicAcceleration =
+            Turret.MAX_HEADING_ANGULAR_ACCELERATION.in(RotationsPerSecondPerSecond);
         config.MotionMagic.MotionMagicJerk = 1000;
+        
+        config.Feedback.SensorToMechanismRatio = (double)
+            RobotDimensions.TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT /
+                RobotDimensions.TURRET_ROTATION_DRIVING_PULLEY_TOOTH_COUNT;
+        config.ClosedLoopGeneral.ContinuousWrap = true;
         
         return config;
         
@@ -167,19 +195,21 @@ public class Turret extends SubsystemBase {
         
     }
     
-    public Heading getHeading() {
+    public Angle getHeading() {
         
-        return Heading.fromMotorShaftAngle(
-            this.headingMotor.getPosition().getValue()
-        );
+        return this.headingMotor.getPosition().getValue();
         
     }
     
-    public void goToHeading(Heading heading) {
+    public void setHeadingSupplier(Supplier<Angle> headingSupplier) {
         
-        this.headingMotor.setControl(new MotionMagicVoltage(
-            heading.getMotorShaftAngle()
-        ));
+        this.headingSupplier = headingSupplier;
+        
+    }
+    
+    public void goToHeading(Angle heading) {
+        
+        this.headingMotor.setControl(new MotionMagicVoltage(heading));
         
     }
     
@@ -192,6 +222,17 @@ public class Turret extends SubsystemBase {
     public void goToPitch(Pitch pitch) {
         
         // not yet implemented -- no pitch adjustment available yet
+        
+    }
+    
+    @Override
+    public void periodic() {
+        
+        if (this.headingSupplier != null) {
+            
+            this.goToHeading(this.headingSupplier.get());
+            
+        }
         
     }
     
@@ -254,9 +295,9 @@ public class Turret extends SubsystemBase {
         
         builder.addDoubleProperty(
             "Turret Heading (Degrees)",
-            () -> this.getHeading().getHeading().in(Turret.DEFAULT_HEADING_UNITS),
+            () -> this.getHeading().in(Turret.DEFAULT_HEADING_UNITS),
             (double angle) -> this.goToHeading(
-                Heading.fromHeading(Turret.DEFAULT_HEADING_UNITS.of(angle))
+                Turret.DEFAULT_HEADING_UNITS.of(angle)
             )
         );
         
@@ -290,6 +331,17 @@ public class Turret extends SubsystemBase {
             
         }
         
+        public Command calibrateHeading() {
+            
+            return new InstantCommand(
+                () -> Turret.this.headingMotor.setPosition(Direction.RIGHT)
+            )
+                .andThen(new LogCommand("Turret heading calibrated."))
+                .withName("Calibrate Turret Heading")
+                .ignoringDisable(true);
+            
+        }
+        
         public Command adjustHeading(double speed) {
             
             return Turret.this.startEnd(
@@ -299,21 +351,29 @@ public class Turret extends SubsystemBase {
             
         }
         
-        public Command goToHeading(Heading heading, Angle tolerance) {
+        public Command goToHeading(Supplier<Angle> heading) {
+            
+            return new InstantCommand(
+                () -> Turret.this.setHeadingSupplier(heading)
+            );
+            
+        }
+        
+        public Command goToHeading(Angle heading, Angle tolerance) {
             
             return Turret.this.runOnce(() -> Turret.this.goToHeading(heading))
                 .andThen(this.waitUntilAtHeading(heading, tolerance));
             
         }
         
-        public Command goToHeading(Heading heading) {
+        public Command goToHeading(Angle heading) {
             
             return this.goToHeading(heading, Turret.DEFAULT_HEADING_TOLERANCE);
             
         }
         
         public Command waitUntilAtHeading(
-            Heading heading,
+            Angle heading,
             Angle tolerance
         ) {
             
@@ -323,7 +383,7 @@ public class Turret extends SubsystemBase {
             
         }
         
-        public Command waitUntilAtHeading(Heading heading) {
+        public Command waitUntilAtHeading(Angle heading) {
             
             return edu.wpi.first.wpilibj2.command.Commands.waitUntil(
                 Turret.this.triggers.isAtHeading(heading)
@@ -380,18 +440,18 @@ public class Turret extends SubsystemBase {
             
         }
         
-        public Trigger isAtHeading(Heading heading, Angle tolerance) {
+        public Trigger isAtHeading(Angle heading, Angle tolerance) {
             
             return new Trigger(() ->
-                Turret.this.getHeading().getHeading().isNear(
-                    heading.getHeading(),
+                Turret.this.getHeading().isNear(
+                    heading,
                     tolerance
                 )
             );
             
         }
         
-        public Trigger isAtHeading(Heading heading) {
+        public Trigger isAtHeading(Angle heading) {
             
             return this.isAtHeading(heading, Turret.DEFAULT_HEADING_TOLERANCE);
             
@@ -592,50 +652,6 @@ public class Turret extends SubsystemBase {
             
             return RobotDimensions.TURRET_UPPER_WHEEL_CIRCUMFERENCE
                 .times(Hertz.of(this.getUpperWheelAngularVelocity().in(RotationsPerSecond)));
-            
-        }
-        
-    }
-    
-    public static class Heading {
-        
-        public static final Heading ZERO_POSITION = new Heading(Degrees.zero());
-        
-        protected final Angle heading;
-        
-        protected Heading(Angle turretAngle) {
-            
-            this.heading = turretAngle;
-            
-        }
-        
-        public static Heading fromHeading(Angle heading) {
-            
-            return new Heading(heading);
-            
-        }
-        
-        public static Heading fromMotorShaftAngle(Angle motorShaftAngle) {
-            
-            return new Heading(
-                motorShaftAngle
-                    .times(RobotDimensions.TURRET_ROTATION_DRIVING_PULLEY_TOOTH_COUNT)
-                    .div(RobotDimensions.TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT)
-            );
-            
-        }
-        
-        public Angle getHeading() {
-            
-            return this.heading;
-            
-        }
-        
-        public Angle getMotorShaftAngle() {
-            
-            return this.heading
-                .times(RobotDimensions.TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT)
-                .div(RobotDimensions.TURRET_ROTATION_DRIVING_PULLEY_TOOTH_COUNT);
             
         }
         
