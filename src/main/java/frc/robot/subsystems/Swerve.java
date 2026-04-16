@@ -6,6 +6,9 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -13,9 +16,14 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,12 +34,15 @@ import frc.robot.configuration.Direction;
 import frc.robot.configuration.SwerveModuleConfiguration;
 import frc.robot.devicewrappers.RaptorsPigeon2;
 import frc.robot.math.DoubleUtilities;
+import frc.robot.math.LinearMotionProfiler;
 import frc.robot.math.Point;
+import frc.robot.math.Vector;
 import frc.robot.util.HeadingLock;
 import frc.robot.util.LogCommand;
 import frc.robot.util.RadiusLock;
 import frc.robot.util.VirtualField;
 
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -661,164 +672,332 @@ public class Swerve extends SubsystemBase {
             
         }
         
-//        public Command goToPosition(
-//            Supplier<Pose2d> poseSupplier,
-//            Supplier<int[]> aprilTagFilter,
-//            Distance distanceTolerance,
-//            Angle angularTolerance
-//        ) {
-//            
-//            AngularVelocity MAX_ANGULAR_VELOCITY = DegreesPerSecond.of(90);
-//            
-//            LinearMotionProfiler trajectory = new LinearMotionProfiler(
-//                /* Max Linear Velocity: */ InchesPerSecond.of(200),
-//                /* Max Linear Acceleration: */ FeetPerSecondPerSecond.of(80),
-//                /* Max Linear Deceleration: */ FeetPerSecondPerSecond.of(6)
-//            );
-//            PIDController thetaController = new PIDController(8, 0, 0);
-//            thetaController.enableContinuousInput(-180, 180);
-//            
-//            Command command = new Command() {
-//                
-//                Pose2d desiredPose;
-//                Pose2d currentPose;
-//                
-//                @Override
-//                public void initialize() {
-//                    
+        public Command goToPosition(
+            Supplier<Pose2d> poseSupplier,
+            Distance distanceTolerance,
+            Angle angularTolerance
+        ) {
+
+            AngularVelocity MAX_ANGULAR_VELOCITY = DegreesPerSecond.of(180);
+            AngularAcceleration MAX_ANGULAR_ACCELERATION = RotationsPerSecondPerSecond.of(1);
+
+            LinearMotionProfiler trajectory = new LinearMotionProfiler(
+                /* Max Linear Velocity: */ FeetPerSecond.of(2),
+                /* Max Linear Acceleration: */ FeetPerSecondPerSecond.of(10),
+                /* Max Linear Deceleration: */ FeetPerSecondPerSecond.of(10)
+            );
+            PIDController thetaController = new PIDController(
+                1,
+                0,
+                0
+//                new TrapezoidProfile.Constraints(
+//                    MAX_ANGULAR_VELOCITY.in(DegreesPerSecond),
+//                    MAX_ANGULAR_ACCELERATION.in(DegreesPerSecondPerSecond)
+//                )
+            );
+            thetaController.enableContinuousInput(-180, 180);
+
+            Command command = new Command() {
+
+                Pose2d desiredPose;
+                Pose2d currentPose;
+
+                @Override
+                public void initialize() {
+                    
+                    System.out.println("goToPosition init");
+
 //                    if (aprilTagFilter != null) {
 //                        Swerve.this.odometry.vision.setAprilTagFilter(aprilTagFilter.get());
 //                    }
-//                    
-//                }
-//                
-//                Distance getRemainingLinearDistance() {
-//                    
-//                    return Meters.of(
-//                        currentPose.getTranslation()
-//                            .minus(desiredPose.getTranslation())
-//                            .getNorm()
-//                    );
-//                    
-//                }
-//                
-//                @Override
-//                public void execute() {
-//                    
-//                    Pose2d newCurrentPose = Swerve.this.odometry.getPose();
-//                    Pose2d newDesiredPose = poseSupplier.get();
-//                    
-//                    if (newCurrentPose != null) this.currentPose = newCurrentPose;
-//                    if (newDesiredPose != null) this.desiredPose = newDesiredPose;
-//                    
-//                    Swerve.this.odometry.setDisplaySetpoint(this.desiredPose);
-//                    thetaController.setSetpoint(
-//                        this.desiredPose.getRotation().getMeasure().in(Degrees)
-//                    );
-//                    
-//                    LinearVelocity velocity = trajectory.calculate(
-//                        this.getRemainingLinearDistance(),
-//                        Swerve.this.getLinearVelocity()
-//                    );
-//                    
-//                    Translation2d deltaTranslation = this.desiredPose.getTranslation()
-//                        .minus(this.currentPose.getTranslation());
-//                    
-//                    Translation2d chassisSpeedTranslation = new Translation2d(
-//                        velocity.in(MetersPerSecond),
-//                        deltaTranslation.getAngle()
-//                    ).times(VirtualField.isRedAlliance() ? -1 : 1);
-//                    
-//                    Swerve.this.chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(new ChassisSpeeds(
-//                        MetersPerSecond.of(chassisSpeedTranslation.getX()),
-//                        MetersPerSecond.of(chassisSpeedTranslation.getY()),
-//                        DegreesPerSecond.of(MathUtil.clamp(
-//                            thetaController.calculate(currentPose.getRotation().getDegrees()),
-//                            -MAX_ANGULAR_VELOCITY.in(DegreesPerSecond),
-//                            MAX_ANGULAR_VELOCITY.in(DegreesPerSecond)
-//                        ))
-//                    ), Swerve.this.gyro.yaw.getRotation());
-//                    
-//                }
-//                
-//                @Override
-//                public boolean isFinished() {
-//                    
-//                    Pose2d relativePose = currentPose.relativeTo(desiredPose);
-//                    Distance linearDistance = Meters.of(relativePose.getTranslation().getNorm());
-//                    
-//                    if (linearDistance.lt(Inches.of(0))) {
-//                        
-//                        linearDistance = linearDistance.times(-1);
-//                        
-//                    }
-//                    
+
+                }
+
+                Distance getRemainingLinearDistance() {
+
+                    return Meters.of(
+                        currentPose.getTranslation()
+                            .minus(desiredPose.getTranslation())
+                            .getNorm()
+                    );
+
+                }
+
+                @Override
+                public void execute() {
+
+                    Pose2d newCurrentPose = Swerve.this.odometry.getPose();
+                    Pose2d newDesiredPose = poseSupplier.get();
+
+                    if (newCurrentPose != null) this.currentPose = newCurrentPose;
+                    if (newDesiredPose != null) this.desiredPose = newDesiredPose;
+
+                    Swerve.this.odometry.setDisplaySetpoint(this.desiredPose);
+                    thetaController.setSetpoint(
+                        this.desiredPose.getRotation().getMeasure().in(Degrees)
+                    );
+                    
+                    System.out.println("-------------------");
+                    System.out.println("remaining distance (ft): " + this.getRemainingLinearDistance().in(Feet));
+                    System.out.println("current linear velocity (ft per sec): " + Swerve.this.getLinearVelocity().in(FeetPerSecond));
+
+                    LinearVelocity velocity = trajectory.calculate(
+                        this.getRemainingLinearDistance(),
+                        Swerve.this.getLinearVelocity()
+                    );
+                    
+                    System.out.println("positioning velocity (ft per sec): " + velocity.in(FeetPerSecond));
+
+                    Translation2d deltaTranslation = this.desiredPose.getTranslation()
+                        .minus(this.currentPose.getTranslation());
+
+                    Translation2d chassisSpeedTranslation = new Translation2d(
+                        velocity.in(MetersPerSecond),
+                        deltaTranslation.getAngle()
+                    ).times(VirtualField.isRedAlliance() ? -1 : 1);
+                    
+                    double thetaCalcResult = thetaController.calculate(currentPose.getRotation().getDegrees());
+                    
+//                    System.out.println("thetaCalcResult: " + thetaCalcResult + " deg per sec");
+                    
+                    double clampedThetaResult = MathUtil.clamp(
+                        thetaCalcResult,
+                        -MAX_ANGULAR_VELOCITY.in(DegreesPerSecond),
+                        MAX_ANGULAR_VELOCITY.in(DegreesPerSecond)
+                    );
+                    
+//                    System.out.println("clampedThetaResult: " + clampedThetaResult + " deg per sec");
+                    
+                    Swerve.this.setChassisSpeeds(
+                        ChassisSpeeds.fromFieldRelativeSpeeds(new ChassisSpeeds(
+                            MetersPerSecond.of(chassisSpeedTranslation.getX()),
+                            MetersPerSecond.of(chassisSpeedTranslation.getY()),
+                            DegreesPerSecond.of(clampedThetaResult)
+                        ), Swerve.this.gyro.yaw.getRotation())
+                    );
+                    
+                }
+
+                @Override
+                public boolean isFinished() {
+
+                    Pose2d relativePose = currentPose.relativeTo(desiredPose);
+                    Distance linearDistance = Meters.of(relativePose.getTranslation().getNorm());
+
+                    if (linearDistance.lt(Inches.of(0))) {
+
+                        linearDistance = linearDistance.times(-1);
+
+                    }
+
 //                    System.out.println(
 //                        "Distance remaining to target pose: " +
 //                            linearDistance.in(Inches) + " inches"
 //                    );
-//                    
-//                    return (
-//                        linearDistance.lte(distanceTolerance) &&
-//                            currentPose.getRotation().getMeasure().isNear(
-//                                desiredPose.getRotation().getMeasure(),
-//                                angularTolerance
-//                            )
-//                    );
-//                    
-//                }
-//                
-//                @Override
-//                public void end(boolean interrupted) {
-//                    
-//                    Swerve.this.odometry.removeDisplaySetpoint();
+
+                    return (
+                        linearDistance.lte(distanceTolerance) &&
+                            currentPose.getRotation().getMeasure().isNear(
+                                desiredPose.getRotation().getMeasure(),
+                                angularTolerance
+                            )
+                    );
+
+                }
+
+                @Override
+                public void end(boolean interrupted) {
+                    
+                    System.out.println("goToPosition ended");
+                    Swerve.this.odometry.removeDisplaySetpoint();
 //                    Swerve.this.odometry.vision.resetAprilTagFilter();
-//                    Swerve.this.stop();
-//                    
-//                }
-//                
-//            };
-//            
-//            command.addRequirements(Swerve.this);
-//            
-//            return command;
-//            
-//        }
-//        
-//        public Command goToPosition(
-//            Supplier<Pose2d> poseSupplier,
-//            Supplier<int[]> aprilTagFilter
-//        ) {
-//            
-//            return this.goToPosition(
-//                poseSupplier,
-//                aprilTagFilter,
-//                Inches.of(0.25),
-//                Degrees.of(1)
-//            );
-//            
-//        }
-//        
-//        public Command waitUntilAtPosition(
-//            Supplier<Pose2d> desiredPoseSupplier,
-//            Distance distanceTolerance,
-//            Angle angularTolerance
-//        ) {
-//            
-//            return edu.wpi.first.wpilibj2.command.Commands.waitUntil(() -> {
-//                
-//                Pose2d desiredPose = desiredPoseSupplier.get();
-//                Pose2d currentPose = Swerve.this.odometry.getPose();
-//                
-//                return (
-//                    currentPose.getMeasureX().isNear(desiredPose.getMeasureX(), distanceTolerance) &&
-//                        currentPose.getMeasureY().isNear(desiredPose.getMeasureY(), distanceTolerance) &&
-//                        currentPose.getRotation().getMeasure().isNear(desiredPose.getRotation().getMeasure(), angularTolerance)
-//                );
-//                
-//            });
-//            
-//        }
+                    Swerve.this.stop();
+
+                }
+
+            };
+
+            command.addRequirements(Swerve.this);
+
+            return command;
+
+        }
+
+        public Command goToPosition(
+            Supplier<Pose2d> poseSupplier
+        ) {
+
+            return this.goToPosition(
+                poseSupplier,
+                Inches.of(0.25),
+                Degrees.of(1)
+            );
+
+        }
+        
+        public Command goToPosition2(
+            Pose2d resultantPose
+        ) {
+            
+            LinearVelocity maxLinearVelocity = FeetPerSecond.of(4);
+            LinearAcceleration maxLinearAcceleration = FeetPerSecondPerSecond.of(2);
+            AngularVelocity maxAngularVelocity = RotationsPerSecond.of(1);
+            AngularAcceleration maxAngularAcceleration = RotationsPerSecondPerSecond.of(2);
+            
+            Command command = new Command() {
+                
+                HolonomicDriveController controller;
+                
+                Trajectory trajectory;
+                
+                double startTime;
+                
+                @Override
+                public void initialize() {
+                    
+                    this.controller = new HolonomicDriveController(
+                        new PIDController(0.001, 0, 0),
+                        new PIDController(0.001, 0, 0),
+                        new ProfiledPIDController(1, 0, 0, new TrapezoidProfile.Constraints(
+                            maxAngularVelocity.in(DegreesPerSecond),
+                            maxAngularAcceleration.in(DegreesPerSecondPerSecond)
+                        ))
+                    );
+                    
+                    Pose2d initialPose = Swerve.this.odometry.getPose();
+                    
+                    initialPose = new Pose2d(
+                        initialPose.getTranslation(),
+                        resultantPose.getRotation()
+                    );
+                    
+                    List<Pose2d> waypoints = List.of(initialPose, resultantPose);
+                    
+                    this.trajectory = TrajectoryGenerator.generateTrajectory(
+                        waypoints,
+                        new TrajectoryConfig(
+                            maxLinearVelocity,
+                            maxLinearAcceleration
+                        )
+                    );
+                    
+                    this.startTime = Timer.getFPGATimestamp();
+                    
+                }
+                
+                double getElapsedSeconds() {
+                    
+                    return Timer.getFPGATimestamp() - this.startTime;
+                    
+                }
+                
+                @Override
+                public void execute() {
+                    
+                    Trajectory.State goal =
+                        this.trajectory.sample(this.getElapsedSeconds());
+                    ChassisSpeeds adjustedSpeeds = this.controller.calculate(
+                        Swerve.this.odometry.getPose(),
+                        goal,
+                        resultantPose.getRotation()
+                    );
+                    
+                    Swerve.this.odometry.setDisplaySetpoint(goal.poseMeters);
+                    
+                    Swerve.this.setChassisSpeeds(adjustedSpeeds);
+                    
+                }
+                
+                @Override
+                public boolean isFinished() {
+                    
+                    return this.getElapsedSeconds() >=
+                        this.trajectory.getTotalTimeSeconds();
+                    
+                }
+                
+                @Override
+                public void end(boolean interrupted) {
+                    
+                    
+                    Swerve.this.stop();
+                    Swerve.this.odometry.removeDisplaySetpoint();
+                    
+                }
+                
+            };
+            
+            command.addRequirements(Swerve.this);
+            
+            return command;
+            
+        }
+        
+        public Command goToPosition3(Pose2d resultantPose) {
+            
+            LinearVelocity maxLinearVelocity = FeetPerSecond.of(5);
+            LinearAcceleration maxLinearAcceleration = FeetPerSecondPerSecond.of(8);
+            AngularVelocity maxAngularVelocity = RotationsPerSecond.of(1);
+            AngularAcceleration maxAngularAcceleration = RotationsPerSecondPerSecond.of(2);
+            
+            return new DeferredCommand(() -> {
+                
+                Pose2d initialPose = Swerve.this.odometry.getPose();
+                List<Pose2d> waypoints = List.of(initialPose, resultantPose);
+                
+                TrajectoryConfig config = new TrajectoryConfig(
+                    maxLinearVelocity,
+                    maxLinearAcceleration
+                );
+                
+                config.setKinematics(Swerve.this.getKinematics());
+                
+                Trajectory trajectory =
+                    TrajectoryGenerator.generateTrajectory(waypoints, config);
+                
+                Swerve.this.odometry.setDisplaySetpoint(resultantPose);
+                
+                return new SwerveControllerCommand(
+                    trajectory,
+                    Swerve.this.odometry::getPose,
+                    Swerve.this.kinematics,
+                    new PIDController(1, 0, 0),
+                    new PIDController(1, 0, 0),
+                    new ProfiledPIDController(1, 0, 0, new TrapezoidProfile.Constraints(
+                        maxAngularVelocity.in(DegreesPerSecond),
+                        maxAngularAcceleration.in(DegreesPerSecondPerSecond)
+                    )),
+					resultantPose::getRotation,
+					Swerve.this::applyModuleStates
+                ).finallyDo(() -> {
+                    Swerve.this.stop();
+                    Swerve.this.odometry.removeDisplaySetpoint();
+                });
+                
+            }, Set.of(Swerve.this));
+            
+        }
+
+        public Command waitUntilAtPosition(
+            Supplier<Pose2d> desiredPoseSupplier,
+            Distance distanceTolerance,
+            Angle angularTolerance
+        ) {
+
+            return edu.wpi.first.wpilibj2.command.Commands.waitUntil(() -> {
+
+                Pose2d desiredPose = desiredPoseSupplier.get();
+                Pose2d currentPose = Swerve.this.odometry.getPose();
+
+                return (
+                    currentPose.getMeasureX().isNear(desiredPose.getMeasureX(), distanceTolerance) &&
+                        currentPose.getMeasureY().isNear(desiredPose.getMeasureY(), distanceTolerance) &&
+                        currentPose.getRotation().getMeasure().isNear(desiredPose.getRotation().getMeasure(), angularTolerance)
+                );
+
+            });
+
+        }
         
         public Command sysIdDriveQuasistatic(SysIdRoutine.Direction direction) {
             
