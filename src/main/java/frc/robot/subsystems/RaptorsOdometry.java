@@ -50,7 +50,8 @@ public class RaptorsOdometry extends SubsystemBase {
 		this.swerve = swerve;
 		this.poseEstimator = new SwerveDrivePoseEstimator(
 			swerve.getKinematics(),
-			new Rotation2d(swerve.getFieldRelativeHeading()),
+			new Rotation2d(swerve.getFieldRelativeHeading())
+				.plus(VirtualField.isRedAlliance() ? Rotation2d.k180deg : Rotation2d.kZero),
 			swerve.getModulePositions(),
 			RaptorsOdometry.getInitialPose()//,
 //			VecBuilder.fill(1, 1, 0.7),
@@ -129,7 +130,8 @@ public class RaptorsOdometry extends SubsystemBase {
 	public void integrateSwerveData() {
 		
 		this.poseEstimator.update(
-			new Rotation2d(this.swerve.getFieldRelativeHeading()),
+			new Rotation2d(this.swerve.getFieldRelativeHeading())
+				.plus(VirtualField.isRedAlliance() ? Rotation2d.k180deg : Rotation2d.kZero),
 			this.swerve.getModulePositions()
 		);
 		
