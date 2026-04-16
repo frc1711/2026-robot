@@ -2,6 +2,7 @@ package frc.robot.input.inputschemes;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.RobotContainer;
+import frc.robot.configuration.Direction;
 import frc.robot.input.InputScheme;
 import frc.robot.input.InputSchemeBuilder;
 import frc.robot.state.IntakePosition;
@@ -32,6 +33,10 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 			.useTriggersForIndexing(controller2)
 			.useBackButtonToCalibrateIntakeExtension(controller2);
 		
+		controller2.povLeft().onTrue(robotContainer.turret.commands.calibrateHeading());
+		controller2.povRight().onTrue(robotContainer.complexCommands.lockTurretHeadingToHub());
+		controller2.povUp().onTrue(robotContainer.turret.commands.goToHeading(() -> Direction.LEFT));
+		
 	}
 	
 	@Override
@@ -43,7 +48,7 @@ public class StandardTeleoperativeInputsScheme implements InputScheme {
 		
 		InputScheme.super.init(robot, controller1, controller2);
 		
-		robot.intake.goToPosition(IntakePosition.FULLY_STOWED);
+//		robot.intake.goToPosition(IntakePosition.FULLY_STOWED);
 		
 	}
 	
