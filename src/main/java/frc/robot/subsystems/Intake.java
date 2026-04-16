@@ -141,14 +141,25 @@ public class Intake extends SubsystemBase {
     }
     
     public void goToPosition(IntakePosition position) {
-
-        Intake.this.leftExtensionMotor.setControl(new MotionMagicVoltage(
-            position.getMotorShaftAngle()
-        ));
         
-        Intake.this.rightExtensionMotor.setControl(new MotionMagicVoltage(
-            position.getMotorShaftAngle()
-        ));
+        MotionMagicVoltage controlRequest =
+            new MotionMagicVoltage(position.getMotorShaftAngle());
+        
+        boolean isLeftTravellingInwards = position.getMotorShaftAngle()
+            .lt(this.leftExtensionMotor.getPosition().getValue());
+        boolean isRightTravellingInwards = position.getMotorShaftAngle()
+            .lt(this.rightExtensionMotor.getPosition().getValue());
+        
+        isLeftTravellingInwards = false;
+        isRightTravellingInwards = false;
+        
+        MotionMagicVoltage leftControlRequest = controlRequest
+            .withFeedForward(isLeftTravellingInwards ? -1 : 0);
+        MotionMagicVoltage rightControlRequest = controlRequest
+            .withFeedForward(isRightTravellingInwards ? -0.5: 0);
+        
+        Intake.this.leftExtensionMotor.setControl(leftControlRequest);
+        Intake.this.rightExtensionMotor.setControl(rightControlRequest);
         
     }
     
