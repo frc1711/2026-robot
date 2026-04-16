@@ -161,7 +161,18 @@ public class InputSchemeBuilder {
 	
 	public InputSchemeBuilder useAButtonToShoot(CommandXboxController controller) {
 		
-		controller.a().whileTrue(this.robot.complexCommands.shoot());
+//		controller.a().whileTrue(this.robot.complexCommands.shoot());
+		controller.a().whileTrue(this.robot.complexCommands.shoot(
+			Turret.WheelSpeeds.fromStaticAngularWheelVelocities(
+				RotationsPerSecond.of(45),
+				RotationsPerSecond.of(45)
+			),
+			false
+		));
+		controller.a().onFalse(
+			this.robot.agitator.commands.spin(-0.3)
+				.withTimeout(Seconds.of(0.5))
+		);
 		
 		return this;
 		
