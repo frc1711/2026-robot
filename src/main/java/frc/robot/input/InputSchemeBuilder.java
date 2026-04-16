@@ -257,10 +257,10 @@ public class InputSchemeBuilder {
 	) {
 		
 		controller.leftTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
-			.onTrue(this.robot.intake.commands.extend(-0.1));
+			.whileTrue(this.robot.intake.commands.extend(-0.15));
 		
 		controller.rightTrigger(InputSchemeBuilder.TRIGGER_THRESHOLD)
-			.onTrue(this.robot.intake.commands.extend(0.1));
+			.whileTrue(this.robot.intake.commands.extend(0.15));
 		
 		return this;
 		
