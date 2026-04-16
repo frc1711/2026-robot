@@ -33,11 +33,14 @@ public enum Auton {
 	),
 	
 	DEPOT_RUN("Depot Run", robot ->
-		robot.swerve.commands.goToPosition3(
-			PoseBuilder.fromPose(new Pose2d(VirtualField.getDepotFaceCenterPoint(), Rotation2d.kZero))
-				.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(20), Direction.LEFT)
-				.withHeading(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Degrees.of(225))
-				.get()
+		robot.complexCommands.lockTurretHeadingToHub().andThen(
+			robot.swerve.commands.goToPosition3(
+				PoseBuilder.fromPose(new Pose2d(VirtualField.getDepotFaceCenterPoint(), Rotation2d.kZero))
+					.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(20), Direction.LEFT)
+					.withTranslation(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Inches.of(24), Direction.FORWARDS)
+					.withHeading(PoseBuilder.CoordinateSystem.FIELD_RELATIVE, Degrees.of(225))
+					.get()
+			)
 		).andThen(
 			robot.complexCommands.intake()
 				.alongWith(
