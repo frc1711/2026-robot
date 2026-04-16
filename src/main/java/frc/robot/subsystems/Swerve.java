@@ -221,7 +221,11 @@ public class Swerve extends SubsystemBase {
         
         this.gyro.yaw.calibrate(currentHeading);
         
-        this.odometry.resetPose(existingPose);
+        this.odometry.resetPose(new Pose2d(
+            existingPose.getTranslation(),
+            new Rotation2d(currentHeading)
+                .plus(VirtualField.isRedAlliance() ? Rotation2d.k180deg : Rotation2d.kZero)
+        ));
         
     }
     
