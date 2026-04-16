@@ -60,7 +60,7 @@ public class Swerve extends SubsystemBase {
     
     public static final AngularAcceleration MAX_ANGULAR_DECELERATION = RotationsPerSecondPerSecond.of(-2);
     
-    public static final LinearVelocity MAX_LINEAR_VELOCITY = InchesPerSecond.of(100);
+    public static final LinearVelocity MAX_LINEAR_VELOCITY = InchesPerSecond.of(105);
     
     public static final AngularVelocity MAX_ANGULAR_VELOCITY = RotationsPerSecond.of(0.5);
     
