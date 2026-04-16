@@ -72,4 +72,10 @@ public class RobotDimensions {
     public static final Distance TURRET_UPPER_WHEEL_CIRCUMFERENCE =
         RobotDimensions.TURRET_UPPER_WHEEL_DIAMETER.times(Math.PI);
     
+    public static final Distance TURRET_X_OFFSET_FROM_ROBOT_CENTER =
+        Inches.of(-5.875);
+    
+    public static final Distance TURRET_Y_OFFSET_FROM_ROBOT_CENTER =
+        Inches.of(-10.375);
+    
 }
