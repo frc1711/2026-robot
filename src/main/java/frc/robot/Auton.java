@@ -53,8 +53,13 @@ public enum Auton {
 //		/*)*/.andThen(
 			robot.swerve.commands.goToPosition3(PoseBuilder.getHubShootingPose(Feet.of(9), Degrees.of(-30)).get())
 		).andThen(
-			robot.complexCommands.shoot(Turret.WheelSpeeds.MID_SHOT, false)
-				.withTimeout(Seconds.of(15))
+			robot.complexCommands.shoot(
+				Turret.WheelSpeeds.fromStaticAngularWheelVelocities(
+					RotationsPerSecond.of(45),
+					RotationsPerSecond.of(45)
+				),
+				false
+			).withTimeout(Seconds.of(15))
 		)
 	),
 	
