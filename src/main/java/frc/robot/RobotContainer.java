@@ -76,6 +76,7 @@ public class RobotContainer {
         driverController.a().whileTrue(
             drivetrain.applyRequest(() -> brake)
         );
+        
         driverController.b().whileTrue(
             drivetrain.applyRequest(() ->
                 point.withModuleDirection(
@@ -86,11 +87,12 @@ public class RobotContainer {
                 )
             )
         );
-        driverController.x().whileTrue(
+
+        driverController.x().and(driverController.back().negate()).whileTrue(
             drivetrain.applyRequest(() ->
                     pointAtAngle
-                        .withVelocityX(-driverController.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                        .withVelocityY(-driverController.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                        .withVelocityX(-translationX.calculate(driverController.getLeftY() * MaxSpeed)) // Drive forward with negative Y (forward)
+                        .withVelocityY(-translationY.calculate(driverController.getLeftX() * MaxSpeed)) // Drive left with negative X (left)
                         .withTargetDirection(Rotation2d.kZero) // Make the robot face away from you
             )
         );
