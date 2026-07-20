@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -16,18 +17,19 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.utils.JoystickSlewRateLimiter;
+import frc.robot.utils.*;
 
 public class RobotContainer {
 
-    private double MaxSpeed = 0.75 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 1 1/2 rotations per second max angular velocity
+    private double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double speedMultiplier = 1;
+    private double maxAngularRate = RotationsPerSecond.of(0.5).in(RadiansPerSecond); // 3/4 rotations per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive =
         new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.11)
-            .withRotationalDeadband(MaxAngularRate * 0.11) // Add an 11% deadband
+            .withDeadband(maxSpeed * 0.11)
+            .withRotationalDeadband(maxAngularRate * 0.11) // Add an 11% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake =
         new SwerveRequest.SwerveDriveBrake();
@@ -35,18 +37,22 @@ public class RobotContainer {
         new SwerveRequest.PointWheelsAt();
     private final SwerveRequest.FieldCentricFacingAngle pointAtAngle =
         new SwerveRequest.FieldCentricFacingAngle()
-        .withHeadingPID(0.013893, 0, 0);
+        .withHeadingPID(2.402, 0, 0)
+        .withDeadband(maxSpeed * 0.11)
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Telemetry logger = new Telemetry(maxSpeed);
 
     private final CommandXboxController driverController = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain =
         TunerConstants.createDrivetrain();
 
-    private JoystickSlewRateLimiter translationX = new JoystickSlewRateLimiter(1, 0.5);
-    private JoystickSlewRateLimiter translationY = new JoystickSlewRateLimiter(1, 0.5);
-    private final JoystickSlewRateLimiter rotation = new JoystickSlewRateLimiter(0.8, 0.35);
+    private JoystickSlewRateLimiter translationX = new JoystickSlewRateLimiter(0.35, 0.15);
+    private JoystickSlewRateLimiter translationY = new JoystickSlewRateLimiter(0.35, 0.15);
+    private final JoystickSlewRateLimiter rotation = new JoystickSlewRateLimiter(0.2, 0.05);
+
+    private DPad direction = DPad.UP;
 
     public RobotContainer() {
         configureBindings();
@@ -60,9 +66,9 @@ public class RobotContainer {
             drivetrain.applyRequest(
                 () ->
                     drive
-                        .withVelocityX(-translationX.calculate(driverController.getLeftY() * MaxSpeed)) // Drive forward with negative Y (forward)
-                        .withVelocityY(-translationY.calculate(driverController.getLeftX() * MaxSpeed)) // Drive left with negative X (left)
-                        .withRotationalRate(-rotation.calculate(driverController.getRightX() * MaxAngularRate)) // Drive counterclockwise with negative X (left)
+                        .withVelocityX(-translationX.calculate(driverController.getLeftY() * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
+                        .withVelocityY(-translationY.calculate(driverController.getLeftX() * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
+                        .withRotationalRate(-rotation.calculate(driverController.getRightX() * maxAngularRate)) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -76,7 +82,7 @@ public class RobotContainer {
         driverController.a().whileTrue(
             drivetrain.applyRequest(() -> brake)
         );
-        
+
         driverController.b().whileTrue(
             drivetrain.applyRequest(() ->
                 point.withModuleDirection(
@@ -88,12 +94,17 @@ public class RobotContainer {
             )
         );
 
-        driverController.x().and(driverController.back().negate()).whileTrue(
+        driverController.povDown().onTrue(Commands.runOnce(() -> direction = DPad.DOWN));
+        driverController.povUp().onTrue(Commands.runOnce(() -> direction = DPad.UP));
+        driverController.povLeft().onTrue(Commands.runOnce(() -> direction = DPad.LEFT));
+        driverController.povRight().onTrue(Commands.runOnce(() -> direction = DPad.RIGHT));
+
+        driverController.x().whileTrue(
             drivetrain.applyRequest(() ->
                     pointAtAngle
-                        .withVelocityX(-translationX.calculate(driverController.getLeftY() * MaxSpeed)) // Drive forward with negative Y (forward)
-                        .withVelocityY(-translationY.calculate(driverController.getLeftX() * MaxSpeed)) // Drive left with negative X (left)
-                        .withTargetDirection(Rotation2d.kZero) // Make the robot face away from you
+                        .withVelocityX(-translationX.calculate(driverController.getLeftY() * maxSpeed)) // Drive forward with negative Y (forward)
+                        .withVelocityY(-translationY.calculate(driverController.getLeftX() * maxSpeed)) // Drive left with negative X (left)
+                        .withTargetDirection(Rotation2d.fromDegrees(direction.getDegrees())) // Make the robot face where the right joystick is pointed
             )
         );
 
@@ -128,5 +139,12 @@ public class RobotContainer {
             // Finally idle for the rest of auton
             drivetrain.applyRequest(() -> idle)
         );
+    }
+
+    public void updateDashboard() {
+
+        speedMultiplier = SmartDashboard.getNumber("Drive/Speed Multiplier", speedMultiplier);
+        SmartDashboard.putNumber("Drive/Speed Multiplier", speedMultiplier);
+
     }
 }
