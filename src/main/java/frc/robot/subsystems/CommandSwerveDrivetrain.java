@@ -7,7 +7,18 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -110,6 +121,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         )
     );
 
+    private static final Slot0Configs[] kPerModuleSteerGains = {
+        new Slot0Configs().withKP(100).withKS(0.52545).withKV(2.5254).withKA(0.055969),
+        new Slot0Configs().withKP(100).withKS(0.56985).withKV(2.521).withKA(0.08566),
+        new Slot0Configs().withKP(100).withKS(0.42446).withKV(2.4239).withKA(0.10713),
+        new Slot0Configs().withKP(100).withKS(0.54909).withKV(2.4987).withKA(0.07789)
+    };
+
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
@@ -130,6 +148,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         super(drivetrainConstants, modules);
         if (Utils.isSimulation()) {
             startSimThread();
+        }
+
+        int moduleNum = 0;
+        for (SwerveModule<TalonFX,TalonFX,CANcoder> module : this.getModules()) {
+            module.getSteerMotor().getConfigurator().apply(kPerModuleSteerGains[moduleNum]);
+            moduleNum++;
         }
     }
 
