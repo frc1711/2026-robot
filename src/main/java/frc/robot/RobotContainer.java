@@ -26,13 +26,13 @@ public class RobotContainer {
 
     private double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double speedMultiplier = 1;
-    private double maxAngularRate = RotationsPerSecond.of(0.5).in(RadiansPerSecond); // 3/4 rotations per second max angular velocity
+    private double maxAngularRate = RotationsPerSecond.of(0.625).in(RadiansPerSecond); // 3/4 rotations per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive =
         new SwerveRequest.FieldCentric()
-            .withDeadband(maxSpeed * 0.11)
-            .withRotationalDeadband(maxAngularRate * 0.11) // Use an 11% deadband
+            .withDeadband(maxSpeed * 0.12)
+            .withRotationalDeadband(maxAngularRate * 0.13) // Use an 11% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake =
         new SwerveRequest.SwerveDriveBrake();
@@ -41,7 +41,7 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentricFacingAngle pointAtAngle =
         new SwerveRequest.FieldCentricFacingAngle()
         .withDeadband(maxSpeed * 0.11) // Use an 11% deadband
-        .withHeadingPID(3, 0, 0)
+        .withHeadingPID(5, 0, 0)
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final Telemetry logger = new Telemetry(maxSpeed);
@@ -51,9 +51,9 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain =
         TunerConstants.createDrivetrain();
 
-    private SlewRateLimiter translationX = new SlewRateLimiter(14, -19, 0);
-    private SlewRateLimiter translationY = new SlewRateLimiter(14, -19, 0);
-    private final SlewRateLimiter rotation = new SlewRateLimiter(5, -8, 0);
+    private SlewRateLimiter translationX = new SlewRateLimiter(12, -17, 0);
+    private SlewRateLimiter translationY = new SlewRateLimiter(12, -17, 0);
+    private final SlewRateLimiter rotation = new SlewRateLimiter(8, -12, 0);
 
     private DPad direction = DPad.UP;
 
@@ -69,9 +69,9 @@ public class RobotContainer {
             drivetrain.applyRequest(
                 () ->
                     drive
-                        .withVelocityX(-translationX.calculate(MathUtil.copyDirectionPow(driverController.getLeftY(), 3) * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
-                        .withVelocityY(-translationY.calculate(MathUtil.copyDirectionPow(driverController.getLeftX(), 3) * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
-                        .withRotationalRate(-rotation.calculate(MathUtil.copyDirectionPow(driverController.getRightX(), 3) * maxAngularRate * speedMultiplier)) // Drive counterclockwise with negative X (left)
+                        .withVelocityX(-translationX.calculate(driverController.getLeftY() * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
+                        .withVelocityY(-translationY.calculate(driverController.getLeftX() * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
+                        .withRotationalRate(-rotation.calculate(driverController.getRightX() * maxAngularRate * speedMultiplier)) // Drive counterclockwise with negative X (left)
             )
         );
 
