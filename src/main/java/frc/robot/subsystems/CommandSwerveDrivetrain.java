@@ -121,12 +121,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         )
     );
 
-    private static final Slot0Configs[] kPerModuleSteerGains = {
-        new Slot0Configs().withKP(100).withKS(0.52545).withKV(2.5254).withKA(0.055969),
-        new Slot0Configs().withKP(100).withKS(0.56985).withKV(2.521).withKA(0.08566),
-        new Slot0Configs().withKP(100).withKS(0.42446).withKV(2.4239).withKA(0.10713),
-        new Slot0Configs().withKP(100).withKS(0.54909).withKV(2.4987).withKA(0.07789)
-    };
+    /*private static final Slot0Configs[] kPerModuleSteerGains = {
+        new Slot0Configs().withKP(10).withKS(0.52545).withKV(2.5254).withKA(0.055969),
+        new Slot0Configs().withKP(10).withKS(0.56985).withKV(2.521).withKA(0.08566),
+        new Slot0Configs().withKP(10).withKS(0.42446).withKV(2.4239).withKA(0.10713),
+        new Slot0Configs().withKP(10).withKS(0.54909).withKV(2.4987).withKA(0.07789)
+    };*/
 
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
@@ -150,11 +150,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
 
-        int moduleNum = 0;
+        /*int moduleNum = 0;
         for (SwerveModule<TalonFX,TalonFX,CANcoder> module : this.getModules()) {
             module.getSteerMotor().getConfigurator().apply(kPerModuleSteerGains[moduleNum]);
             moduleNum++;
-        }
+        }*/
     }
 
     /**
