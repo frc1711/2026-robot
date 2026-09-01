@@ -1,0 +1,81 @@
+package frc.robot.configuration;
+
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+
+import static edu.wpi.first.units.Units.*;
+
+public class RobotDimensions {
+
+    public static final AngularVelocity KRAKEN_X60_MAX_FREE_SPEED =
+        Rotations.per(Minute).of(5800);
+
+    public static final Distance FRAME_WIDTH = Inches.of(32.75);
+
+    public static final Distance FRAME_LENGTH = Inches.of(21.75);
+
+    public static final Distance BUMPER_THICKNESS = Inches.of(3.5);
+
+    public static final Distance ROBOT_LENGTH =
+        FRAME_LENGTH.plus(BUMPER_THICKNESS.times(2));
+
+    public static final Distance ROBOT_WIDTH =
+        FRAME_WIDTH.plus(BUMPER_THICKNESS.times(2));
+
+    public static final Distance SWERVE_LR_WHEELBASE_DISTANCE = Inches.of(27.0825);
+
+    public static final Distance SWERVE_FR_WHEELBASE_DISTANCE = Inches.of(16.0825);
+
+    public static final int SWERVE_STEERING_GEAR_RATIO = 26;
+
+    public static final int SWERVE_DRIVE_S1_R1_DRIVING_TOOTH_COUNT = 12;
+
+    public static final int SWERVE_DRIVE_S1_R2_DRIVING_TOOTH_COUNT = 14;
+
+    public static final int SWERVE_DRIVE_S1_R3_DRIVING_TOOTH_COUNT = 16;
+
+    public static final int SWERVE_DRIVE_S1_DRIVEN_TOOTH_COUNT = 54;
+
+    public static final int SWERVE_DRIVE_S2_DRIVING_TOOTH_COUNT = 32;
+
+    public static final int SWERVE_DRIVE_S2_DRIVEN_TOOTH_COUNT = 25;
+
+    public static final int SWERVE_DRIVE_S3_DRIVING_TOOTH_COUNT = 15;
+
+    public static final int SWERVE_DRIVE_S3_DRIVEN_TOOTH_COUNT = 30;
+
+    public static final Distance SWERVE_WHEEL_DIAMETER = Inches.of(4);
+
+    public static final Distance SWERVE_WHEEL_CIRCUMFERENCE =
+        RobotDimensions.SWERVE_WHEEL_DIAMETER.times(Math.PI);
+
+    public static final Distance HTD5_BELT_PITCH = Millimeters.of(5);
+
+    public static final int INTAKE_EXTENSION_GEAR_TOOTH_COUNT = 20;
+
+    public static final int INTAKE_EXTENSION_GEAR_RACK_DIAMETRAL_PITCH = 20;
+
+    public static final Distance INTAKE_EXTENSION_GEAR_RACK_PITCH =
+        Inches.of(Math.PI / RobotDimensions.INTAKE_EXTENSION_GEAR_RACK_DIAMETRAL_PITCH);
+
+    public static final int TURRET_ROTATION_DRIVING_PULLEY_TOOTH_COUNT = 11;
+
+    public static final int TURRET_ROTATION_DRIVEN_PULLEY_TOOTH_COUNT = 130;
+
+    public static final Distance TURRET_LOWER_WHEEL_DIAMETER = Inches.of(4);
+
+    public static final Distance TURRET_LOWER_WHEEL_CIRCUMFERENCE =
+        RobotDimensions.TURRET_LOWER_WHEEL_DIAMETER.times(Math.PI);
+
+    public static final Distance TURRET_UPPER_WHEEL_DIAMETER = Inches.of(4);
+
+    public static final Distance TURRET_UPPER_WHEEL_CIRCUMFERENCE =
+        RobotDimensions.TURRET_UPPER_WHEEL_DIAMETER.times(Math.PI);
+
+    public static final Distance TURRET_X_OFFSET_FROM_ROBOT_CENTER =
+        Inches.of(-5.875);
+
+    public static final Distance TURRET_Y_OFFSET_FROM_ROBOT_CENTER =
+        Inches.of(-10.375);
+
+}

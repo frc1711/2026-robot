@@ -7,25 +7,36 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Agitator;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Indexer;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.Turret.WheelSpeeds;
 import frc.robot.utils.*;
 
 public class RobotContainer {
 
     private double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double speedMultiplier = 1;
+    private double previousMultiplier = speedMultiplier;
     private double maxAngularRate = RotationsPerSecond.of(0.625).in(RadiansPerSecond); // 3/4 rotations per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
@@ -33,7 +44,7 @@ public class RobotContainer {
         new SwerveRequest.FieldCentric()
             .withDeadband(maxSpeed * 0.12)
             .withRotationalDeadband(maxAngularRate * 0.13) // Use an 11% deadband
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+            .withDriveRequestType(DriveRequestType.Velocity); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake =
         new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point =
@@ -42,7 +53,7 @@ public class RobotContainer {
         new SwerveRequest.FieldCentricFacingAngle()
         .withDeadband(maxSpeed * 0.11) // Use an 11% deadband
         .withHeadingPID(5, 0, 0)
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        .withDriveRequestType(DriveRequestType.Velocity);
 
     private final Telemetry logger = new Telemetry(maxSpeed);
 
@@ -50,15 +61,32 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain =
         TunerConstants.createDrivetrain();
+    public final Agitator agitator = new Agitator();
+    public final Indexer indexer = new Indexer();
+    public final Turret turret = new Turret();
+    public final Intake intake = new Intake();
+
+    private final ComplexCommands complexCommands = new ComplexCommands(this);
 
     private SlewRateLimiter translationX = new SlewRateLimiter(12, -17, 0);
     private SlewRateLimiter translationY = new SlewRateLimiter(12, -17, 0);
     private final SlewRateLimiter rotation = new SlewRateLimiter(8, -12, 0);
 
-    private DPad direction = DPad.UP;
+    private CardinalDirections direction = CardinalDirections.UP;
+
+    private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
+        setupNamedCommands();
         configureBindings();
+        autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        SmartDashboard.putData("Auto Mode", autoChooser);
+    }
+
+    private void setupNamedCommands() {
+
+        NamedCommands.registerCommand("shoot", complexCommands.shoot(WheelSpeeds.FAR_SHOT, false));
+
     }
 
     private void configureBindings() {
@@ -86,28 +114,29 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> brake)
         );
 
-        driverController.b().whileTrue(
-            drivetrain.applyRequest(() ->
-                point.withModuleDirection(
-                    new Rotation2d(
-                        -driverController.getLeftY(),
-                        -driverController.getLeftX()
-                    )
-                )
-            )
+        driverController.x().whileTrue(
+            complexCommands.intake()
         );
 
-        driverController.povDown().onTrue(Commands.runOnce(() -> direction = DPad.DOWN));
-        driverController.povUp().onTrue(Commands.runOnce(() -> direction = DPad.UP));
-        driverController.povLeft().onTrue(Commands.runOnce(() -> direction = DPad.LEFT));
-        driverController.povRight().onTrue(Commands.runOnce(() -> direction = DPad.RIGHT));
+        driverController.rightTrigger().whileTrue(this.intake.commands.extend(() -> .1));
+        driverController.leftTrigger().whileTrue(this.intake.commands.extend(() -> -.1));
 
-        driverController.x().whileTrue(
+        driverController.y().whileTrue(complexCommands.shoot(WheelSpeeds.fromStaticAngularWheelVelocities(
+            RotationsPerSecond.of(55),
+            RotationsPerSecond.of(55)), false));
+        //driverController.y().onTrue(complexCommands.lockTurretHeadingToHub());
+
+        driverController.povDown().onTrue(Commands.runOnce(() -> direction = CardinalDirections.DOWN));
+        driverController.povUp().onTrue(Commands.runOnce(() -> direction = CardinalDirections.UP));
+        driverController.povLeft().onTrue(Commands.runOnce(() -> direction = CardinalDirections.LEFT));
+        driverController.povRight().onTrue(Commands.runOnce(() -> direction = CardinalDirections.RIGHT));
+
+        driverController.leftBumper().whileTrue(
             drivetrain.applyRequest(() ->
                     pointAtAngle
                         .withVelocityX(-translationX.calculate(MathUtil.copyDirectionPow(driverController.getLeftY(), 3) * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
                         .withVelocityY(-translationY.calculate(MathUtil.copyDirectionPow(driverController.getLeftX(), 3) * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
-                        .withTargetDirection(Rotation2d.fromDegrees(direction.getDegrees())) // Make the robot face where the right joystick is pointed
+                        .withTargetDirection(Rotation2d.fromDegrees(direction.getDegrees().in(Degrees))) // Make the robot face where the right joystick is pointed
             )
         );
 
@@ -119,29 +148,20 @@ public class RobotContainer {
         driverController.start().and(driverController.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // Reset the field-centric heading on left bumper press.
-        driverController.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+        driverController.rightBumper().onTrue(drivetrain.runOnce(drivetrain::resetPose));
+        driverController.rightTrigger().whileTrue(Commands.runOnce(() -> {
+            previousMultiplier = speedMultiplier;
+            speedMultiplier = 0.3;
+        }));
+        driverController.rightTrigger().whileFalse(Commands.runOnce(() -> speedMultiplier = previousMultiplier));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
     public Command getAutonomousCommand() {
-        // Simple drive forward auton
-        final var idle = new SwerveRequest.Idle();
-        return Commands.sequence(
-            // Reset our field centric heading to match the robot
-            // facing away from our alliance station wall (0 deg).
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric(Rotation2d.kZero)),
-            // Then slowly drive forward (away from us) for 5 seconds.
-            drivetrain
-                .applyRequest(() ->
-                    drive
-                        .withVelocityX(0.5)
-                        .withVelocityY(0)
-                        .withRotationalRate(0)
-                ).withTimeout(5.0),
-            // Finally idle for the rest of auton
-            drivetrain.applyRequest(() -> idle)
-        );
+        /* Run the path selected from the auto chooser */
+        return autoChooser.getSelected();
     }
 
     public void updateDashboard() {

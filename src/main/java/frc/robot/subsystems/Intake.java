@@ -1,0 +1,347 @@
+package frc.robot.subsystems;
+
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.units.measure.*;
+import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.configuration.CANDevice;
+import frc.robot.configuration.RobotDimensions;
+import frc.robot.state.IntakePosition;
+import frc.robot.utils.LogCommand;
+
+import static edu.wpi.first.units.Units.*;
+
+public class Intake extends SubsystemBase {
+
+    protected static final Time TIME_TO_MAX_EXTENSION = Seconds.of(0.5);
+
+    protected static final Time TIME_TO_MAX_EXTENSION_VELOCITY = Seconds.of(0.25);
+
+    protected static final Current MINIMUM_STALL_DETECTION_CURRENT = Amps.of(20);
+
+    protected TalonFX leftExtensionMotor;
+
+    protected TalonFX rightExtensionMotor;
+
+    protected TalonFX rollerMotor;
+
+    public final Commands commands;
+
+    public final Triggers triggers;
+
+    public Intake() {
+
+        this.leftExtensionMotor = new TalonFX(CANDevice.INTAKE_LEFT_EXTENSION_MOTOR_CONTROLLER.id);
+        this.rightExtensionMotor = new TalonFX(CANDevice.INTAKE_RIGHT_EXTENSION_MOTOR_CONTROLLER.id);
+        this.rollerMotor = new TalonFX(CANDevice.INTAKE_ROLLER_MOTOR_CONTROLLER.id);
+        this.commands = new Commands();
+        this.triggers = new Triggers();
+
+        this.leftExtensionMotor.getConfigurator().apply(Intake.getLeftExtensionMotorConfig());
+        this.rightExtensionMotor.getConfigurator().apply(Intake.getRightExtensionMotorConfig());
+        this.rollerMotor.getConfigurator().apply(Intake.getRollerMotorConfig());
+
+        ShuffleboardTab shuffleboardCalibrationTab =
+            Shuffleboard.getTab("Calibration");
+
+        shuffleboardCalibrationTab.add(
+            this.commands.calibrateExtensionLimits()
+        );
+
+        Shuffleboard.getTab("Subsystems").add("Intake", this);
+
+    }
+
+    protected static TalonFXConfiguration getLeftExtensionMotorConfig() {
+
+        TalonFXConfiguration config = new TalonFXConfiguration();
+
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+        config.CurrentLimits.StatorCurrentLimit = 70;
+        config.CurrentLimits.StatorCurrentLimitEnable = true;
+
+//        config.Slot0.kS = 1;
+//        config.Slot0.kV = 0.5;
+
+        config.Slot0.kP = 20;
+        config.Slot0.kI = 0;
+        config.Slot0.kD = 0;
+
+        double maxExtensionVelocityInchesPerSecond =
+            IntakePosition.FULLY_EXTENDED.getOffsetFromFullyStowed()
+                .div(Intake.TIME_TO_MAX_EXTENSION)
+                .in(InchesPerSecond);
+        double maxExtensionVelocityTeethPerSecond =
+            maxExtensionVelocityInchesPerSecond /
+                RobotDimensions.INTAKE_EXTENSION_GEAR_RACK_PITCH.in(Inches);
+        double maxExtensionVelocityRotationsPerSecond =
+            maxExtensionVelocityTeethPerSecond /
+                RobotDimensions.INTAKE_EXTENSION_GEAR_TOOTH_COUNT;
+
+        config.MotionMagic.MotionMagicCruiseVelocity =
+            maxExtensionVelocityRotationsPerSecond;
+
+        double maxExtensionAccelerationRotationsPerSecondPerSecond =
+            maxExtensionVelocityRotationsPerSecond /
+                Intake.TIME_TO_MAX_EXTENSION_VELOCITY.in(Seconds);
+
+        config.MotionMagic.MotionMagicAcceleration =
+            maxExtensionAccelerationRotationsPerSecondPerSecond;
+//        config.MotionMagic.MotionMagicJerk = 1000;
+
+        config.HardwareLimitSwitch.ForwardLimitEnable = false;
+        config.HardwareLimitSwitch.ReverseLimitEnable = false;
+
+        return config;
+
+    }
+
+    protected static TalonFXConfiguration getRightExtensionMotorConfig() {
+
+        TalonFXConfiguration config = Intake.getLeftExtensionMotorConfig();
+
+        config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+        return config;
+
+    }
+
+    protected static TalonFXConfiguration getRollerMotorConfig() {
+
+        TalonFXConfiguration config = new TalonFXConfiguration();
+
+        config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+
+        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5;
+
+        return config;
+
+    }
+
+    public IntakePosition getPosition() {
+
+        return IntakePosition.fromMotorShaftAngle(
+            this.leftExtensionMotor.getPosition().getValue()
+        );
+
+    }
+
+    public void goToPosition(IntakePosition position) {
+
+        MotionMagicVoltage controlRequest =
+            new MotionMagicVoltage(position.getMotorShaftAngle());
+
+        boolean isLeftTravellingInwards = position.getMotorShaftAngle()
+            .lt(this.leftExtensionMotor.getPosition().getValue());
+        boolean isRightTravellingInwards = position.getMotorShaftAngle()
+            .lt(this.rightExtensionMotor.getPosition().getValue());
+
+        isLeftTravellingInwards = false;
+        isRightTravellingInwards = false;
+
+        MotionMagicVoltage leftControlRequest = controlRequest
+            .withFeedForward(isLeftTravellingInwards ? -1 : 0);
+        MotionMagicVoltage rightControlRequest = controlRequest
+            .withFeedForward(isRightTravellingInwards ? -0.5: 0);
+
+        Intake.this.leftExtensionMotor.setControl(leftControlRequest);
+        Intake.this.rightExtensionMotor.setControl(rightControlRequest);
+
+    }
+
+    public boolean isStalling() {
+
+        return (
+            Intake.this.leftExtensionMotor.getStatorCurrent()
+                .getValue()
+                .gte(Intake.MINIMUM_STALL_DETECTION_CURRENT) ||
+            Intake.this.rightExtensionMotor.getStatorCurrent()
+                .getValue()
+                .gte(Intake.MINIMUM_STALL_DETECTION_CURRENT)
+        );
+
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+
+        builder.addDoubleProperty(
+            "Left Extension Length (inches)",
+            () -> IntakePosition
+                .fromMotorShaftAngle(this.leftExtensionMotor.getPosition().getValue())
+                .getOffsetFromFullyStowed()
+                .in(Inches),
+            null
+        );
+
+        builder.addDoubleProperty(
+            "Right Extension Length (inches)",
+            () -> IntakePosition
+                .fromMotorShaftAngle(this.rightExtensionMotor.getPosition().getValue())
+                .getOffsetFromFullyStowed()
+                .in(Inches),
+            null
+        );
+
+    }
+
+    public class Commands {
+
+        public Command calibrateExtensionLimits() {
+
+            return Intake.this.runOnce(() -> {
+                Intake.this.leftExtensionMotor.setPosition(Rotations.zero());
+                Intake.this.rightExtensionMotor.setPosition(Rotations.zero());
+            })
+                .andThen(new LogCommand("Intake extension limits calibrated."))
+                .withName("Calibrate Intake Extension Limits")
+                .ignoringDisable(true);
+
+        }
+
+        public Command extend(DoubleSupplier speed) {
+
+            return Intake.this.startEnd(
+                    () -> {
+                        Intake.this.leftExtensionMotor.set(speed.getAsDouble());
+                        Intake.this.rightExtensionMotor.set(speed.getAsDouble());
+                    },
+                    () -> {
+                        Intake.this.leftExtensionMotor.stopMotor();
+                        Intake.this.rightExtensionMotor.stopMotor();
+                    }
+            );
+
+        }
+
+        public Command pulseV1() {
+
+            IntakePosition innerPosition = new IntakePosition(Inches.of(3));
+            IntakePosition outerPosition = IntakePosition.PARTIALLY_STOWED;
+
+            Command retract = this.goToPosition(innerPosition)
+                .withTimeout(Seconds.of(0.25));
+            Command extend = this.goToPosition(outerPosition);
+            Runnable resetPosition = () -> this.goToPosition(IntakePosition.PARTIALLY_STOWED);
+
+            return retract
+                .andThen(extend)
+                .repeatedly()
+                .finallyDo(resetPosition);
+
+        }
+
+        public Command pulseV2() {
+
+            IntakePosition innerPosition = IntakePosition.FULLY_STOWED;
+            IntakePosition outerPosition = new IntakePosition(Inches.of(10));
+
+            Command retract = this.goToPosition(innerPosition)
+                .until(Intake.this::isStalling);
+//                .withTimeout(Seconds.of(0.25));
+            Command extend = this.goToPosition(outerPosition);
+            Command pulse = retract.andThen(extend);
+            Command spinRoller = edu.wpi.first.wpilibj2.command.Commands.startEnd(
+                () -> Intake.this.rollerMotor.set(0.4),
+                () -> Intake.this.rollerMotor.stopMotor()
+            );
+
+            return spinRoller.alongWith(
+                pulse.repeatedly()
+            ).finallyDo(() -> this.goToPosition(IntakePosition.PARTIALLY_STOWED));
+
+        }
+
+        public Command pulseV3() {
+
+            IntakePosition innerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(-4));
+            IntakePosition outerPosition = IntakePosition.PARTIALLY_STOWED.plus(Inches.of(2));
+
+            Command retract = this.goToPosition(innerPosition)
+                .withTimeout(Seconds.of(0.2));
+            Command extend = this.goToPosition(outerPosition);
+            Command delay = edu.wpi.first.wpilibj2.command.Commands.waitTime(Seconds.of(0.4));
+            Runnable resetPosition = () -> this.goToPosition(IntakePosition.PARTIALLY_STOWED);
+
+            return retract
+                .andThen(extend)
+                .andThen(delay)
+                .repeatedly()
+                .finallyDo(resetPosition);
+
+        }
+
+        public Command waitUntilAtPosition(
+            IntakePosition position,
+            Distance tolerance
+        ) {
+
+            return edu.wpi.first.wpilibj2.command.Commands.waitUntil(
+                Intake.this.triggers.isAtPosition(position, tolerance)
+            );
+
+        }
+
+        public Command goToPosition(IntakePosition position) {
+
+            return Intake.this
+                .runOnce(() -> Intake.this.goToPosition(position))
+                .andThen(this.waitUntilAtPosition(position, Inches.of(0.25)));
+
+        }
+
+        public Command intake(DoubleSupplier speed) {
+
+            return Intake.this.startEnd(
+                () -> Intake.this.rollerMotor.set(speed.getAsDouble()),
+                () -> Intake.this.rollerMotor.stopMotor()
+            );
+
+        }
+
+        public Command outtake(DoubleSupplier speed) {
+
+            return Intake.this.startEnd(
+                () -> Intake.this.rollerMotor.set(-speed.getAsDouble()),
+                () -> Intake.this.rollerMotor.stopMotor()
+            );
+
+        }
+
+    }
+
+    public class Triggers {
+
+        public Trigger isAtPosition(IntakePosition position, Distance tolerance) {
+
+            return new Trigger(() -> Intake.this.getPosition().getOffsetFromFullyStowed().isNear(
+                position.getOffsetFromFullyStowed(),
+                tolerance
+            ));
+
+        }
+
+        public Trigger isStalling() {
+
+            return new Trigger(Intake.this::isStalling);
+
+        }
+
+    }
+
+}
