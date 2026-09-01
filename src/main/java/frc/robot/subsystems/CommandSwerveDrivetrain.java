@@ -16,12 +16,23 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -29,7 +40,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -55,6 +66,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+    private final SwerveRequest.ApplyRobotSpeeds autoRequest = new SwerveRequest.ApplyRobotSpeeds();
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -144,6 +156,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
 
+        configurePathPlanner();
+
         /*int moduleNum = 0;
         for (SwerveModule<TalonFX,TalonFX,CANcoder> module : this.getModules()) {
             module.getSteerMotor().getConfigurator().apply(kPerModuleSteerGains[moduleNum]);
@@ -173,6 +187,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (Utils.isSimulation()) {
             startSimThread();
         }
+
+        configurePathPlanner();
     }
 
     /**
@@ -204,6 +220,49 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
         if (Utils.isSimulation()) {
             startSimThread();
+        }
+
+        configurePathPlanner();
+    }
+
+    private void configurePathPlanner() {
+        try {
+            RobotConfig config = new RobotConfig(
+                Kilograms.of(55.792),
+                KilogramSquareMeters.of(5.737),
+                new ModuleConfig(
+                    Meters.of(0.051), 
+                    MetersPerSecond.of(3.633), 
+                    1.1, 
+                    DCMotor.getKrakenX60(1),
+                    7.030,
+                    Amps.of(120),
+                    1
+                ),
+                new Translation2d(Meters.of(0.204), Meters.of(0.344)),
+                new Translation2d(Meters.of(0.204), Meters.of(-0.344)),
+                new Translation2d(Meters.of(-0.204), Meters.of(0.344)),
+                new Translation2d(Meters.of(-0.204), Meters.of(-0.344)));
+
+            AutoBuilder.configure(
+                this::getPose,
+                this::resetPose,
+                () -> getState().Speeds,
+                (speeds, feedforwards) -> this.setControl(
+                    autoRequest.withSpeeds(ChassisSpeeds.discretize(speeds, 0.020))
+                    .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                    .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
+                ),
+                new PPHolonomicDriveController(
+                    new PIDConstants(10, 0, 0),
+                    new PIDConstants(7, 0, 0),
+                    TunerConstants.kSpeedAt12Volts.in(MetersPerSecond)
+                ),
+                config,
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+                this);
+        } catch (Exception e) {
+            DriverStation.reportError("Failed to load Pathplanner config and configure AutoBuilder", e.getStackTrace());
         }
     }
 
@@ -318,5 +377,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public Optional<Pose2d> samplePoseAt(double timestampSeconds) {
         return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
+    }
+
+    public void resetPose() {
+        resetPose(Pose2d.kZero);
+    }
+
+    public Pose2d getPose() {
+        return this.getState().Pose;
+    }
+
+    public ChassisSpeeds getCurrentSpeeds() {
+        return getKinematics().toChassisSpeeds(getState().ModuleStates);
     }
 }
