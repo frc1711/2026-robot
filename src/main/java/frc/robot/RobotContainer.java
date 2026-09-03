@@ -64,7 +64,6 @@ public class RobotContainer {
     public final Agitator agitator = new Agitator();
     public final Indexer indexer = new Indexer();
     public final Turret turret = new Turret();
-    public final Intake intake = new Intake();
 
     private final ComplexCommands complexCommands = new ComplexCommands(this);
 
@@ -114,13 +113,6 @@ public class RobotContainer {
             drivetrain.applyRequest(() -> brake)
         );
 
-        driverController.x().whileTrue(
-            complexCommands.intake()
-        );
-
-        driverController.rightTrigger().whileTrue(this.intake.commands.extend(() -> .1));
-        driverController.leftTrigger().whileTrue(this.intake.commands.extend(() -> -.1));
-
         driverController.y().whileTrue(complexCommands.shoot(WheelSpeeds.fromStaticAngularWheelVelocities(
             RotationsPerSecond.of(55),
             RotationsPerSecond.of(55)), false));
@@ -155,6 +147,8 @@ public class RobotContainer {
             speedMultiplier = 0.3;
         }));
         driverController.rightTrigger().whileFalse(Commands.runOnce(() -> speedMultiplier = previousMultiplier));
+
+        complexCommands.lockTurretHeadingToHub();
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
