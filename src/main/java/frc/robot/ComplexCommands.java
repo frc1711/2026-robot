@@ -29,7 +29,7 @@ public class ComplexCommands {
     private final Turret turret;
     private final Agitator agitator;
     private final Indexer indexer;
-    //private final Intake intake;
+    private final Intake intake;
 
     public ComplexCommands(RobotContainer robot) {
 
@@ -37,16 +37,16 @@ public class ComplexCommands {
         this.drivetrain = robot.drivetrain;
         this.agitator = robot.agitator;
         this.indexer = robot.indexer;
-        //this.intake = robot.intake;
+        this.intake = robot.intake;
 
     }
 
-    /*public Command intake() {
+    public Command intake() {
         
         Command prepareAndRunIntake =
             new InstantCommand(() -> this.intake.goToPosition(IntakePosition.INTAKING));
                 //.andThen(this.intake.intake(() -> 0.65));
-        Command waitSeconds = Commands.waitSeconds(0.25);
+        Command waitSeconds = Commands.waitSeconds(5);
         Command spinIntake = this.intake.commands.intake(() -> 0.6);
         Runnable resetIntakePosition = () ->
             this.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
@@ -62,7 +62,7 @@ public class ComplexCommands {
         Command prepareAndRunIntake =
             new InstantCommand(() -> this.intake.goToPosition(IntakePosition.INTAKING));
                 //.andThen(this.intake.intake(() -> 0.65));
-        Command waitSeconds = Commands.waitSeconds(0.25);
+        Command waitSeconds = Commands.waitSeconds(3);
         Command spinIntake = this.intake.commands.intake(() -> -0.65);
         Runnable resetIntakePosition = () ->
             this.intake.goToPosition(IntakePosition.PARTIALLY_STOWED);
@@ -72,7 +72,7 @@ public class ComplexCommands {
             .finallyDo(resetIntakePosition);
         
         
-    }*/
+    }
 
     public Command lockTurretHeadingToHub() {
 
@@ -116,6 +116,7 @@ public class ComplexCommands {
         Command waitUntilReady = Commands.waitTime(spinupWaitTime);
         Command feedShooter = this.indexer.commands.forward()
             .alongWith(Commands.waitTime(Seconds.of(0.5)).andThen(this.agitator.commands.agitate()));
+        Command backTake = this.indexer.commands.backward();
 
         return Commands.parallel(
             spinUpShooter,
