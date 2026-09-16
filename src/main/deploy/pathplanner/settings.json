@@ -5,7 +5,7 @@
   "pathFolders": [],
   "autoFolders": [],
   "defaultMaxVel": 3.633,
-  "defaultMaxAccel": 5.5,
+  "defaultMaxAccel": 5.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 1940.0,
   "defaultNominalVoltage": 12.0,
@@ -22,11 +22,13 @@
   "flModuleY": 0.34394775,
   "frModuleX": 0.20424775,
   "frModuleY": -0.34394775,
-  "blModuleX": -0.20424775,
-  "blModuleY": 0.34394775,
-  "brModuleX": -0.20424775,
-  "brModuleY": -0.34394775,
+  "blModuleX": -0.204,
+  "blModuleY": 0.344,
+  "brModuleX": -0.204,
+  "brModuleY": -0.344,
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
-  "robotFeatures": []
+  "robotFeatures": [
+    "{\"name\":\"Shooter\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":-0.204,\"y\":-0.344},\"size\":{\"width\":0.2,\"length\":0.2},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
+  ]
 }
