@@ -66,7 +66,7 @@ public class Agitator extends SubsystemBase {
         public Command agitate(double speed) {
 
             return this.spin(speed).withTimeout(Seconds.of(1.5))
-                .andThen(this.spin(-speed).withTimeout(Seconds.of(0.25)))
+                .andThen(this.spin(-speed).withTimeout(Seconds.of(0.5)))
                 .repeatedly();
 
         }
