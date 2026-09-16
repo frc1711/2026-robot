@@ -49,10 +49,10 @@ public class Robot extends TimedRobot {
             Angle heading = Degrees.of(driveState.Pose.getRotation().getDegrees());
             AngularVelocity omega = RotationsPerSecond.of(Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond));
 
-            for (int i = 0; i < limelights.length; i++) {
-                LimelightHelpers.SetRobotOrientation(limelights[i], heading.in(Degrees), 0, 0, 0, 0, 0);
-                var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelights[i]);
-                if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omega.in(RotationsPerSecond)) < 2.0) {
+            for (String limelight: limelights) {
+                LimelightHelpers.SetRobotOrientation(limelight, heading.in(Degrees), 0, 0, 0, 0, 0);
+                var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(limelight);
+                if (llMeasurement != null && llMeasurement.tagCount > 1 && Math.abs(omega.in(RotationsPerSecond)) < 2.0) {
                     m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
                 }
             }
