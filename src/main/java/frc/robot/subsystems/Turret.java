@@ -77,7 +77,7 @@ public class Turret extends SubsystemBase {
         this.upperWheelMotor.getConfigurator().apply(Turret.getUpperWheelMotorConfig());
         this.headingMotor.getConfigurator().apply(Turret.getHeadingMotorConfiguration());
 
-        this.commands.calibrateHeading(Degrees.of(270));
+        this.headingMotor.setPosition(Degrees.of(270));
 
         ShuffleboardTab shuffleboardCalibrationTab =
             Shuffleboard.getTab("Calibration");
