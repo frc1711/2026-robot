@@ -34,6 +34,7 @@ import frc.robot.utils.*;
 
 public class RobotContainer {
 
+    private double DEADBAND = 0.06;
     private double maxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double speedMultiplier = 1;
     private double previousMultiplier = speedMultiplier;
@@ -42,6 +43,7 @@ public class RobotContainer {
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive =
         new SwerveRequest.FieldCentric()
+            .withDeadband(maxSpeed * DEADBAND)
             .withDriveRequestType(DriveRequestType.Velocity); // Use closed-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake =
         new SwerveRequest.SwerveDriveBrake();
@@ -49,6 +51,7 @@ public class RobotContainer {
         new SwerveRequest.PointWheelsAt();
     private final SwerveRequest.FieldCentricFacingAngle pointAtAngle =
         new SwerveRequest.FieldCentricFacingAngle()
+        .withDeadband(maxSpeed * DEADBAND)
         .withHeadingPID(5, 0, 0)
         .withDriveRequestType(DriveRequestType.Velocity);
 
@@ -62,7 +65,7 @@ public class RobotContainer {
     public final Agitator agitator = new Agitator();
     public final Indexer indexer = new Indexer();
     public final Turret turret = new Turret();
-    public final Intake intake = new Intake();
+    //public final Intake intake = new Intake();
 
     private final ComplexCommands complexCommands = new ComplexCommands(this);
 
@@ -105,9 +108,9 @@ public class RobotContainer {
             drivetrain.applyRequest(
                 () ->
                     drive
-                        .withVelocityX(-translationX.calculate(joystickDeadband(driverController.getLeftY()) * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
-                        .withVelocityY(-translationY.calculate(joystickDeadband(driverController.getLeftX()) * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
-                        .withRotationalRate(-rotation.calculate(joystickDeadband(driverController.getRightX()) * maxAngularRate * speedMultiplier)) // Drive counterclockwise with negative X (left)
+                        .withVelocityX(-translationX.calculate(MathUtil.copyDirectionPow(driverController.getLeftY(), 2) * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
+                        .withVelocityY(-translationY.calculate(MathUtil.copyDirectionPow(driverController.getLeftX(), 2) * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
+                        .withRotationalRate(-rotation.calculate(MathUtil.copyDirectionPow(driverController.getRightX(), 2) * maxAngularRate * speedMultiplier)) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -139,8 +142,8 @@ public class RobotContainer {
         driverController.leftBumper().whileTrue(
             drivetrain.applyRequest(() ->
                     pointAtAngle
-                        .withVelocityX(-translationX.calculate(joystickDeadband(driverController.getLeftY()) * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
-                        .withVelocityY(-translationY.calculate(joystickDeadband(driverController.getLeftX()) * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
+                        .withVelocityX(-translationX.calculate(MathUtil.copyDirectionPow(driverController.getLeftY(), 2) * maxSpeed * speedMultiplier)) // Drive forward with negative Y (forward)
+                        .withVelocityY(-translationY.calculate(MathUtil.copyDirectionPow(driverController.getLeftX(), 2) * maxSpeed * speedMultiplier)) // Drive left with negative X (left)
                         .withTargetDirection(Rotation2d.fromDegrees(direction.getDegrees().in(Degrees))) // Make the robot face where the right joystick is pointed
             )
         );
@@ -179,7 +182,7 @@ public class RobotContainer {
     }
 
     private double joystickDeadband(double value) {
-        double deadband = MathUtil.applyDeadband(value, 0.1);
+        double deadband = MathUtil.applyDeadband(value, DEADBAND);
 
         return MathUtil.copyDirectionPow(deadband, 2);
     }

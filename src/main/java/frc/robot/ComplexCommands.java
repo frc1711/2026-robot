@@ -29,7 +29,7 @@ public class ComplexCommands {
     private final Turret turret;
     private final Agitator agitator;
     private final Indexer indexer;
-    private final Intake intake;
+    //private final Intake intake;
 
     public ComplexCommands(RobotContainer robot) {
 
@@ -37,11 +37,11 @@ public class ComplexCommands {
         this.drivetrain = robot.drivetrain;
         this.agitator = robot.agitator;
         this.indexer = robot.indexer;
-        this.intake = robot.intake;
+        //this.intake = robot.intake;
 
     }
 
-    public Command intake() {
+    /*public Command intake() {
         
         Command prepareAndRunIntake =
             new InstantCommand(() -> this.intake.goToPosition(IntakePosition.INTAKING));
@@ -72,7 +72,7 @@ public class ComplexCommands {
             .finallyDo(resetIntakePosition);
         
         
-    }
+    }*/
 
     public Command lockTurretHeadingToHub() {
 
