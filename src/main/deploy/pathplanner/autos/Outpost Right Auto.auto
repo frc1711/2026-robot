@@ -7,19 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Example Path"
+            "pathName": "Bump To Outpost"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 4.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Backward Path"
+            "pathName": "Outpost to Right"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Aim"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
           }
         }
       ]
